@@ -47,8 +47,8 @@ rule final:
 
 rule sickle_pe:
     input:
-        forward = lambda wildcards: config["data_dir"] + config["data"][wildcards.sample]['forward'],
-        reverse = lambda wildcards: config["data_dir"] + config["data"][wildcards.sample]['reverse']
+        forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
+        reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
     output:
         forward="{project}/trimming/{sample}_1.fastq.gz",
         reverse="{project}/trimming/{sample}_2.fastq.gz",
@@ -746,7 +746,8 @@ rule bamm_per_sample:
 
 rule genemark:
     input:
-        contigs="{project}/megahit_per_sample/{sample}/final.contigs.fa.gz",
+        #contigs="{project}/megahit_per_sample/{sample}/final.contigs.fa.gz",
+        contigs="{project}/megahit/final.contigs.fa.gz"
     output:
         gff="{project}/genemark/{sample}.gff",
         nucleotide="{project}/genemark/{sample}.fna",
