@@ -1,0 +1,29 @@
+{
+    "project" : "1511KMI-0007",
+    "min_qual" : "30",
+    "min_length" : "150",
+    "diamond_database": "/data/db/blast/nr/20160122/nr-diamond-0.7.10",
+    "silva_ref" : "/data/db/qiime/Silva119_release/rep_set/97/Silva_119_rep_set97.fna",
+    "silva_taxonomy" : "/data/db/qiime/Silva119_release/consensus_majority_taxonomy_SILVA119/consensus_taxonomy/97/taxonomy_97_7_levels_consensus.txt",
+    "data_dir" : "../data/",
+    "data" : {
+  "MPR1-1n-CUR": { "forward":"MPR1-1n-CUR_1.fastq.gz", "reverse":"MPR1-1n-CUR_2.fastq.gz"},
+  "MPR1-1n-EST": { "forward":"MPR1-1n-EST_1.fastq.gz", "reverse":"MPR1-1n-EST_2.fastq.gz"},
+  "MPR1-2n-CUR": { "forward":"MPR1-2n-CUR_1.fastq.gz", "reverse":"MPR1-2n-CUR_2.fastq.gz"},
+  "MPR1-3n-CUR": { "forward":"MPR1-3n-CUR_1.fastq.gz", "reverse":"MPR1-3n-CUR_2.fastq.gz"},
+  "MPR1-3n-EST": { "forward":"MPR1-3n-EST_1.fastq.gz", "reverse":"MPR1-3n-EST_2.fastq.gz"},
+  "MPR1-4n-EST": { "forward":"MPR1-4n-EST_1.fastq.gz", "reverse":"MPR1-4n-EST_2.fastq.gz"},
+  "MPR2-1n-EST": { "forward":"MPR2-1n-EST_1.fastq.gz", "reverse":"MPR2-1n-EST_2.fastq.gz"},
+  "MPR2-2n-CUR": { "forward":"MPR2-2n-CUR_1.fastq.gz", "reverse":"MPR2-2n-CUR_2.fastq.gz"},
+  "MPR2-3n-CUR": { "forward":"MPR2-3n-CUR_1.fastq.gz", "reverse":"MPR2-3n-CUR_2.fastq.gz"},
+  "MPR2-4n-CUR": { "forward":"MPR2-4n-CUR_1.fastq.gz", "reverse":"MPR2-4n-CUR_2.fastq.gz"},
+  "MPR2-4n-EST": { "forward":"MPR2-4n-EST_1.fastq.gz", "reverse":"MPR2-4n-EST_2.fastq.gz"},
+  "MPR2-6n-EST": { "forward":"MPR2-6n-EST_1.fastq.gz", "reverse":"MPR2-6n-EST_2.fastq.gz"},
+  "MPR3-1n-EST": { "forward":"MPR3-1n-EST_1.fastq.gz", "reverse":"MPR3-1n-EST_2.fastq.gz"},
+  "MPR3-2n-CUR": { "forward":"MPR3-2n-CUR_1.fastq.gz", "reverse":"MPR3-2n-CUR_2.fastq.gz"},
+  "MPR3-3n-CUR": { "forward":"MPR3-3n-CUR_1.fastq.gz", "reverse":"MPR3-3n-CUR_2.fastq.gz"},
+  "MPR3-3n-EST": { "forward":"MPR3-3n-EST_1.fastq.gz", "reverse":"MPR3-3n-EST_2.fastq.gz"},
+  "MPR3-4n-CUR": { "forward":"MPR3-4n-CUR_1.fastq.gz", "reverse":"MPR3-4n-CUR_2.fastq.gz"},
+  "MPR3-4n-EST": { "forward":"MPR3-4n-EST_1.fastq.gz", "reverse":"MPR3-4n-EST_2.fastq.gz"}
+}
+}
