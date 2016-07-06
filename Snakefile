@@ -32,8 +32,6 @@ rule final:
                        {project}/mapped/{sample}.flagstat.txt \
                        {project}/megahit_per_sample/{sample}/final.contigs.fa.gz \
                        {project}/megahit_per_sample/{sample}/barrnap.gff \
-                       {project}/genemark/{sample}.gff \
-                       {project}/genemark/{sample}.fna.gz \
                        {project}/genecatalog/{sample}/allgenecalled.{sample}_1.bam \
                        {project}/genecatalog/{sample}/allgenecalled.{sample}.coverage.tsv \
                        {project}/microbecensus/{sample}.ags.txt \
@@ -582,11 +580,12 @@ rule mmgenome_orfs:
         "{project}/megahit/assembly.fa.gz"
     output:
         orfs="{project}/mmgenome/orfs.faa",
+        nucleotide="{project}/mmgenome/orfs.fna",
         orfscleaned="{project}/mmgenome/orfs.clean.faa"
     log:
         "{project}/mmgenome/prodigal.log"
     run:
-        shell("zcat {input} | prodigal -a {output.orfs} -i /dev/stdin -m -o {log} -p meta -q")
+        shell("zcat {input} | prodigal -d {output.nucleotide} -a {output.orfs} -i /dev/stdin -m -o {log} -p meta -q")
         shell("cut -f1 -d ' ' {output.orfs} > {output.orfscleaned}")
 
 rule mmgenome_essential:
@@ -755,15 +754,16 @@ rule genemark:
     shell: "source /data/tools/metagenemark/3.26/env.sh; zcat {input} | gmhmmp -A {output.protein} -D {output.nucleotide} -f G -m /data/tools/metagenemark/3.26/model/MetaGeneMark_v1.mod -o {output.gff} /dev/stdin"
 
 #TODO: Fix header, few duplicates present after merging    
-rule genemark_unique:
+rule orfs_unique:
     input:
-        nucleotide="{project}/genemark/{sample}.fna",
-        protein="{project}/genemark/{sample}.faa"
+        nucleotide="{project}/mmgenome/orfs.fna",
+        protein="{project}/mmgenome/orfs.faa",
     output:
-        nucleotide="{project}/genemark/{sample}.fna.gz",
-        protein="{project}/genemark/{sample}.faa.gz"
+        nucleotide="{project}/mmgenome/orfs.fna.gz",
+        protein="{project}/mmgenome/orfs.faa.gz"
     params:
-        prefix="{sample}"
+        # TODO: does this needs to be changed?
+        prefix="prefix"
     run:
         # Headers of the nuc and aa files need to be the same in order to construct the an aa file from the nucl genecatalog  
         # add a prefix to the header, keep only the part until the first |, remove empty lines with sed
@@ -785,7 +785,7 @@ rule genemark_merge:
 
 rule genecatalog:
     input:
-        "{project}/genemark_merged/all.fna.gz"
+        "{project}/mmgenome/orfs.fna.gz"
     output:
         clusters="{project}/genecatalog/allgenecalled.clusters.uc",
         fasta="{project}/genecatalog/allgenecalled.centroids.fna"
@@ -795,7 +795,7 @@ rule genecatalog:
 rule genecatalog_aa:
     input:
         genecatalog="{project}/genecatalog/allgenecalled.centroids.fna",
-        protein="{project}/genemark_merged/all.faa.gz"
+        protein="{project}/mmgenome/orfs.faa.gz"
     output:
         nucleotide="{project}/genecatalog/allgenecalled.fna.gz",
         protein="{project}/genecatalog/allgenecalled.faa.gz"
