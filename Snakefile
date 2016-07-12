@@ -12,28 +12,23 @@ configfile: "config.json"
 
 rule final:
         input: expand("{project}/trimming/{sample}_unpaired/forward_reads.fastq \
+                       {project}/gunzip/{sample}.fastq \
                        {project}/diamond/{sample}.diamond.nr-taxonomy.tsv \
                        {project}/diamond/{sample}.diamond.nr-taxonomy-filtered.tsv \
                        {project}/diamond/{sample}.diamond.nr-taxonomy-filtered.qiime.txt \
                        {project}/diamond/{project}.RData \
-                       {project}/interleaved_merged/all.fastq \
-                       {project}/kraken/{sample}.kraken \
-                       {project}/kraken/{sample}.kraken.qiime.taxonomy \
                        {project}/extract_16S/{sample}.bbduk.fa.gz \
                        {project}/extract_16S/taxonomy/{project}.biom \
                        {project}/extract_16S/megahit/{sample}.gff \
                        {project}/extract_16S/megahit/{sample}/final.contigs.fa.rdp \
                        {project}/megahit/final.contigs.fa.gz \
+                       {project}/assembly/{assembler}/contigs.fasta \
                        {project}/bamm/final.contigs.{sample}_1.bam \
                        {project}/bamm/{sample}/final.contigs.{sample}_1.bam \
                        {project}/bamm/assembly.{sample}_1.bam \
                        {project}/mmgenome/{project}.RData \
                        {project}/metabat/bin.1.fa \
                        {project}/mapped/{sample}.flagstat.txt \
-                       {project}/megahit_per_sample/{sample}/final.contigs.fa.gz \
-                       {project}/megahit_per_sample/{sample}/barrnap.gff \
-                       {project}/genecatalog/{sample}/allgenecalled.{sample}_1.bam \
-                       {project}/genecatalog/{sample}/allgenecalled.{sample}.coverage.tsv \
                        {project}/microbecensus/{sample}.ags.txt \
                        {project}/genecatalog/all.coverage.norm.tpm.biom \
                        {project}/genecatalog/allgenecalled.diamond.nr-taxonomy.tsv \
@@ -41,7 +36,7 @@ rule final:
                        {project}/genecatalog/uproc/allgenecalled.uproc.kegg.txt \
                        {project}/genecatalog/uproc/allgenecalled.uproc.cog.txt \
                        {project}/genecatalog/uproc/allgenecalled.uproc.pfam.txt \
-                       {project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv".split(), project=config["project"], sample=config["data"])
+                       {project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv".split(), project=config["project"], sample=config["data"], assembler=config["assembler"])
 
 rule sickle_pe:
     input:
@@ -58,7 +53,7 @@ rule sickle_pe:
     log:
        "{project}/trimming/{sample}.log"
     wrapper:
-        "file:///bio/sickle_pe"
+        "file://./bio/sickle_pe"
 
 rule split_unpaired:
     input:
@@ -225,10 +220,12 @@ rule diamond_R:
 
 rule interleave:
     input:
-        "{project}/trimming/{sample}_1.fastq.gz",
-        "{project}/trimming/{sample}_2.fastq.gz"
+#        "{project}/trimming/{sample}_1.fastq.gz",
+#        "{project}/trimming/{sample}_2.fastq.gz"
+        forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
+        reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
     output:
-        "{project}/interleaved/{sample}.fastq"
+        "{project}/gunzip/{sample}.fastq"
     shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/interleave-reads.py -o {output} {input}"
 
 rule interleave_merge:
@@ -419,9 +416,26 @@ rule megahit:
         # bulk            '--min-count 3 --k-list 31,51,71,91,99 --no-mercy'  (experimental, standard bulk sequencing with >= 30x depth)
         # single-cell     '--min-count 3 --k-list 21,33,55,77,99,121 --merge_level 20,0.96' (experimental, single cell data)
 
-        shell("/data/tools/megahit/1.0.3/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --presets meta -1 {forward_str} -2 {reverse_str} -r {unpaired_str} 2> {log}")
+        shell("/data/tools/megahit/1.0.6/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --presets meta -1 {forward_str} -2 {reverse_str} -r {unpaired_str} 2> {log}")
         shell("gzip -c {output.contigs} > {output.contigs_gzip}")
 
+rule spades:
+   input:
+        forward=expand("{{project}}/trimming/{sample}_1.fastq.gz", sample=config["data"]),
+        reverse=expand("{{project}}/trimming/{sample}_2.fastq.gz", sample=config["data"]),
+        unpaired=expand("{{project}}/trimming/{sample}_unpaired.fastq.gz", sample=config["data"])
+   output:
+        "{project}/assembly/spades/contigs.fasta"
+   params:
+       outdir="{project}/assembly/spades/"
+   log:
+       "{project}/assembly/spades/spades.log"
+   threads: 16
+   run:
+       forward_str = " -1 ".join(input.forward)
+       reverse_str = " -2 ".join(input.reverse) 
+       unpaired_str = " -s ".join(input.unpaired)  
+       shell("ulimit -m 480000000; /data/tools/SPAdes/3.8.2/bin/spades.py -m 480 -1 {forward_str} -2 {reverse_str} -s {unpaired_str} --only-assembler -t {threads} -k 21,33,55,77 --careful -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
 
 rule barrnap_cross_assembly_all:
     input:
