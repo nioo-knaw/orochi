@@ -13,6 +13,8 @@ configfile: "config.json"
 rule final:
         input: expand("{project}/trimming/{sample}_unpaired/forward_reads.fastq \
                        {project}/gunzip/{sample}.fastq \
+                       {project}/stats/raw.readstat.csv \
+                       {project}/stats/trimmed.readstat.csv \
                        {project}/diamond/{sample}.diamond.nr-taxonomy.tsv \
                        {project}/diamond/{sample}.diamond.nr-taxonomy-filtered.tsv \
                        {project}/diamond/{sample}.diamond.nr-taxonomy-filtered.qiime.txt \
@@ -22,7 +24,8 @@ rule final:
                        {project}/extract_16S/megahit/{sample}.gff \
                        {project}/extract_16S/megahit/{sample}/final.contigs.fa.rdp \
                        {project}/assembly/{assembler}/contigs.fasta \
-                       {project}/bamm/{assembler}/assembly.flagstat.txt \
+                       {project}/stats/{assembler}.quast.report.txt \
+                       {project}/stats/{assembler}.assembly.flagstat.txt \
                        {project}/microbecensus/{sample}.ags.txt \
                        {project}/genecatalog/all.coverage.norm.tpm.biom \
                        {project}/genecatalog/allgenecalled.diamond.nr-taxonomy.tsv \
@@ -48,6 +51,26 @@ rule sickle_pe:
        "{project}/trimming/{sample}.log"
     wrapper:
         "file://./bio/sickle_pe"
+
+rule readstat_raw:
+    input:
+        expand("{{project}}/gunzip/{sample}.fastq", sample=config["data"])
+    output:
+        "{project}/stats/raw.readstat.csv"
+    log:
+        "{project}/stats/raw.readstat.log"
+    shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/readstats.py {input} --csv -o {output} 2> {log}"
+ 
+rule readstat_trim:
+    input:
+        forward=expand("{{project}}/trimming/{sample}_1.fastq.gz", sample=config["data"]),
+        reverse=expand("{{project}}/trimming/{sample}_2.fastq.gz", sample=config["data"]),
+        unpaired=expand("{{project}}/trimming/{sample}_unpaired.fastq.gz", sample=config["data"]),
+    output:
+        "{project}/stats/trimmed.readstat.csv"
+    log:
+        "{project}/stats/trimmed.readstat.log"
+    shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/readstats.py {input} --csv -o {output} 2> {log}"
 
 rule split_unpaired:
     input:
@@ -435,13 +458,16 @@ rule quast:
     input:
         "{project}/assembly/{assembler}/assembly.fa.gz"
     output:
-        "{project}/assembly/{assembler}/quast/report.txt"
+        quast="{project}/assembly/{assembler}/quast/report.txt",
+        stats="{project}/stats/{assembler}.quast.report.txt"
     params:
         outdir="{project}/assembly/{assembler}/quast"
     log:
         "{project}/assembly/{assembler}/quast/quast.log"
     threads: 16
-    shell: "python2.7 /data/tools/quast/4.1/bin/metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}"
+    run:
+        shell("python2.7 /data/tools/quast/4.1/bin/metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}")
+        shell("cp {output.quast} {output.stats}")
 
 rule barrnap_cross_assembly_all:
     input:
@@ -552,7 +578,7 @@ rule samtools_flagstat:
     input:
         "{project}/bamm/{assembler}/assembly.bam"
     output:
-        "{project}/bamm/{assembler}/assembly.flagstat.txt"
+        "{project}/stats/{assembler}.assembly.flagstat.txt"
     shell:
         "samtools flagstat {input} > {output}"
 
