@@ -437,6 +437,18 @@ rule spades:
        unpaired_str = " -s ".join(input.unpaired)  
        shell("ulimit -m 480000000; /data/tools/SPAdes/3.8.2/bin/spades.py -m 480 -1 {forward_str} -2 {reverse_str} -s {unpaired_str} --only-assembler -t {threads} -k 21,33,55,77 --careful -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
 
+rule quast:
+    input:
+        "{project}/assembly/{assembler}/assembly.fa.gz"
+    output:
+        "{project}/assembly/{assembler}/quast/report.txt"
+    params:
+        outdir="{project}/assembly/{assembler}/quast"
+    log:
+        "{project}/assembly/{assembler}/quast/quast.log"
+    threads: 16
+    shell: "python2.7 /data/tools/quast/4.1/bin/metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}"
+
 rule barrnap_cross_assembly_all:
     input:
         "{project}/megahit/assembly.fa"
@@ -556,6 +568,17 @@ rule prepare_mmgenome:
     run:
         shell("zcat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
+
+rule prepare_mmgenome_spades:
+    input:
+        "{project}/assembly/spades/contigs.fasta"
+    output:
+        gzip="{project}/assembly/spades/assembly.fa.gz",
+        fasta=temp("{project}/assembly/spades/assembly.fa")
+    run:
+        shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
+        shell("gzip -c {output.fasta} > {output.gzip}")
+
 
 rule mmgenome_bwa_index:
     input:
