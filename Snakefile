@@ -21,14 +21,8 @@ rule final:
                        {project}/extract_16S/taxonomy/{project}.biom \
                        {project}/extract_16S/megahit/{sample}.gff \
                        {project}/extract_16S/megahit/{sample}/final.contigs.fa.rdp \
-                       {project}/megahit/final.contigs.fa.gz \
                        {project}/assembly/{assembler}/contigs.fasta \
-                       {project}/bamm/final.contigs.{sample}_1.bam \
-                       {project}/bamm/{sample}/final.contigs.{sample}_1.bam \
-                       {project}/bamm/assembly.{sample}_1.bam \
-                       {project}/mmgenome/{project}.RData \
-                       {project}/metabat/bin.1.fa \
-                       {project}/mapped/{sample}.flagstat.txt \
+                       {project}/bamm/{assembler}/assembly.flagstat.txt \
                        {project}/microbecensus/{sample}.ags.txt \
                        {project}/genecatalog/all.coverage.norm.tpm.biom \
                        {project}/genecatalog/allgenecalled.diamond.nr-taxonomy.tsv \
@@ -546,12 +540,19 @@ rule bwa_mem_unpaired:
     wrapper:
         "0.0.11/bio/bwa_mem"
 
-
+rule samtools merge:
+    input:
+        expand("{{project}}/bamm/{{assembler}}/assembly.{sample}_1.bam", sample=config["data"])
+    output:
+        "{project}/bamm/{assembler}/assembly.bam"
+    shell:
+        "samtools merge {output} {input}"
+    
 rule samtools_flagstat:
     input:
-        "{project}/mapped/{sample}.bam"
+        "{project}/bamm/{assembler}/assembly.bam"
     output:
-        "{project}/mapped/{sample}.flagstat.txt"
+        "{project}/bamm/{assembler}/assembly.flagstat.txt"
     shell:
         "samtools flagstat {input} > {output}"
 
@@ -561,10 +562,10 @@ rule samtools_flagstat:
 
 rule prepare_mmgenome:
     input:
-        "{project}/megahit/final.contigs.fa.gz"
+        "{project}/assembly/megahit/final.contigs.fa.gz"
     output:
-        gzip="{project}/megahit/assembly.fa.gz",
-        fasta=temp("{project}/megahit/assembly.fa")
+        gzip="{project}/assembly/megahit/assembly.fa.gz",
+        fasta=temp("{project}/assembly/megahit/assembly.fa")
     run:
         shell("zcat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
@@ -582,28 +583,28 @@ rule prepare_mmgenome_spades:
 
 rule mmgenome_bwa_index:
     input:
-         "{project}/megahit/assembly.fa.gz"
+         "{project}/assembly/{assembler}/assembly.fa.gz"
     output:
-        "{project}/megahit/assembly.fa.gz.bwt"
-    log: "{project}/megahit/bwa-index.log"
+        "{project}/assembly/{assembler}/assembly.fa.gz.bwt"
+    log: "{project}/assembly/{assembler}/bwa-index.log"
     shell: "/data/tools/bwa/default/bin/bwa index {input} > {log}"
 
 rule bamm_mmgenome:
     input:
-        contigs="{project}/megahit/assembly.fa.gz",
+        contigs="{project}/assembly/{assembler}/assembly.fa.gz",
         forward="{project}/trimming/{sample}_1.fastq.gz",
         reverse="{project}/trimming/{sample}_2.fastq.gz",
         unpaired="{project}/trimming/{sample}_unpaired.fastq.gz",
-        index="{project}/megahit/assembly.fa.gz.bwt"
+        index="{project}/assembly/{assembler}/assembly.fa.gz.bwt"
     output:
-        "{project}/bamm/assembly.{sample}_1.bam",
-        "{project}/bamm/assembly.{sample}_1.bam.bai"
+        "{project}/bamm/{assembler}/assembly.{sample}_1.bam",
+        "{project}/bamm/{assembler}/assembly.{sample}_1.bam.bai"
     log:
-        "{project}/bamm/{sample}.log"
+        "{project}/bamm/{assembler}/{sample}.log"
     params:
-        outdir="{project}/bamm/"
+        outdir="{project}/bamm/{assembler}"
     threads: 16
-    shell: "source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
+    shell: "set +u ;source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; set -u; bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
 rule mmgenome_coverage:
     input:
@@ -614,25 +615,25 @@ rule mmgenome_coverage:
 
 rule mmgenome_orfs:
     input:
-        "{project}/megahit/assembly.fa.gz"
+        "{project}/assembly/{assembler}/assembly.fa.gz"
     output:
-        orfs="{project}/mmgenome/orfs.faa",
-        nucleotide="{project}/mmgenome/orfs.fna",
-        orfscleaned="{project}/mmgenome/orfs.clean.faa"
+        orfs="{project}/mmgenome/{assembler}/orfs.faa",
+        nucleotide="{project}/mmgenome/{assembler}/orfs.fna",
+        orfscleaned="{project}/mmgenome/{assembler}/orfs.clean.faa"
     log:
-        "{project}/mmgenome/prodigal.log"
+        "{project}/mmgenome/{assembler}/prodigal.log"
     run:
         shell("zcat {input} | prodigal -d {output.nucleotide} -a {output.orfs} -i /dev/stdin -m -o {log} -p meta -q")
         shell("cut -f1 -d ' ' {output.orfs} > {output.orfscleaned}")
 
 rule mmgenome_essential:
     input:
-        "{project}/mmgenome/orfs.clean.faa"
+        "{project}/mmgenome/{assembler}/orfs.clean.faa"
     output:
-        prediction="{project}/mmgenome/assembly.hmm.orfs.txt",
-        essential="{project}/mmgenome/essential.txt"
+        prediction="{project}/mmgenome/{assembler}/assembly.hmm.orfs.txt",
+        essential="{project}/mmgenome/{assembler}/essential.txt"
     log:
-       "{project}/mmgenome/prodigal.log"
+       "{project}/mmgenome/{assembler}/prodigal.log"
     run:
         shell("hmmsearch --tblout {output.prediction} --cut_tc --notextw ~/install/mmgenome/scripts/essential.hmm {input} > {log}")
         shell("echo 'scaffold orf hmm.id' > {output.essential}")
@@ -640,11 +641,11 @@ rule mmgenome_essential:
 
 rule mmgenome_extract_essential:
     input:
-        prediction="{project}/mmgenome/assembly.hmm.orfs.txt",
-        orfs="{project}/mmgenome/orfs.clean.faa"
+        prediction="{project}/mmgenome/{assembler}/assembly.hmm.orfs.txt",
+        orfs="{project}/mmgenome/{assembler}/orfs.clean.faa"
     output:
-        posorfs="{project}/mmgenome/list.of.positive.orfs.txt",
-        faa="{project}/mmgenome/assembly.orfs.hmm.faa"
+        posorfs="{project}/mmgenome/{assembler}/list.of.positive.orfs.txt",
+        faa="{project}/mmgenome/{assembler}/assembly.orfs.hmm.faa"
     run:
         shell("grep -v '^#' {input.prediction} | cut -f1 -d ' ' > {output.posorfs}")
         shell("perl ~/install/mmgenome/scripts/extract.using.header.list.pl -l {output.posorfs} -s {input.orfs} -o {output.faa}")
@@ -653,10 +654,10 @@ rule mmgenome_extract_essential:
 # TODO: add the MEGAN command
 rule mmgenome_essential_annotate:
     input:
-        faa="{project}/mmgenome/assembly.orfs.hmm.faa"
+        faa="{project}/mmgenome/{assembler}/assembly.orfs.hmm.faa"
     output:
-        blast="{project}/mmgenome/assembly.orfs.hmm.blast.xml",
-        tax="{project}/mmgenome/tax.txt"
+        blast="{project}/mmgenome/{assembler}/assembly.orfs.hmm.blast.xml",
+        tax="{project}/mmgenome/{assembler}/tax.txt"
     threads: 16
     run:
         shell("blastp -query {input.faa} -db /data/db/blast/nr/20150311/nr -evalue 1e-5 -num_threads {threads} -max_target_seqs 5 -outfmt 5 -out {output.blast}")
@@ -665,10 +666,10 @@ rule mmgenome_essential_annotate:
 
 rule mmgenome_load_data:
      input:
-         assembly="{project}/megahit/assembly.fa.gz",
-         essential="{project}/mmgenome/essential.txt",
-         coverage="{project}/mmgenome/coverage.pmean.tsv",
-         tax="{project}/mmgenome/tax.txt"
+         assembly="{project}/assembly/{assembler}/assembly.fa.gz",
+         essential="{project}/mmgenome/{assembler}/essential.txt",
+         coverage="{project}/mmgenome/{assembler}/coverage.pmean.tsv",
+         tax="{project}/mmgenome/{assembler}/tax.txt"
      output:
          "{project}/mmgenome/{project}.RData"
      run:
@@ -690,9 +691,9 @@ save.image(file={output})
 
 rule metabat:
     input: 
-        contigs="{project}/megahit/assembly.fa",
+        contigs="{project}/assembly/{assembler}/assembly.fa",
         #bam=expand("{{project}}/mapped/{sample}.bam", sample=config["data"]),
-        bam=expand("{{project}}/bamm/assembly.{sample}_1.bam", sample=config["data"])
+        bam=expand("{{project}}/bamm/{{assembler}}/assembly.{sample}_1.bam", sample=config["data"])
     output:
         depth="{project}/metabat/depth.txt",
         bin="{project}/metabat/bin.1.fa"
