@@ -454,6 +454,30 @@ rule spades:
        unpaired_str = " -s ".join(input.unpaired)  
        shell("ulimit -m 480000000; /data/tools/SPAdes/3.8.2/bin/spades.py -m 480 -1 {forward_str} -2 {reverse_str} -s {unpaired_str} --only-assembler -t {threads} -k 21,33,55,77 --careful -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
 
+# Interleave paired end reads and convert to fasta
+rule idba_prepare:
+    input:
+        forward="{project}/trimming/{sample}_1.fastq.gz",
+        reverse="{project}/trimming/{sample}_2.fastq.gz",   
+    output:
+        forward=temp("{project}/trimming/{sample}_1.fastq"),
+        reverse=temp("{project}/trimming/{sample}_2.fastq"),
+        merged="{project}/trimming/{sample}.fasta"
+    run:
+        shell("gunzip -c {input.forward} > {output.forward}")
+        shell("gunzip -c {input.reverse} > {output.reverse}")
+        shell("/data/tools/idba/1.1.3/bin/fq2fa --merge {output.forward} {output.reverse} {output.merged}")
+
+rule idba:
+    input:
+        expand("{{project}}/trimming/{sample}.fasta", sample=config["data"])
+    output:
+        "{project}/assembly/idba/scaffold.fa"
+    params:
+        outdir="{project}/assembly/idba/"
+    threads: 25
+    shell: "cat {input} | /data/tools/idba/1.1.3/bin/idba_ud -r /dev/stdin -o {params.outdir} --num_threads {threads} --mink 21 --maxk 21 --step 20 --pre_correction"
+
 rule quast:
     input:
         "{project}/assembly/{assembler}/assembly.fa.gz"
