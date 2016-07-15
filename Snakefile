@@ -23,7 +23,6 @@ rule final:
                        {project}/extract_16S/taxonomy/{project}.biom \
                        {project}/extract_16S/megahit/{sample}.gff \
                        {project}/extract_16S/megahit/{sample}/final.contigs.fa.rdp \
-                       {project}/assembly/{assembler}/contigs.fasta \
                        {project}/stats/{assembler}.quast.report.txt \
                        {project}/stats/{assembler}.assembly.flagstat.txt \
                        {project}/microbecensus/{sample}.ags.txt \
@@ -472,11 +471,14 @@ rule idba:
     input:
         expand("{{project}}/trimming/{sample}.fasta", sample=config["data"])
     output:
-        "{project}/assembly/idba/scaffold.fa"
+        fasta=temp("{project}/assembly/idba/input.fasta"),
+        scaffold="{project}/assembly/idba/scaffold.fa"
     params:
         outdir="{project}/assembly/idba/"
     threads: 25
-    shell: "cat {input} | /data/tools/idba/1.1.3/bin/idba_ud -r /dev/stdin -o {params.outdir} --num_threads {threads} --mink 21 --maxk 21 --step 20 --pre_correction"
+    run:
+        shell("cat {input} > {output.fasta}")
+        shell("/data/tools/idba/1.1.3/bin/idba_ud -r {output.fasta} -o {params.outdir} --num_threads {threads} --mink 21 --maxk 121 --step 20 --pre_correction")
 
 rule quast:
     input:
@@ -626,6 +628,16 @@ rule prepare_mmgenome_spades:
     output:
         gzip="{project}/assembly/spades/assembly.fa.gz",
         fasta=temp("{project}/assembly/spades/assembly.fa")
+    run:
+        shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
+        shell("gzip -c {output.fasta} > {output.gzip}")
+
+rule prepare_mmgenome_idba:
+    input:
+        "{project}/assembly/idba/scaffold.fa"
+    output:
+        gzip="{project}/assembly/idba/assembly.fa.gz",
+        fasta=temp("{project}/assembly/idba/assembly.fa")
     run:
         shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
