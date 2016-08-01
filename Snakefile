@@ -11,6 +11,11 @@ min_version("3.5.4")
 configfile: "config.json"
 
 rule final:
+    input: expand("{project}/stats/raw.readstat.csv \
+                   {project}/trimming/{sample}_1.fastq".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
+
+"""
+rule final:
         input: expand("{project}/trimming/{sample}_unpaired/forward_reads.fastq \
                        {project}/gunzip/{sample}.fastq \
                        {project}/stats/raw.readstat.csv \
@@ -33,11 +38,37 @@ rule final:
                        {project}/genecatalog/uproc/allgenecalled.uproc.cog.txt \
                        {project}/genecatalog/uproc/allgenecalled.uproc.pfam.txt \
                        {project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv".split(), project=config["project"], sample=config["data"], assembler=config["assembler"])
+"""
 
-rule sickle_pe:
+rule unpack_and_merge:
     input:
         forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
         reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
+    output:
+        forward="{project}/unpack/{sample}_1.fastq.gz",
+        reverse="{project}/unpack/{sample}_2.fastq.gz",
+    threads: 16
+    run:
+        shell("pbzip2 -p{threads} -dc {input.forward} | pigz -p {threads} > {output.forward}")
+        shell("pbzip2 -p{threads} -dc {input.reverse} | pigz -p {threads} > {output.reverse}")
+       
+rule skewer:
+    input:
+        forward="{project}/unpack/{sample}_1.fastq.gz",
+        reverse="{project}/unpack/{sample}_2.fastq.gz",
+    output:
+        forward="{project}/skewer/{sample}_1.fastq",
+        reverse="{project}/skewer/{sample}_2.fastq",
+    log:
+        "{project}/skewer/skewer.log"
+    run:
+        shell("/data/tools/skewer/0.2.2/bin/skewer -x AGATGTGTATAAGAGACAG -m head -1 -t {threads} --quiet {input.forward} 2>> skewer.head.log | /data/tools/skewer/0.2.2/bin/skewer -x CTGTCTCTTATACACATCT -m tail -t {threads} --quiet -1 - 2>> skewer.tail.log > {output.forward}")
+        shell("/data/tools/skewer/0.2.2/bin/skewer -x AGATGTGTATAAGAGACAG -m head -1 -t {threads} --quiet {input.reverse} 2>> skewer.head.log | /data/tools/skewer/0.2.2/bin/skewer -x CTGTCTCTTATACACATCT -m tail -t {threads} --quiet -1 - 2>> skewer.tail.log > {output.reverse}")
+
+rule sickle_pe:
+    input:
+        forward="{project}/skewer/{sample}_1.fastq",
+        reverse="{project}/skewer/{sample}_2.fastq",
     output:
         forward="{project}/trimming/{sample}_1.fastq.gz",
         reverse="{project}/trimming/{sample}_2.fastq.gz",
@@ -53,7 +84,7 @@ rule sickle_pe:
 
 rule readstat_raw:
     input:
-        expand("{{project}}/gunzip/{sample}.fastq", sample=config["data"])
+        expand("{{project}}/unpack/{sample}.fastq", sample=config["data"])
     output:
         "{project}/stats/raw.readstat.csv"
     log:
@@ -236,12 +267,12 @@ rule diamond_R:
 
 rule interleave:
     input:
-#        "{project}/trimming/{sample}_1.fastq.gz",
-#        "{project}/trimming/{sample}_2.fastq.gz"
-        forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
-        reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
+        "{project}/unpack/{sample}_1.fastq.gz",
+        "{project}/unpack/{sample}_2.fastq.gz"
+#        forward = lambda wildcards: config["data_dir"] + config["data"][wildcards.sample]['forward'],
+#        reverse = lambda wildcards: config["data_dir"] + config["data"][wildcards.sample]['reverse']
     output:
-        "{project}/gunzip/{sample}.fastq"
+        "{project}/unpack/{sample}.fastq"
     shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/interleave-reads.py -o {output} {input}"
 
 rule interleave_merge:
