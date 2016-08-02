@@ -40,7 +40,7 @@ rule final:
                        {project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv".split(), project=config["project"], sample=config["data"], assembler=config["assembler"])
 """
 
-rule unpack_and_merge:
+rule merge_and_rename:
     input:
         forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
         reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
@@ -49,8 +49,13 @@ rule unpack_and_merge:
         reverse="{project}/unpack/{sample}_2.fastq.gz",
     threads: 16
     run:
-        shell("pbzip2 -p{threads} -dc {input.forward} | pigz -p {threads} > {output.forward}")
-        shell("pbzip2 -p{threads} -dc {input.reverse} | pigz -p {threads} > {output.reverse}")
+        if os.path.splitext(input[0])[1] == ".bz2":
+            shell("pbzip2 -p{threads} -dc {input.forward} | pigz -p {threads} > {output.forward}")
+            shell("pbzip2 -p{threads} -dc {input.reverse} | pigz -p {threads} > {output.reverse}")
+        if os.path.splitext(input[0])[1] == ".gz":
+            shell("pigz -p {threads} -dc {input.forward} | pigz -p {threads} > {output.forward}")
+            shell("pigz -p {threads} -dc {input.reverse} | pigz -p {threads} > {output.reverse}")
+
        
 rule skewer:
     input:
@@ -61,6 +66,7 @@ rule skewer:
         reverse="{project}/skewer/{sample}_2.fastq",
     log:
         "{project}/skewer/skewer.log"
+    threads: 16
     run:
         shell("/data/tools/skewer/0.2.2/bin/skewer -x AGATGTGTATAAGAGACAG -m head -1 -t {threads} --quiet {input.forward} 2>> skewer.head.log | /data/tools/skewer/0.2.2/bin/skewer -x CTGTCTCTTATACACATCT -m tail -t {threads} --quiet -1 - 2>> skewer.tail.log > {output.forward}")
         shell("/data/tools/skewer/0.2.2/bin/skewer -x AGATGTGTATAAGAGACAG -m head -1 -t {threads} --quiet {input.reverse} 2>> skewer.head.log | /data/tools/skewer/0.2.2/bin/skewer -x CTGTCTCTTATACACATCT -m tail -t {threads} --quiet -1 - 2>> skewer.tail.log > {output.reverse}")
