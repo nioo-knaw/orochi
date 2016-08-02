@@ -147,7 +147,7 @@ rule diamond_per_sample:
         output="{project}/diamond/{sample}.diamond.nr",
         format="tab",
         tmp="/tmp"        
-    threads: 16
+    threads: 32
     run:
         shell("/data/tools/diamond/{params.version}/bin/diamond blastx -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}")
         shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
