@@ -12,11 +12,14 @@ configfile: "config.json"
 
 rule final:
     input: expand("{project}/stats/raw.readstat.csv \
-                   {project}/trimming/{sample}_1.fastq".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
+                   {project}/trimming/{sample}_1.fastq \
+                   {project}/trimmomatic/{sample}_forward_paired.fq.gz \
+                   {project}/host_filtering/{sample}_forward_paired.fq.gz".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
 
 """
 rule final:
         input: expand("{project}/trimming/{sample}_unpaired/forward_reads.fastq \
+                       {project}/trimmomatic/{sample}_forward_paired.fq.gz \
                        {project}/gunzip/{sample}.fastq \
                        {project}/stats/raw.readstat.csv \
                        {project}/stats/trimmed.readstat.csv \
@@ -40,7 +43,7 @@ rule final:
                        {project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv".split(), project=config["project"], sample=config["data"], assembler=config["assembler"])
 """
 
-rule unpack_and_merge:
+rule merge_and_rename:
     input:
         forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
         reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
@@ -49,8 +52,13 @@ rule unpack_and_merge:
         reverse="{project}/unpack/{sample}_2.fastq.gz",
     threads: 16
     run:
-        shell("pbzip2 -p{threads} -dc {input.forward} | pigz -p {threads} > {output.forward}")
-        shell("pbzip2 -p{threads} -dc {input.reverse} | pigz -p {threads} > {output.reverse}")
+        if os.path.splitext(input[0])[1] == ".bz2":
+            shell("pbzip2 -p{threads} -dc {input.forward} | pigz -p {threads} > {output.forward}")
+            shell("pbzip2 -p{threads} -dc {input.reverse} | pigz -p {threads} > {output.reverse}")
+        if os.path.splitext(input[0])[1] == ".gz":
+            shell("pigz -p {threads} -dc {input.forward} | pigz -p {threads} > {output.forward}")
+            shell("pigz -p {threads} -dc {input.reverse} | pigz -p {threads} > {output.reverse}")
+
        
 rule skewer:
     input:
@@ -61,6 +69,7 @@ rule skewer:
         reverse="{project}/skewer/{sample}_2.fastq",
     log:
         "{project}/skewer/skewer.log"
+    threads: 16
     run:
         shell("/data/tools/skewer/0.2.2/bin/skewer -x AGATGTGTATAAGAGACAG -m head -1 -t {threads} --quiet {input.forward} 2>> skewer.head.log | /data/tools/skewer/0.2.2/bin/skewer -x CTGTCTCTTATACACATCT -m tail -t {threads} --quiet -1 - 2>> skewer.tail.log > {output.forward}")
         shell("/data/tools/skewer/0.2.2/bin/skewer -x AGATGTGTATAAGAGACAG -m head -1 -t {threads} --quiet {input.reverse} 2>> skewer.head.log | /data/tools/skewer/0.2.2/bin/skewer -x CTGTCTCTTATACACATCT -m tail -t {threads} --quiet -1 - 2>> skewer.tail.log > {output.reverse}")
@@ -82,6 +91,23 @@ rule sickle_pe:
     wrapper:
         "file://./bio/sickle_pe"
 
+# Trim adapters and low quality regions
+rule trimmomatic:
+    input:
+        forward="{project}/unpack/{sample}_1.fastq.gz",
+        reverse="{project}/unpack/{sample}_2.fastq.gz",
+    output:
+        fw_paired="{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        fw_unpaired="{project}/trimmomatic/{sample}_forward_unpaired.fq.gz",
+        rev_paired="{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
+        rev_unpaired="{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz",
+    params:
+        adapters = "/data/tools/Trimmomatic/0.36/adapters/NexteraPE-PE.fa"
+    log:
+        "{project}/trimmomatic/{sample}.log" 
+    threads: 16
+    shell: "java -jar /data/tools/Trimmomatic/0.36/trimmomatic-0.36.jar PE -threads {threads} -phred33 {input.forward} {input.reverse} {output.fw_paired} {output.fw_unpaired} {output.rev_paired} {output.rev_unpaired} ILLUMINACLIP:{params.adapters}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:30 MINLEN:100 2> {log}"
+
 rule readstat_raw:
     input:
         expand("{{project}}/unpack/{sample}.fastq", sample=config["data"])
@@ -101,6 +127,31 @@ rule readstat_trim:
     log:
         "{project}/stats/trimmed.readstat.log"
     shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/readstats.py {input} --csv -o {output} 2> {log}"
+
+rule host_removal:
+    input:
+        fw_paired="{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        fw_unpaired="{project}/trimmomatic/{sample}_forward_unpaired.fq.gz",
+        rev_paired="{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
+        rev_unpaired="{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz",
+        #forward="sickle/{data}_R1.fastq",
+        #rev="sickle/{data}_R2.fastq"
+    output:
+        fw_paired="{project}/host_filtering/{sample}_forward_paired.fq.gz",
+        #forward="reference_filtered_raw/{data}_R1_filtered.fastq",
+        #rev="reference_filtered_raw/{data}_R2_filtered.fastq",
+    
+        #the SAM output might be deleted if needed
+        fw_paired_map="{project}/host_filtering/sam/{sample}_forward_paired.sam",
+        #mapped2="reference_aligned/sam/{data}_R2.sam"    
+    params:
+        refindex=config["reference_index"],
+    log: "log/filtering.log"
+    threads: 32
+    benchmark:"benchmark/bowtie2_filtering.log"
+    run:
+        shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fw_paired} -p {threads} -x {params.refindex} -U {input.fw_paired} -S {output.fw_paired_map}")
+        #shell("bowtie2 --very-sensitive --un {output.rev} -p {threads} -x {params.refindex} -U {input.rev} -S {output.mapped2}")
 
 rule split_unpaired:
     input:
