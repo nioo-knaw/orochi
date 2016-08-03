@@ -14,7 +14,7 @@ rule final:
     input: expand("{project}/stats/raw.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                   {project}/host_filtering/{sample}_forward_paired.fq.gz".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
+                   {project}/host_filtering/{sample}_fr_mapped_and_unmapped.sam".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
 
 """
 rule final:
@@ -134,24 +134,19 @@ rule host_removal:
         fw_unpaired="{project}/trimmomatic/{sample}_forward_unpaired.fq.gz",
         rev_paired="{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
         rev_unpaired="{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz",
-        #forward="sickle/{data}_R1.fastq",
-        #rev="sickle/{data}_R2.fastq"
     output:
-        fw_paired="{project}/host_filtering/{sample}_forward_paired.fq.gz",
-        #forward="reference_filtered_raw/{data}_R1_filtered.fastq",
-        #rev="reference_filtered_raw/{data}_R2_filtered.fastq",
-    
-        #the SAM output might be deleted if needed
-        fw_paired_map="{project}/host_filtering/sam/{sample}_forward_paired.sam",
-        #mapped2="reference_aligned/sam/{data}_R2.sam"    
+        fr_mapped_and_unmapped="{project}/host_filtering/{sample}_fr_mapped_and_unmapped.sam",
+        s_mapped_and_unmapped="{project}/host_filtering/{sample}_s_mapped_and_unmapped.sam",
+        fr_unmapped_pairs="{project}/host_filtering/{sample}_fr_unmapped_pairs.fastq",
+        s_unmapped="{project}/host_filtering/{sample}_s_unmapped.fastq",
     params:
         refindex=config["reference_index"],
     log: "log/filtering.log"
     threads: 32
     benchmark:"benchmark/bowtie2_filtering.log"
     run:
-        shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fw_paired} -p {threads} -x {params.refindex} -U {input.fw_paired} -S {output.fw_paired_map}")
-        #shell("bowtie2 --very-sensitive --un {output.rev} -p {threads} -x {params.refindex} -U {input.rev} -S {output.mapped2}")
+        shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -1 {input.fw_paired} -2 {input.rev_paired} -S {output.fr_mapped_and_unmapped} --un-conc {output.fr_unmapped_pairs}")
+        shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -U {input.fw_unpaired} -U {input.rev_unpaired} -S {output.s_mapped_and_unmapped} --un {output.s_unmapped}")
 
 rule split_unpaired:
     input:
