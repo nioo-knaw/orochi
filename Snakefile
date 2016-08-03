@@ -137,7 +137,7 @@ rule host_removal:
     output:
         fr_mapped_and_unmapped="{project}/host_filtering/{sample}_fr_mapped_and_unmapped.sam",
         s_mapped_and_unmapped="{project}/host_filtering/{sample}_s_mapped_and_unmapped.sam",
-        fr_unmapped_pairs="{project}/host_filtering/{sample}_fr_unmapped_pairs.fastq",
+        fr_unmapped_pairs="{project}/host_filtering/{sample}_fr_unmapped_pairs.1.fastq",
         s_unmapped="{project}/host_filtering/{sample}_s_unmapped.fastq",
     params:
         refindex=config["reference_index"],
