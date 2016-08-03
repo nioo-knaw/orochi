@@ -141,12 +141,14 @@ rule host_removal:
         s_unmapped="{project}/host_filtering/{sample}_s_unmapped.fastq",
     params:
         refindex=config["reference_index"],
-    log: "log/filtering.log"
+        fr_unmapped_prefix="{project}/host_filtering/{sample}_fr_unmapped_pairs",
+        s_unmapped_prefix="{project}/host_filtering/{sample}_s_unmapped",
+    log: "log/host_removal_{sample}.log"
     threads: 32
     benchmark:"benchmark/bowtie2_filtering.log"
     run:
-        shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -1 {input.fw_paired} -2 {input.rev_paired} -S {output.fr_mapped_and_unmapped} --un-conc {output.fr_unmapped_pairs}")
-        shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -U {input.fw_unpaired} -U {input.rev_unpaired} -S {output.s_mapped_and_unmapped} --un {output.s_unmapped}")
+        shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -1 {input.fw_paired} -2 {input.rev_paired} -S {output.fr_mapped_and_unmapped} --un-conc {params.fr_unmapped_prefix} 2>> {log} ")
+        shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -U {input.fw_unpaired} -U {input.rev_unpaired} -S {output.s_mapped_and_unmapped} --un {params.s_unmapped_prefix} 2>> {log}")
 
 rule split_unpaired:
     input:
