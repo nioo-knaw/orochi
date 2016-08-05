@@ -173,9 +173,9 @@ rule filter_reads:
     threads: 32
     benchmark:"benchmark/bowtie2_filtering.log"
     run:
-      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fw_paired} -p {threads} -x {params.refindex} -U {input.fw_paired} -S {output.fw_mapped_and_unmapped}")
-      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.rev_paired} -p {threads} -x {params.refindex} -U {input.rev_paired} -S {output.rev_mapped_and_unmapped}")
-      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fr_unpaired} -p {threads} -x {params.refindex} -U {input.fw_unpaired} -U {input.rev_unpaired} -S {output.fr_unpaired_mapped_and_unmapped}")
+      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fw_paired} -p {threads} -x {params.refindex} -U {input.fw_paired} -S {output.fw_mapped_and_unmapped} 2>> {log}")
+      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.rev_paired} -p {threads} -x {params.refindex} -U {input.rev_paired} -S {output.rev_mapped_and_unmapped} 2>> {log}")
+      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fr_unpaired} -p {threads} -x {params.refindex} -U {input.fw_unpaired} -U {input.rev_unpaired} -S {output.fr_unpaired_mapped_and_unmapped} 2>> {log}")
 
 
 rule pair_filtered_reads:
