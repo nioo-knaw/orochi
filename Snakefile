@@ -14,7 +14,8 @@ rule final:
     input: expand("{project}/stats/raw.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                   {project}/host_filtering/{sample}_fr_mapped_and_unmapped.sam".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
+                   {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
+                   {project}/assembly/spades/contigs.fasta".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
 
 """
 rule final:
@@ -149,6 +150,48 @@ rule host_removal:
     run:
         shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -1 {input.fw_paired} -2 {input.rev_paired} -S {output.fr_mapped_and_unmapped} --un-conc {params.fr_unmapped_prefix} 2>> {log} ")
         shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -U {input.fw_unpaired} -U {input.rev_unpaired} -S {output.s_mapped_and_unmapped} --un {params.s_unmapped_prefix} 2>> {log}")
+
+rule filter_reads:
+    input:
+      forward="{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+      rev="{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
+        fw_paired="{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        fw_unpaired="{project}/trimmomatic/{sample}_forward_unpaired.fq.gz",
+        rev_paired="{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
+        rev_unpaired="{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz",
+    output:
+        fw_mapped_and_unmapped="{project}/host_filtering/{sample}_fw_mapped_and_unmapped.sam",
+        rev_mapped_and_unmapped="{project}/host_filtering/{sample}_rev_mapped_and_unmapped.sam",
+        fr_unpaired_mapped_and_unmapped="{project}/host_filtering/{sample}_fr_unpaired_mapped_and_unmapped.sam",
+        fw_paired="{project}/host_filtering/raw/{sample}_R1_filtered.fastq",
+        rev_paired="{project}/host_filtering/raw/{sample}_R2_filtered.fastq",
+        fr_unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq",
+    params:
+      refindex=config["reference_index"],
+
+    log: "log/host_filtering_{sample}.log"
+    threads: 32
+    benchmark:"benchmark/bowtie2_filtering.log"
+    run:
+      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fw_paired} -p {threads} -x {params.refindex} -U {input.fw_paired} -S {output.fw_mapped_and_unmapped}")
+      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.rev_paired} -p {threads} -x {params.refindex} -U {input.rev_paired} -S {output.rev_mapped_and_unmapped}")
+      shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fr_unpaired} -p {threads} -x {params.refindex} -U {input.fw_unpaired} -U input{rev_unpaired} -S {output.fr_unpaired_mapped_and_unmapped}")
+
+
+rule pair_filtered_reads:
+  input:
+    forward=rules.filter_reads.output.fw_paired,
+    rev=rules.filter_reads.output.rev_paired
+  output:
+    forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq",
+    rev="{project}/host_filtering/{sample}_R2_paired_filtered.fastq",
+    single="{project}/reference_filtered/{sample}_R1R2_singular_filtered.fastq"
+    
+  params:
+    sep=" "
+  threads: 1
+  run:
+    shell("python2.7 ../src/fastqCombinePairedEnd.py {input.forward} {input.rev} {output.forward} {output.rev} {output.single} {params.sep}")
 
 rule split_unpaired:
     input:
@@ -516,16 +559,16 @@ rule megahit:
 
 rule spades:
    input:
-        forward=expand("{{project}}/trimming/{sample}_1.fastq.gz", sample=config["data"]),
-        reverse=expand("{{project}}/trimming/{sample}_2.fastq.gz", sample=config["data"]),
-        unpaired=expand("{{project}}/trimming/{sample}_unpaired.fastq.gz", sample=config["data"])
+        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]),
+        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]),
+        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"])
    output:
         "{project}/assembly/spades/contigs.fasta"
    params:
        outdir="{project}/assembly/spades/"
    log:
        "{project}/assembly/spades/spades.log"
-   threads: 16
+   threads: 32
    run:
        forward_str = " -1 ".join(input.forward)
        reverse_str = " -2 ".join(input.reverse) 
