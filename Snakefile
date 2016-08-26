@@ -15,7 +15,11 @@ rule final:
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
-                   {project}/assembly/spades/contigs.fasta".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
+                   {project}/assembly/spades/contigs.fasta \
+                   {project}/stats/{assembler}.quast.report.txt \
+                   {project}/stats/{assembler}.assembly.flagstat.txt \
+                   {project}/genecatalog/{assembler}/allgenecalled.faa.gz \
+                   {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
 
 """
 rule final:
@@ -35,6 +39,7 @@ rule final:
                        {project}/stats/{assembler}.quast.report.txt \
                        {project}/stats/{assembler}.assembly.flagstat.txt \
                        {project}/microbecensus/{sample}.ags.txt \
+                       {project}/genecatalog/{assembler}/all.coverage.tsv
                        {project}/genecatalog/all.coverage.norm.tpm.biom \
                        {project}/genecatalog/allgenecalled.diamond.nr-taxonomy.tsv \
                        {project}/genecatalog/all.coverage.norm.tpm.taxonomy.biom \
@@ -978,11 +983,11 @@ rule genemark:
 #TODO: Fix header, few duplicates present after merging    
 rule orfs_unique:
     input:
-        nucleotide="{project}/mmgenome/orfs.fna",
-        protein="{project}/mmgenome/orfs.faa",
+        nucleotide="{project}/mmgenome/{assembler}/orfs.fna",
+        protein="{project}/mmgenome/{assembler}/orfs.faa",
     output:
-        nucleotide="{project}/mmgenome/orfs.fna.gz",
-        protein="{project}/mmgenome/orfs.faa.gz"
+        nucleotide="{project}/mmgenome/{assembler}/orfs.fna.gz",
+        protein="{project}/mmgenome/{assembler}/orfs.faa.gz"
     params:
         # TODO: does this needs to be changed?
         prefix="prefix"
@@ -1007,20 +1012,20 @@ rule genemark_merge:
 
 rule genecatalog:
     input:
-        "{project}/mmgenome/orfs.fna.gz"
+        "{project}/mmgenome/{assembler}/orfs.fna.gz"
     output:
-        clusters="{project}/genecatalog/allgenecalled.clusters.uc",
-        fasta="{project}/genecatalog/allgenecalled.centroids.fna"
+        clusters="{project}/genecatalog/{assembler}/allgenecalled.clusters.uc",
+        fasta="{project}/genecatalog/{assembler}/allgenecalled.centroids.fna"
     threads: 16
     shell: "vsearch -cluster_fast {input} -id 0.95 -idprefix 4 -target_cov .9 -consout {output.fasta} -uc {output.clusters} -threads {threads}"
 
 rule genecatalog_aa:
     input:
-        genecatalog="{project}/genecatalog/allgenecalled.centroids.fna",
-        protein="{project}/mmgenome/orfs.faa.gz"
+        genecatalog="{project}/genecatalog/{assembler}/allgenecalled.centroids.fna",
+        protein="{project}/mmgenome/{assembler}/orfs.faa.gz"
     output:
-        nucleotide="{project}/genecatalog/allgenecalled.fna.gz",
-        protein="{project}/genecatalog/allgenecalled.faa.gz"
+        nucleotide="{project}/genecatalog/{assembler}/allgenecalled.fna.gz",
+        protein="{project}/genecatalog/{assembler}/allgenecalled.faa.gz"
     run: 
         # Select the headers of the nucleotide sequences in the genecatalog
         # Select the seqids inbetween the = and ;
@@ -1033,39 +1038,39 @@ rule genecatalog_aa:
 
 rule genecatalog_bwa_index:
    input:
-       genes="{project}/genecatalog/allgenecalled.fna.gz"
+       genes="{project}/genecatalog/{assembler}/allgenecalled.fna.gz"
    output:
-       index="{project}/genecatalog/allgenecalled.fna.gz.bwt"
+       index="{project}/genecatalog/{assembler}/allgenecalled.fna.gz.bwt"
    shell: "bwa index {input}"
 
 rule map_to_genes:
     input:
-        genes="{project}/genecatalog/allgenecalled.fna.gz",
-        index="{project}/genecatalog/allgenecalled.fna.gz.bwt",
-        forward="{project}/trimming/{sample}_1.fastq.gz",
-        reverse="{project}/trimming/{sample}_2.fastq.gz",
-        unpaired="{project}/trimming/{sample}_unpaired.fastq.gz"
+        genes="{project}/genecatalog/{assembler}/allgenecalled.fna.gz",
+        index="{project}/genecatalog/{assembler}/allgenecalled.fna.gz.bwt",
+        forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq",
+        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq",
+        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq"
     output:
-        "{project}/genecatalog/{sample}/allgenecalled.{sample}_1.bam",
-        "{project}/genecatalog/{sample}/allgenecalled.{sample}_1.bam.bai",
-        "{project}/genecatalog/{sample}/allgenecalled.{sample}_unpaired.bam",
-        "{project}/genecatalog/{sample}/allgenecalled.{sample}_unpaired.bam.bai"
+        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.bam",
+        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.bam.bai",
+        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.bam",
+        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.bam.bai"
 
     log:
-        "{project}/genecatalog/{sample}/mapping.log"
+        "{project}/genecatalog/{assembler}/{sample}/mapping.log"
     params:
-        outdir="{project}/genecatalog/{sample}"
+        outdir="{project}/genecatalog/{assembler}/{sample}"
     threads: 16
     # Use --kept to re/multi use preindexed reference. Otherwise with --force the indexes are rebuild every time
     shell: "source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
 
 rule coveragetable: 
     input: 
-        paired = "{project}/genecatalog/{sample}/allgenecalled.{sample}_1.bam",
-        unpaired = "{project}/genecatalog/{sample}/allgenecalled.{sample}_unpaired.bam"
+        paired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.bam",
+        unpaired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.bam"
     output:
-        paired = "{project}/genecatalog/{sample}/allgenecalled.{sample}_1.coverage.tsv",
-        unpaired = "{project}/genecatalog/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"
+        paired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"
     threads: 16
     run:
         shell("source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; bamm parse -c {output.paired} -m counts -b {input.paired} -t {threads}")
@@ -1073,10 +1078,10 @@ rule coveragetable:
 
 rule fixcounts:
     input:
-        paired = "{project}/genecatalog/{sample}/allgenecalled.{sample}_1.coverage.tsv",
-        unpaired = "{project}/genecatalog/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"  
+        paired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"  
     output:
-        "{project}/genecatalog/{sample}/allgenecalled.{sample}.coverage.tsv",
+        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}.coverage.tsv",
     run:
         import pandas as pd
         import numpy as np
@@ -1098,9 +1103,9 @@ rule fixcounts:
 
 rule combine_counts:
     input:
-        expand("{{project}}/genecatalog/{sample}/allgenecalled.{sample}.coverage.tsv", sample=config["data"])
+        expand("{{project}}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
     output:
-        "{project}/genecatalog/all.coverage.tsv"
+        "{project}/genecatalog/{assembler}/all.coverage.tsv"
     run:       
         # Each file has 3 columns: gene,length,count. Get the total. 
         nc = len(input)*3
