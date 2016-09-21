@@ -781,9 +781,9 @@ rule mmgenome_bwa_index:
 rule bamm_mmgenome:
     input:
         contigs="{project}/assembly/{assembler}/assembly.fa.gz",
-        forward="{project}/trimming/{sample}_1.fastq.gz",
-        reverse="{project}/trimming/{sample}_2.fastq.gz",
-        unpaired="{project}/trimming/{sample}_unpaired.fastq.gz",
+        forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq",                        
+        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq", 
+        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq", 
         index="{project}/assembly/{assembler}/assembly.fa.gz.bwt"
     output:
         "{project}/bamm/{assembler}/assembly.{sample}_1.bam",
