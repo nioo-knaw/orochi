@@ -15,7 +15,7 @@ rule final:
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
-                   {project}/assembly/spades/contigs.fasta \
+                   {project}/assembly/megahit/assembly.fa.gz \
                    {project}/stats/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}.assembly.flagstat.txt \
                    {project}/genecatalog/{assembler}/allgenecalled.faa.gz \
@@ -536,16 +536,16 @@ rule combine_reads:
 
 rule megahit:
     input:
-        forward=expand("{{project}}/trimming/{sample}_1.fastq.gz", sample=config["data"]),
-        reverse=expand("{{project}}/trimming/{sample}_2.fastq.gz", sample=config["data"]),
-        unpaired=expand("{{project}}/trimming/{sample}_unpaired.fastq.gz", sample=config["data"])
+        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]),
+        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]),
+        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"])
     output:
-        contigs="{project}/megahit/final.contigs.fa",
-        contigs_gzip="{project}/megahit/final.contigs.fa.gz",
+        contigs="{project}/assembly/megahit/final.contigs.fa",
+        contigs_gzip="{project}/assembly/megahit/final.contigs.fa.gz",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
-        opts="{project}/megahit/opts.txt"
-    params: dir="{project}/megahit"
-    log: "{project}/megahit/megahit.log"
+        opts="{project}/assembly/megahit/opts.txt"
+    params: dir="{project}/assembly/megahit"
+    log: "{project}/assembly/megahit/megahit.log"
     threads: 16
     run:
         forward_str = ",".join(input.forward)
@@ -559,7 +559,7 @@ rule megahit:
         # bulk            '--min-count 3 --k-list 31,51,71,91,99 --no-mercy'  (experimental, standard bulk sequencing with >= 30x depth)
         # single-cell     '--min-count 3 --k-list 21,33,55,77,99,121 --merge_level 20,0.96' (experimental, single cell data)
 
-        shell("/data/tools/megahit/1.0.6/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --presets meta -1 {forward_str} -2 {reverse_str} -r {unpaired_str} 2> {log}")
+        shell("ulimit -m 700000000; /data/tools/megahit/1.0.6/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --presets meta -1 {forward_str} -2 {reverse_str} -r {unpaired_str} 2> {log}")
         shell("gzip -c {output.contigs} > {output.contigs_gzip}")
 
 rule spades:
