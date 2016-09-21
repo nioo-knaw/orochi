@@ -719,9 +719,9 @@ rule bwa_mem_unpaired:
     wrapper:
         "0.0.11/bio/bwa_mem"
 
-rule samtools merge:
+rule samtools_merge:
     input:
-        expand("{{project}}/bamm/{{assembler}}/assembly.{sample}_1.bam", sample=config["data"])
+        expand("{{project}}/bamm/{{assembler}}/assembly.{sample}_R1_paired_filtered.bam", sample=config["data"])
     output:
         "{project}/bamm/{assembler}/assembly.bam"
     shell:
@@ -786,8 +786,8 @@ rule bamm_mmgenome:
         unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq", 
         index="{project}/assembly/{assembler}/assembly.fa.gz.bwt"
     output:
-        "{project}/bamm/{assembler}/assembly.{sample}_1.bam",
-        "{project}/bamm/{assembler}/assembly.{sample}_1.bam.bai"
+        "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filtered.bam",
+        "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filtered.bam.bai"
     log:
         "{project}/bamm/{assembler}/{sample}.log"
     params:
