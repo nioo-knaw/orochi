@@ -108,7 +108,7 @@ rule trimmomatic:
         rev_paired="{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
         rev_unpaired="{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz",
     params:
-        adapters = "/data/tools/Trimmomatic/0.36/adapters/NexteraPE-PE.fa"
+        adapters = config["adapters"]
     log:
         "{project}/trimmomatic/{sample}.log" 
     threads: 16

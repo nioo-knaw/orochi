@@ -1,5 +1,6 @@
 {
     "project" : "1511KMI-0007",
+    "adapters" : "/data/tools/Trimmomatic/0.36/adapters/NexteraPE-PE.fa"
     "min_qual" : "30",
     "min_length" : "150",
     "reference_index": "/data/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic",
