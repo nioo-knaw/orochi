@@ -232,6 +232,15 @@ rule count_unpaired_reverse:
             sample = params.samples[i]
             shell("printf {sample}'\t' >> {output} && cat {file} | printf $((`wc -l`/4)) >> {output} && printf '\treverse\n' >> {output}")
 
+rule nonpareil:
+    input:
+        "{project}/host_filtering/{sample}_R1_paired_filtered.fastq"
+    output:
+        "nonpareil.npo"
+    params:
+        prefix="nonpareil"
+    shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t 32 -R 400000"
+
 rule diamond_per_sample:
     input:
         "{project}/trimming/{sample}_1.fastq.gz"
