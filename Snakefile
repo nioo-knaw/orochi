@@ -15,6 +15,7 @@ rule final:
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
+                   {project}/diamond/{project}.RData \
                    {project}/assembly/megahit/assembly.fa.gz \
                    {project}/stats/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}.assembly.flagstat.txt \
@@ -234,7 +235,7 @@ rule count_unpaired_reverse:
 
 rule diamond_per_sample:
     input:
-        "{project}/trimming/{sample}_1.fastq.gz"
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
     output:
         tsv="{project}/diamond/{sample}.diamond.nr.tsv"
     params:
@@ -258,15 +259,15 @@ rule diamond_lca:
 
 rule seq_names_forward:
     input:
-        "{project}/trimming/{sample}_1.fastq.gz"
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
     output:
-        "{project}/trimming/{sample}_1.names.txt"
+        "{project}/trimmomatic/{sample}_1.names.txt"
     shell: "zcat {input} | awk '(NR%4 == 1){{print $0}}' | cut -d' ' -f 1 | cut -c 2- > {output}" 
 
 rule diamond_filter:
     input:
         taxonomy="{project}/diamond/{sample}.diamond.nr-taxonomy.tsv",
-        reads = "{project}/trimming/{sample}_1.names.txt"
+        reads = "{project}/trimmomatic/{sample}_1.names.txt"
     output:
         taxonomy="{project}/diamond/{sample}.diamond.nr-taxonomy-filtered.tsv"
     params:
