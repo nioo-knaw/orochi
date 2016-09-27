@@ -563,22 +563,25 @@ rule megahit:
         shell("gzip -c {output.contigs} > {output.contigs_gzip}")
 
 rule spades:
-   input:
-        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]),
-        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]),
-        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"])
-   output:
+    input:
+        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \ 
+           else expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
+        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
+           else expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
+        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
+           else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
+    output:
         "{project}/assembly/spades/contigs.fasta"
-   params:
-       outdir="{project}/assembly/spades/"
-   log:
-       "{project}/assembly/spades/spades.log"
-   threads: 32
-   run:
-       forward_str = " -1 ".join(input.forward)
-       reverse_str = " -2 ".join(input.reverse) 
-       unpaired_str = " -s ".join(input.unpaired)  
-       shell("ulimit -m 700000000; /data/tools/SPAdes/3.9.0/bin/metaspades.py -m 700 -1 {forward_str} -2 {reverse_str} -s {unpaired_str} --only-assembler -k 21,33,55,77,99,127 -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
+    params:
+        outdir="{project}/assembly/spades/"
+    log:
+        "{project}/assembly/spades/spades.log"
+    threads: 32
+    run:
+        forward_str = " -1 ".join(input.forward)
+        reverse_str = " -2 ".join(input.reverse)
+        unpaired_str = " -s ".join(input.unpaired)
+        shell("ulimit -m 700000000; /data/tools/SPAdes/3.9.0/bin/metaspades.py -m 700 -1 {forward_str} -2 {reverse_str} -s {unpaired_str} --only-assembler -k 21,33,55,77,99,127 -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
 
 # Interleave paired end reads and convert to fasta
 rule idba_prepare:
