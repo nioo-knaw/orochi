@@ -14,6 +14,7 @@ rule final:
     input: expand("{project}/stats/raw.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
+                   {project}/{sample}.nonpareil.npo \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
                    {project}/assembly/megahit/assembly.fa.gz \
@@ -235,11 +236,12 @@ rule count_unpaired_reverse:
 
 rule nonpareil:
     input:
-        "{project}/host_filtering/{sample}_R1_paired_filtered.fastq"
+        "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
     output:
-        "nonpareil.npo"
+        "{project}/{sample}.nonpareil.npo"
     params:
-        prefix="nonpareil"
+        prefix="{project}/{sample}.nonpareil"
     shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t 32 -R 400000"
 
 rule diamond_per_sample:
