@@ -20,6 +20,7 @@ rule final:
                    {project}/assembly/megahit/assembly.fa.gz \
                    {project}/stats/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}.assembly.flagstat.txt \
+                   {project}/megagta/{sample}/opts.txt \
                    {project}/genecatalog/{assembler}/allgenecalled.faa.gz \
                    {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
 
@@ -243,6 +244,23 @@ rule nonpareil:
     params:
         prefix="{project}/{sample}.nonpareil"
     shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t 32 -R 400000"
+
+rule megagta:
+    input:
+        forward = "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_reverse_paired.fq.gz"
+    output:
+        "{project}/megagta/{sample}/opts.txt"
+    params:
+        outdir="{project}/megagta/{sample}/"
+    log:
+        "{project}/megagta/{sample}/megagta.log"
+    threads: 16
+    run:
+        shell("python2.7 ~/install/megagta/bin/megagta.py --continue -1 {input.forward} -2 {input.reverse} -o {params.outdir} -g gene_list.txt -t {threads} -m 0.5 --min-contig-len 300 2> {log}")
+        shell("~/install/megagta/bin/post_proc.sh -g /mnt/data/home/NIOO/mattiash/install/megagta/share/RDPTools/Xander_assembler/gene_resource -d {params.outdir}contigs -m 16G -c 0.01")
 
 rule diamond_per_sample:
     input:
