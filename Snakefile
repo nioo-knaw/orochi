@@ -14,10 +14,13 @@ rule final:
     input: expand("{project}/stats/raw.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
+                   {project}/{sample}.nonpareil.npo \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
+                   {project}/diamond/{project}.RData \
                    {project}/assembly/megahit/assembly.fa.gz \
                    {project}/stats/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}.assembly.flagstat.txt \
+                   {project}/megagta/{sample}/opts.txt \
                    {project}/genecatalog/{assembler}/allgenecalled.faa.gz \
                    {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
 
@@ -232,9 +235,36 @@ rule count_unpaired_reverse:
             sample = params.samples[i]
             shell("printf {sample}'\t' >> {output} && cat {file} | printf $((`wc -l`/4)) >> {output} && printf '\treverse\n' >> {output}")
 
+rule nonpareil:
+    input:
+        "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
+    output:
+        "{project}/{sample}.nonpareil.npo"
+    params:
+        prefix="{project}/{sample}.nonpareil"
+    shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t 32 -R 400000"
+
+rule megagta:
+    input:
+        forward = "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_reverse_paired.fq.gz"
+    output:
+        "{project}/megagta/{sample}/opts.txt"
+    params:
+        outdir="{project}/megagta/{sample}/"
+    log:
+        "{project}/megagta/{sample}/megagta.log"
+    threads: 16
+    run:
+        shell("python2.7 ~/install/megagta/bin/megagta.py --continue -1 {input.forward} -2 {input.reverse} -o {params.outdir} -g gene_list.txt -t {threads} -m 0.5 --min-contig-len 300 2> {log}")
+        shell("~/install/megagta/bin/post_proc.sh -g /mnt/data/home/NIOO/mattiash/install/megagta/share/RDPTools/Xander_assembler/gene_resource -d {params.outdir}contigs -m 16G -c 0.01")
+
 rule diamond_per_sample:
     input:
-        "{project}/trimming/{sample}_1.fastq.gz"
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
     output:
         tsv="{project}/diamond/{sample}.diamond.nr.tsv"
     params:
@@ -258,15 +288,15 @@ rule diamond_lca:
 
 rule seq_names_forward:
     input:
-        "{project}/trimming/{sample}_1.fastq.gz"
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
     output:
-        "{project}/trimming/{sample}_1.names.txt"
+        "{project}/trimmomatic/{sample}_1.names.txt"
     shell: "zcat {input} | awk '(NR%4 == 1){{print $0}}' | cut -d' ' -f 1 | cut -c 2- > {output}" 
 
 rule diamond_filter:
     input:
         taxonomy="{project}/diamond/{sample}.diamond.nr-taxonomy.tsv",
-        reads = "{project}/trimming/{sample}_1.names.txt"
+        reads = "{project}/trimmomatic/{sample}_1.names.txt"
     output:
         taxonomy="{project}/diamond/{sample}.diamond.nr-taxonomy-filtered.tsv"
     params:
@@ -563,11 +593,14 @@ rule megahit:
         shell("gzip -c {output.contigs} > {output.contigs_gzip}")
 
 rule spades:
-   input:
-        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]),
-        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]),
-        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"])
-   output:
+    input:
+        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \ 
+           else expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
+        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
+           else expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
+        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
+           else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
+    output:
         "{project}/assembly/spades/contigs.fasta"
    params:
        outdir="{project}/assembly/spades/",
