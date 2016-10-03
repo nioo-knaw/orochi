@@ -570,7 +570,8 @@ rule spades:
    output:
         "{project}/assembly/spades/contigs.fasta"
    params:
-       outdir="{project}/assembly/spades/"
+       outdir="{project}/assembly/spades/",
+       kmers=config["kmers"]
    log:
        "{project}/assembly/spades/spades.log"
    threads: 32
@@ -578,7 +579,7 @@ rule spades:
        forward_str = " -1 ".join(input.forward)
        reverse_str = " -2 ".join(input.reverse) 
        unpaired_str = " -s ".join(input.unpaired)  
-       shell("ulimit -m 700000000; /data/tools/SPAdes/3.9.0/bin/metaspades.py -m 700 -1 {forward_str} -2 {reverse_str} -s {unpaired_str} --only-assembler -k 21,33,55,77,99,127 -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
+       shell("ulimit -m 700000000; /data/tools/SPAdes/3.9.0/bin/metaspades.py -m 700 -1 {forward_str} -2 {reverse_str} -s {unpaired_str} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
 
 # Interleave paired end reads and convert to fasta
 rule idba_prepare:
