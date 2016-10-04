@@ -243,7 +243,8 @@ rule nonpareil:
         "{project}/{sample}.nonpareil.npo"
     params:
         prefix="{project}/{sample}.nonpareil"
-    shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t 32 -R 400000"
+    threads: 32
+    shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t {threads} -R 400000 -L 80"
 
 rule megagta:
     input:
@@ -269,7 +270,7 @@ rule diamond_per_sample:
         tsv="{project}/diamond/{sample}.diamond.nr.tsv"
     params:
         reference=config["diamond_database"],
-        version="0.7.10",
+        version="0.8.20",
         output="{project}/diamond/{sample}.diamond.nr",
         format="tab",
         tmp="/tmp"        
