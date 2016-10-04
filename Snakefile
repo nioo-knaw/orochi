@@ -266,7 +266,7 @@ rule diamond_per_sample:
     input:
         "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
     output:
-        tsv="{project}/diamond/{sample}.diamond.nr.tsv"
+        tsv="{project}/diamond/{sample}.diamond.nr.daa"
     params:
         reference=config["diamond_database"],
         version="0.7.10",
@@ -276,15 +276,18 @@ rule diamond_per_sample:
     threads: 32
     run:
         shell("/data/tools/diamond/{params.version}/bin/diamond blastx -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}")
-        shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
+        #shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
 
 rule diamond_lca:
     input:
-        "{project}/diamond/{sample}.diamond.nr.tsv"
+        "{project}/diamond/{sample}.diamond.nr.daa"
     output:
         "{project}/diamond/{sample}.diamond.nr-taxonomy.tsv"
+    params:
+        megan_version=config['megan_version'],
+        megan_mapping=config['megan_mapping']
     # shell: "/data/tools/MEGAN/mtools/mtools/bin/lcamapper.sh -i {input} -f Detect -ms 50 -me 0.01 -tp 50 -gt /data/tools/MEGAN/mtools/mtools/data/gi_taxid_prot-4March2015.bin -o {output}"
-    shell: "java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/5.10.0/jars/MEGAN.jar:/data/tools/MEGAN/5.10.0/jars/data.jar' megan.tools.TaxonPathClassifier -i {input} -f Detect -ms 50 -me 0.01 -tp 50 -g2t /data/db/megan/gi_taxid_prot-4March2015.bin -o {output}"
+    shell: "java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping}"
 
 rule seq_names_forward:
     input:
