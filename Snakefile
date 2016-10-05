@@ -1243,12 +1243,14 @@ rule diamond_genes:
         version="0.7.10",
         output="{project}/genecatalog/allgenecalled.diamond.nr",
         format="tab",
-        tmp="/tmp"        
+        tmp="/tmp",
+        megan_version=config['megan_version'],
+        megan_mapping=config['megan_mapping']
     threads: 16
     run:
         shell("/data/tools/diamond/{params.version}/bin/diamond blastx --sensitive -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}")
         shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
-        shell("java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/5.10.0/jars/MEGAN.jar:/data/tools/MEGAN/5.10.0/jars/data.jar' megan.tools.TaxonPathClassifier -i {output.tsv} -f Detect -ms 50 -me 0.01 -tp 50 -g2t /data/db/megan/gi_taxid_prot-4March2015.bin -o {output.taxonomy}")
+        shell(java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {output.tsv} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping} -o {output.taxonomy}")
 
 rule kraken_genes:
     input:
