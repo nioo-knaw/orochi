@@ -1240,7 +1240,7 @@ rule diamond_genes:
         taxonomy="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy.tsv"
     params:
         reference=config["diamond_database"],
-        version="0.7.10",
+        version="0.8.20",
         output="{project}/genecatalog/allgenecalled.diamond.nr",
         format="tab",
         tmp="/tmp",
