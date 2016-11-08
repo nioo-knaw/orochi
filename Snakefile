@@ -283,7 +283,7 @@ rule diamond_lca:
     input:
         "{project}/diamond/{sample}.diamond.nr.daa"
     output:
-        "{project}/diamond/{sample}.diamond.nr-taxonomy.tsv"
+        "{project}/diamond/{sample}.diamond.nr-taxonomy.txt"
     params:
         megan_version=config['megan_version'],
         megan_mapping=config['megan_mapping']
