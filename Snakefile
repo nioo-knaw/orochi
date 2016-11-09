@@ -57,8 +57,8 @@ rule merge_and_rename:
         forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
         reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
     output:
-        forward="{project}/unpack/{sample}_1.fastq.gz",
-        reverse="{project}/unpack/{sample}_2.fastq.gz",
+        forward=temp("{project}/unpack/{sample}_1.fastq.gz"),
+        reverse=temp("{project}/unpack/{sample}_2.fastq.gz"),
     threads: 16
     run:
         if os.path.splitext(input[0])[1] == ".bz2":
@@ -106,10 +106,10 @@ rule trimmomatic:
         forward="{project}/unpack/{sample}_1.fastq.gz",
         reverse="{project}/unpack/{sample}_2.fastq.gz",
     output:
-        fw_paired="{project}/trimmomatic/{sample}_forward_paired.fq.gz",
-        fw_unpaired="{project}/trimmomatic/{sample}_forward_unpaired.fq.gz",
-        rev_paired="{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
-        rev_unpaired="{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz",
+        fw_paired=temp("{project}/trimmomatic/{sample}_forward_paired.fq.gz"),
+        fw_unpaired=temp("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz"),
+        rev_paired=temp("{project}/trimmomatic/{sample}_reverse_paired.fq.gz"),
+        rev_unpaired=temp("{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz"),
     params:
         adapters = config["adapters"]
     log:
@@ -121,7 +121,7 @@ rule readstat_raw:
     input:
         expand("{{project}}/unpack/{sample}.fastq", sample=config["data"])
     output:
-        "{project}/stats/raw.readstat.csv"
+        protected("{project}/stats/raw.readstat.csv")
     log:
         "{project}/stats/raw.readstat.log"
     shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/readstats.py {input} --csv -o {output} 2> {log}"
@@ -132,7 +132,7 @@ rule readstat_trim:
         reverse=expand("{{project}}/trimming/{sample}_2.fastq.gz", sample=config["data"]),
         unpaired=expand("{{project}}/trimming/{sample}_unpaired.fastq.gz", sample=config["data"]),
     output:
-        "{project}/stats/trimmed.readstat.csv"
+        protected("{project}/stats/trimmed.readstat.csv")
     log:
         "{project}/stats/trimmed.readstat.log"
     shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/readstats.py {input} --csv -o {output} 2> {log}"
@@ -144,10 +144,10 @@ rule host_removal:
         rev_paired="{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
         rev_unpaired="{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz",
     output:
-        fr_mapped_and_unmapped="{project}/host_filtering/{sample}_fr_mapped_and_unmapped.sam",
-        s_mapped_and_unmapped="{project}/host_filtering/{sample}_s_mapped_and_unmapped.sam",
-        fr_unmapped_pairs="{project}/host_filtering/{sample}_fr_unmapped_pairs.1",
-        s_unmapped="{project}/host_filtering/{sample}_s_unmapped",
+        fr_mapped_and_unmapped=temp("{project}/host_filtering/{sample}_fr_mapped_and_unmapped.sam"),
+        s_mapped_and_unmapped=temp("{project}/host_filtering/{sample}_s_mapped_and_unmapped.sam"),
+        fr_unmapped_pairs=temp("{project}/host_filtering/{sample}_fr_unmapped_pairs.1"),
+        s_unmapped=temp("{project}/host_filtering/{sample}_s_unmapped"),
     params:
         refindex=config["reference_index"],
         fr_unmapped_prefix="{project}/host_filtering/{sample}_fr_unmapped_pairs",
@@ -267,7 +267,7 @@ rule diamond_per_sample:
     input:
         "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
     output:
-        tsv="{project}/diamond/{sample}.diamond.nr.daa"
+        tsv=temp("{project}/diamond/{sample}.diamond.nr.daa")
     params:
         reference=config["diamond_database"],
         version="0.8.20",
@@ -283,7 +283,7 @@ rule diamond_lca:
     input:
         "{project}/diamond/{sample}.diamond.nr.daa"
     output:
-        "{project}/diamond/{sample}.diamond.nr-taxonomy.txt"
+        temp("{project}/diamond/{sample}.diamond.nr-taxonomy.txt")
     params:
         megan_version=config['megan_version'],
         megan_mapping=config['megan_mapping']
@@ -302,7 +302,7 @@ rule diamond_filter:
         taxonomy="{project}/diamond/{sample}.diamond.nr-taxonomy.txt",
         reads = "{project}/trimmomatic/{sample}_1.names.txt"
     output:
-        taxonomy="{project}/diamond/{sample}.diamond.nr-taxonomy-filtered.txt"
+        taxonomy=protected("{project}/diamond/{sample}.diamond.nr-taxonomy-filtered.txt")
     params:
         minscore="80"
     run:
@@ -613,7 +613,7 @@ rule spades:
         unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
            else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
     output:
-        "{project}/assembly/spades/contigs.fasta"
+        temp("{project}/assembly/spades/contigs.fasta")
     params:
         outdir="{project}/assembly/spades/",
         kmers=config["kmers"]
@@ -799,7 +799,7 @@ rule prepare_mmgenome_spades:
     input:
         "{project}/assembly/spades/contigs.fasta"
     output:
-        gzip="{project}/assembly/spades/assembly.fa.gz",
+        gzip=protected("{project}/assembly/spades/assembly.fa.gz"),
         fasta=temp("{project}/assembly/spades/assembly.fa")
     run:
         shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
