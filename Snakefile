@@ -775,7 +775,8 @@ rule bwa_mem_unpaired:
 
 rule samtools_merge:
     input:
-        expand("{{project}}/bamm/{{assembler}}/assembly.{sample}_R1_paired_filteredstq.bam", sample=config["data"])
+        expand("{{project}}/bamm/{{assembler}}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else \
+               "{{project}}/bamm/{{assembler}}/assembly.{sample}_forward_paired.bam", sample=config["data"])
     output:
         "{project}/bamm/{assembler}/assembly.bam"
     shell:
@@ -842,8 +843,8 @@ rule bamm_mmgenome:
         unpaired = "{project}/host_filtered/{sample}_R1R2_singular_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
         index="{project}/assembly/{assembler}/assembly.fa.gz.bwt"
     output:
-        "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filteredstq.bam",
-        "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filteredstq.bam.bai"
+        "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/assembly.{sample}_forward_paired.bam", 
+        "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/assembly.{sample}_forward_paired.bam.bai", 
     log:
         "{project}/bamm/{assembler}/{sample}.log"
     params:
