@@ -117,6 +117,14 @@ rule trimmomatic:
     threads: 16
     shell: "java -jar /data/tools/Trimmomatic/0.36/trimmomatic-0.36.jar PE -threads {threads} -phred33 {input.forward} {input.reverse} {output.fw_paired} {output.fw_unpaired} {output.rev_paired} {output.rev_unpaired} ILLUMINACLIP:{params.adapters}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:30 MINLEN:100 2> {log}"
 
+rule trimmomatic_combine_unpaired:
+    input:
+        fw_unpaired=temp("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz"),
+        rev_unpaired=temp("{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz"),
+    output:
+        "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz"
+    shell: "zcat {input} | gzip -c > {output}"
+   
 rule readstat_raw:
     input:
         expand("{{project}}/unpack/{sample}.fastq", sample=config["data"])
@@ -826,10 +834,12 @@ rule mmgenome_bwa_index:
 
 rule bamm_mmgenome:
     input:
-        contigs="{project}/assembly/{assembler}/assembly.fa.gz",
-        forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq",                        
-        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq", 
-        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq", 
+        contigs="{project}/assembly/{assembler}/assembly.fa.gz", 
+        forward = "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
+        unpaired = "{project}/host_filtered/{sample}_R1R2_singular_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
         index="{project}/assembly/{assembler}/assembly.fa.gz.bwt"
     output:
         "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filteredstq.bam",
