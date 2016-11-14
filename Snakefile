@@ -14,7 +14,7 @@ rule final:
     input: expand("{project}/stats/raw.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                   {project}/{sample}.nonpareil.npo \
+                   {project}/nonpareil/{sample}.nonpareil.npo \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
                    {project}/assembly/megahit/assembly.fa.gz \
@@ -248,11 +248,11 @@ rule nonpareil:
         "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
         "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
     output:
-        "{project}/{sample}.nonpareil.npo"
+        "{project}/nonpareil/{sample}.nonpareil.npo"
     params:
-        prefix="{project}/{sample}.nonpareil"
+        prefix="{project}/nonpareil/{sample}.nonpareil"
     threads: 32
-    shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t {threads} -R 400000 -L 80"
+    shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t {threads} -R 400000 -L 50"
 
 rule megagta:
     input:
