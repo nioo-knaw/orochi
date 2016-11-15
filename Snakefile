@@ -243,6 +243,14 @@ rule count_unpaired_reverse:
             sample = params.samples[i]
             shell("printf {sample}'\t' >> {output} && cat {file} | printf $((`wc -l`/4)) >> {output} && printf '\treverse\n' >> {output}")
 
+rule merge_per_treatment:
+    input:
+        lambda wildcards: expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", zip, sample=config["treatment"][wildcards.treatment])
+    output:
+        "{project}/treatment/{treatment}.fastq.gz"
+    shell: "zcat {input} | gzip -c > {output}"
+        
+
 rule nonpareil:
     input:
         "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \

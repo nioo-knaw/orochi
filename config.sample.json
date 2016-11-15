@@ -13,6 +13,11 @@
     "host_removal" : False,
     "assembler" : "spades",
     "kmers" : "33,55,77,99,127",
+    "treatment" : {
+        "A" : ["MPR1-1n-CUR", "MPR1-4n-EST"],
+        "B" : ["MPR3-3n-CUR"],
+    },
+
     "data" : {
   "MPR1-1n-CUR": { "forward":"MPR1-1n-CUR_1.fastq.gz", "reverse":"MPR1-1n-CUR_2.fastq.gz"},
   "MPR1-1n-EST": { "forward":"MPR1-1n-EST_1.fastq.gz", "reverse":"MPR1-1n-EST_2.fastq.gz"},
