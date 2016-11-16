@@ -606,14 +606,15 @@ rule megahit:
         contigs_gzip="{project}/assembly/megahit/final.contigs.fa.gz",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
         opts="{project}/assembly/megahit/opts.txt"
-    params: dir="{project}/assembly/megahit"
+    params:
+        dir="{project}/assembly/megahit",
+        kmers=config["kmers"]
     log: "{project}/assembly/megahit/megahit.log"
     threads: 16
     run:
         forward_str = ",".join(input.forward)
         reverse_str = ",".join(input.reverse) 
         unpaired_str = ",".join(input.unpaired) 
-
         # Parameter settings
         # meta            '--min-count 2 --k-list 21,41,61,81,99'             (generic metagenomes, default)
         # meta-sensitive  '--min-count 2 --k-list 21,31,41,51,61,71,81,91,99' (more sensitive but slower)
@@ -621,7 +622,7 @@ rule megahit:
         # bulk            '--min-count 3 --k-list 31,51,71,91,99 --no-mercy'  (experimental, standard bulk sequencing with >= 30x depth)
         # single-cell     '--min-count 3 --k-list 21,33,55,77,99,121 --merge_level 20,0.96' (experimental, single cell data)
 
-        shell("ulimit -m 700000000; /data/tools/megahit/1.0.6/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --presets meta -1 {forward_str} -2 {reverse_str} -r {unpaired_str} 2> {log}")
+        shell("ulimit -m 700000000; /data/tools/megahit/1.0.6/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --k-list {params.kmers} -1 {forward_str} -2 {reverse_str} -r {unpaired_str} 2> {log}")
         shell("gzip -c {output.contigs} > {output.contigs_gzip}")
 
 rule spades:
@@ -852,7 +853,7 @@ rule bamm_mmgenome:
         "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
         reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
         "{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
-        unpaired = "{project}/host_filtered/{sample}_R1R2_singular_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
+        unpaired = "{project}/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
         index="{project}/assembly/{assembler}/assembly.fa.gz.bwt"
     output:
         "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/assembly.{sample}_forward_paired.bam", 
