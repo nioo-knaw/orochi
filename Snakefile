@@ -14,7 +14,7 @@ rule final:
     input: expand("{project}/stats/raw.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                   {project}/nonpareil/{sample}.nonpareil.npo \
+                   {project}/nonpareil/{treatment}.nonpareil.npo \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
                    {project}/assembly/megahit/assembly.fa.gz \
@@ -22,7 +22,7 @@ rule final:
                    {project}/stats/{assembler}.assembly.flagstat.txt \
                    {project}/megagta/{sample}/opts.txt \
                    {project}/genecatalog/{assembler}/allgenecalled.faa.gz \
-                   {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], assembler=config["assembler"])
+                   {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"])
 
 """
 rule final:
@@ -245,7 +245,7 @@ rule count_unpaired_reverse:
 
 rule merge_per_treatment:
     input:
-        lambda wildcards: expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", zip, sample=config["treatment"][wildcards.treatment])
+        lambda wildcards: expand("{project}/trimmomatic/{sample}_forward_paired.fq.gz", project=config["project"], sample=config["treatment"][wildcards.treatment])
     output:
         "{project}/treatment/{treatment}.fastq.gz"
     shell: "zcat {input} | gzip -c > {output}"
@@ -253,12 +253,11 @@ rule merge_per_treatment:
 
 rule nonpareil:
     input:
-        "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
-        "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
+        "{project}/treatment/{treatment}.fastq.gz"
     output:
-        "{project}/nonpareil/{sample}.nonpareil.npo"
+        "{project}/nonpareil/{treatment}.nonpareil.npo"
     params:
-        prefix="{project}/nonpareil/{sample}.nonpareil"
+        prefix="{project}/nonpareil/{treatment}.nonpareil"
     threads: 32
     shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t {threads} -R 400000 -L 50"
 
