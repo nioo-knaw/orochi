@@ -14,7 +14,7 @@ rule final:
     input: expand("{project}/stats/raw.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                   {project}/nonpareil/{treatment}.nonpareil.npo \
+                   {project}/nonpareil/{treatment}.nonpareil.png \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
                    {project}/assembly/megahit/assembly.fa.gz \
@@ -260,6 +260,20 @@ rule nonpareil:
         prefix="{project}/nonpareil/{treatment}.nonpareil"
     threads: 32
     shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t {threads} -R 400000 -L 50"
+
+rule nonpareil_plot:
+    input:
+        "{project}/nonpareil/{treatment}.nonpareil.npo"
+    output:
+        "{project}/nonpareil/{treatment}.nonpareil.png"
+    run:
+        R("""
+        source("~/install/nonpareil/utils/Nonpareil.R")
+        png("{output}")
+        np <- Nonpareil.curve("{input}")
+        legend('bottomright', legend = c(paste("Coverage: ", round(np$C*100,digits=2), "%"),paste("Actual effort =", round(np$LR/1000000,digits=2), "Mbp"), paste("Required effort for 95% coverage=", round(np$LRstar/1000000,digits=2), "Mbp"), paste("Diversity =", round(np$diversity,digits=2))),bty = "n")
+        dev.off()
+        """)
 
 rule megagta:
     input:
