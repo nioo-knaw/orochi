@@ -602,14 +602,14 @@ rule megahit:
            else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
 
     output:
-        contigs="{project}/assembly/megahit/final.contigs.fa",
-        contigs_gzip="{project}/assembly/megahit/final.contigs.fa.gz",
+        contigs="{project}/assembly/megahit/{kmers}/final.contigs.fa",
+        contigs_gzip="{project}/assembly/megahit/{kmers}/final.contigs.fa.gz",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
-        opts="{project}/assembly/megahit/opts.txt"
+        opts="{project}/assembly/megahit/{kmers}/opts.txt"
     params:
-        dir="{project}/assembly/megahit",
-        kmers=config["kmers"]
-    log: "{project}/assembly/megahit/megahit.log"
+        dir="{project}/assembly/megahit/{kmers}/",
+        kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
+    log: "{project}/assembly/megahit/{kmers}/megahit.log"
     threads: 16
     run:
         forward_str = ",".join(input.forward)
