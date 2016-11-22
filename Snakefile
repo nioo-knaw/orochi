@@ -18,7 +18,7 @@ rule final:
                    {project}/nonpareil/{treatment}.nonpareil.png \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
-                   {project}/assembly/megahit/{kmers}/assembly.fa.gz \
+                   {project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}.assembly.flagstat.txt \
                    {project}/megagta/{sample}/opts.txt \
@@ -625,22 +625,18 @@ rule combine_reads:
 
 rule megahit:
     input:
-        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \ 
-           else expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
-        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
-           else expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
-        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
-           else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
-
+        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
     output:
-        contigs="{project}/assembly/megahit/{kmers}/final.contigs.fa",
-        contigs_gzip="{project}/assembly/megahit/{kmers}/final.contigs.fa.gz",
+        contigs="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
+        contigs_gzip="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa.gz",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
-        opts="{project}/assembly/megahit/{kmers}/opts.txt"
+        opts="{project}/assembly/megahit/{treatment}/{kmers}/opts.txt"
     params:
-        dir="{project}/assembly/megahit/{kmers}/",
+        dir="{project}/assembly/megahit/{treatment}/{kmers}/",
         kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
-    log: "{project}/assembly/megahit/{kmers}/megahit.log"
+    log: "{project}/assembly/megahit/{treatment}/{kmers}/megahit.log"
     threads: 16
     run:
         forward_str = ",".join(input.forward)
