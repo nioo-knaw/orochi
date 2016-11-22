@@ -15,7 +15,6 @@ rule final:
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/nonpareil/{treatment}.nonpareil.npo \
-                   {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
                    {project}/assembly/megahit/assembly.fa.gz \
                    {project}/stats/{assembler}.quast.report.txt \
@@ -245,15 +244,30 @@ rule count_unpaired_reverse:
 
 rule merge_per_treatment:
     input:
-        lambda wildcards: expand("{project}/trimmomatic/{sample}_forward_paired.fq.gz", project=config["project"], sample=config["treatment"][wildcards.treatment])
+#        lambda wildcards: expand("{project}/trimmomatic/{sample}_forward_paired.fq.gz", project=config["project"], sample=config["treatment"][wildcards.treatment])
+        forward=lambda wildcards: expand("{project}/host_filtering/{sample}_R1_paired_filtered.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \ 
+           else lambda wildcards: expand("{project}/trimmomatic/{sample}_forward_paired.fq.gz", project=config["project"], sample=config["treatment"][wildcards.treatment]),
+        reverse=lambda wildcards: expand("{project}/host_filtering/{sample}_R2_paired_filtered.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
+           else lambda wildcards: expand("{project}/trimmomatic/{sample}_reverse_paired.fq.gz", project=config["project"], sample=config["treatment"][wildcards.treatment]),
+        unpaired=lambda wildcards: expand("{project}/host_filtering/{sample}_unpaired_filtered.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
+           else lambda wildcards: expand("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz", project=config["project"], sample=config["treatment"][wildcards.treatment])
     output:
-        "{project}/treatment/{treatment}.fastq.gz"
-    shell: "zcat {input} | gzip -c > {output}"
-        
+        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
+    run: 
+        if config['host_removal']:
+            shell("cat {input.forward} | gzip -c > {output.forward}")
+            shell("cat {input.reverse} | gzip -c > {output.reverse}")
+            shell("cat {input.unpaired} | gzip -c > {output.unpaired}")
+        else:
+            shell("zcat {input.forward} | gzip -c > {output.forward}")
+            shell("zcat {input.reverse} | gzip -c > {output.reverse}")
+            shell("zcat {input.unpaired} | gzip -c > {output.unpaired}")
 
 rule nonpareil:
     input:
-        "{project}/treatment/{treatment}.fastq.gz"
+        "{project}/treatment/{treatment}_forward.fastq.gz"
     output:
         "{project}/nonpareil/{treatment}.nonpareil.npo"
     params:
