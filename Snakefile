@@ -12,17 +12,18 @@ configfile: "config.json"
 
 rule final:
     input: expand("{project}/stats/raw.readstat.csv \
+                   {project}/stats/trimmed.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/nonpareil/{treatment}.nonpareil.png \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
-                   {project}/assembly/megahit/assembly.fa.gz \
+                   {project}/assembly/megahit/{kmers}/assembly.fa.gz \
                    {project}/stats/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}.assembly.flagstat.txt \
                    {project}/megagta/{sample}/opts.txt \
                    {project}/genecatalog/{assembler}/allgenecalled.faa.gz \
-                   {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"])
+                   {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=lambda wildcards: config["assembly-klist"][wildcards.kmers])
 
 """
 rule final:
@@ -136,9 +137,11 @@ rule readstat_raw:
  
 rule readstat_trim:
     input:
-        forward=expand("{{project}}/trimming/{sample}_1.fastq.gz", sample=config["data"]),
-        reverse=expand("{{project}}/trimming/{sample}_2.fastq.gz", sample=config["data"]),
-        unpaired=expand("{{project}}/trimming/{sample}_unpaired.fastq.gz", sample=config["data"]),
+#        forward=expand("{{project}}/trimming/{sample}_1.fastq.gz", sample=config["data"]),
+        fw_paired=expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
+        fw_unpaired=expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"]),
+        rev_paired=expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
+        rev_unpaired=expand("{{project}}/trimmomatic/{sample}_reverse_unpaired.fq.gz", sample=config["data"]),
     output:
         protected("{project}/stats/trimmed.readstat.csv")
     log:
@@ -822,10 +825,10 @@ rule samtools_flagstat:
 
 rule prepare_mmgenome:
     input:
-        "{project}/assembly/megahit/final.contigs.fa.gz"
+        "{project}/assembly/megahit/{kmers}/final.contigs.fa.gz"
     output:
-        gzip="{project}/assembly/megahit/assembly.fa.gz",
-        fasta=temp("{project}/assembly/megahit/assembly.fa")
+        gzip="{project}/assembly/megahit/{kmers}/assembly.fa.gz",
+        fasta=temp("{project}/assembly/megahit/{kmers}/assembly.fa")
     run:
         shell("zcat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
