@@ -12,16 +12,18 @@ configfile: "config.json"
 
 rule final:
     input: expand("{project}/stats/raw.readstat.csv \
+                   {project}/stats/trimmed.readstat.csv \
                    {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                   {project}/nonpareil/{treatment}.nonpareil.npo \
+                   {project}/nonpareil/{treatment}.nonpareil.png \
+                   {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
-                   {project}/assembly/megahit/assembly.fa.gz \
+                   {project}/assembly/megahit/{kmers}/assembly.fa.gz \
                    {project}/stats/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}.assembly.flagstat.txt \
                    {project}/megagta/{sample}/opts.txt \
                    {project}/genecatalog/{assembler}/allgenecalled.faa.gz \
-                   {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"])
+                   {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=lambda wildcards: config["assembly-klist"][wildcards.kmers])
 
 """
 rule final:
@@ -135,9 +137,11 @@ rule readstat_raw:
  
 rule readstat_trim:
     input:
-        forward=expand("{{project}}/trimming/{sample}_1.fastq.gz", sample=config["data"]),
-        reverse=expand("{{project}}/trimming/{sample}_2.fastq.gz", sample=config["data"]),
-        unpaired=expand("{{project}}/trimming/{sample}_unpaired.fastq.gz", sample=config["data"]),
+#        forward=expand("{{project}}/trimming/{sample}_1.fastq.gz", sample=config["data"]),
+        fw_paired=expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
+        fw_unpaired=expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"]),
+        rev_paired=expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
+        rev_unpaired=expand("{{project}}/trimmomatic/{sample}_reverse_unpaired.fq.gz", sample=config["data"]),
     output:
         protected("{project}/stats/trimmed.readstat.csv")
     log:
@@ -274,6 +278,20 @@ rule nonpareil:
         prefix="{project}/nonpareil/{treatment}.nonpareil"
     threads: 32
     shell: "/data/tools/nonpareil/2.4/bin/nonpareil -b {params.prefix} -s {input} -f fastq -t {threads} -R 400000 -L 50"
+
+rule nonpareil_plot:
+    input:
+        "{project}/nonpareil/{treatment}.nonpareil.npo"
+    output:
+        "{project}/nonpareil/{treatment}.nonpareil.png"
+    run:
+        R("""
+        source("~/install/nonpareil/utils/Nonpareil.R")
+        png("{output}")
+        np <- Nonpareil.curve("{input}")
+        legend('bottomright', legend = c(paste("Coverage: ", round(np$C*100,digits=2), "%"),paste("Actual effort =", round(np$LR/1000000,digits=2), "Mbp"), paste("Required effort for 95% coverage=", round(np$LRstar/1000000,digits=2), "Mbp"), paste("Diversity =", round(np$diversity,digits=2))),bty = "n")
+        dev.off()
+        """)
 
 rule megagta:
     input:
@@ -822,10 +840,10 @@ rule samtools_flagstat:
 
 rule prepare_mmgenome:
     input:
-        "{project}/assembly/megahit/final.contigs.fa.gz"
+        "{project}/assembly/megahit/{kmers}/final.contigs.fa.gz"
     output:
-        gzip="{project}/assembly/megahit/assembly.fa.gz",
-        fasta=temp("{project}/assembly/megahit/assembly.fa")
+        gzip="{project}/assembly/megahit/{kmers}/assembly.fa.gz",
+        fasta=temp("{project}/assembly/megahit/{kmers}/assembly.fa")
     run:
         shell("zcat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
