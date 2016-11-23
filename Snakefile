@@ -649,7 +649,7 @@ rule megahit:
         # bulk            '--min-count 3 --k-list 31,51,71,91,99 --no-mercy'  (experimental, standard bulk sequencing with >= 30x depth)
         # single-cell     '--min-count 3 --k-list 21,33,55,77,99,121 --merge_level 20,0.96' (experimental, single cell data)
 
-        shell("ulimit -m 700000000; /data/tools/megahit/1.0.6/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --k-list {params.kmers} -1 {forward} -2 {reverse} -r {unpaired} 2> {log}")
+        shell("ulimit -m 700000000; /data/tools/megahit/1.0.6/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} -r {input.unpaired} 2> {log}")
         shell("gzip -c {output.contigs} > {output.contigs_gzip}")
 
 rule spades:
