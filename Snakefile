@@ -13,12 +13,11 @@ configfile: "config.json"
 rule final:
     input: expand("{project}/stats/raw.readstat.csv \
                    {project}/stats/trimmed.readstat.csv \
-                   {project}/trimming/{sample}_1.fastq \
                    {project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/nonpareil/{treatment}.nonpareil.png \
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
-                   {project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz \
+                   {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/megagta/{sample}/opts.txt".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
