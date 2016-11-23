@@ -19,11 +19,12 @@ rule final:
                    {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
                    {project}/diamond/{project}.RData \
                    {project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz \
-                   {project}/stats/{assembler}.quast.report.txt \
-                   {project}/stats/{assembler}.assembly.flagstat.txt \
-                   {project}/megagta/{sample}/opts.txt \
-                   {project}/genecatalog/{assembler}/allgenecalled.faa.gz \
-                   {project}/genecatalog/{assembler}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
+                   {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
+                   {project}/megagta/{sample}/opts.txt".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+
+#{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz \
+#{project}/genecatalog/{assembler}/all.coverage.tsv
 
 """
 rule final:
@@ -703,14 +704,14 @@ rule idba:
 
 rule quast:
     input:
-        "{project}/assembly/{assembler}/assembly.fa.gz"
+        "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
-        quast="{project}/assembly/{assembler}/quast/report.txt",
-        stats="{project}/stats/{assembler}.quast.report.txt"
+        quast="{project}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt",
+        stats="{project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt"
     params:
-        outdir="{project}/assembly/{assembler}/quast"
+        outdir="{project}/assembly/{assembler}/{treatment}/{kmers}/quast"
     log:
-        "{project}/assembly/{assembler}/quast/quast.log"
+        "{project}/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
     threads: 16
     run:
         shell("python2.7 /data/tools/quast/4.1/bin/metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}")
@@ -815,18 +816,18 @@ rule bwa_mem_unpaired:
 
 rule samtools_merge:
     input:
-        expand("{{project}}/bamm/{{assembler}}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else \
-               "{{project}}/bamm/{{assembler}}/assembly.{sample}_forward_paired.bam", sample=config["data"])
+        expand("{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else \
+               "{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_forward_paired.bam", sample=config["data"])
     output:
-        "{project}/bamm/{assembler}/assembly.bam"
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
     shell:
         "samtools merge {output} {input}"
     
 rule samtools_flagstat:
     input:
-        "{project}/bamm/{assembler}/assembly.bam"
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
     output:
-        "{project}/stats/{assembler}.assembly.flagstat.txt"
+        "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     shell:
         "samtools flagstat {input} > {output}"
 
@@ -867,28 +868,28 @@ rule prepare_mmgenome_idba:
 
 rule mmgenome_bwa_index:
     input:
-         "{project}/assembly/{assembler}/assembly.fa.gz"
+         "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
-        "{project}/assembly/{assembler}/assembly.fa.gz.bwt"
-    log: "{project}/assembly/{assembler}/bwa-index.log"
+        "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz.bwt"
+    log: "{project}/assembly/{assembler}/{treatment}/{kmers}/bwa-index.log"
     shell: "/data/tools/bwa/default/bin/bwa index {input} > {log}"
 
 rule bamm_mmgenome:
     input:
-        contigs="{project}/assembly/{assembler}/assembly.fa.gz", 
+        contigs="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz", 
         forward = "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
         "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
         reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
         "{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
         unpaired = "{project}/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
-        index="{project}/assembly/{assembler}/assembly.fa.gz.bwt"
+        index="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz.bwt"
     output:
-        "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/assembly.{sample}_forward_paired.bam", 
-        "{project}/bamm/{assembler}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/assembly.{sample}_forward_paired.bam.bai", 
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
     log:
-        "{project}/bamm/{assembler}/{sample}.log"
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log"
     params:
-        outdir="{project}/bamm/{assembler}"
+        outdir="{project}/bamm/{assembler}/{treatment}/{kmers}"
     threads: 16
     shell: "set +u ;source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; set -u; bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
@@ -901,13 +902,13 @@ rule mmgenome_coverage:
 
 rule mmgenome_orfs:
     input:
-        "{project}/assembly/{assembler}/assembly.fa.gz"
+        "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
-        orfs="{project}/mmgenome/{assembler}/orfs.faa",
-        nucleotide="{project}/mmgenome/{assembler}/orfs.fna",
-        orfscleaned="{project}/mmgenome/{assembler}/orfs.clean.faa"
+        orfs="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa",
+        nucleotide="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna",
+        orfscleaned="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
     log:
-        "{project}/mmgenome/{assembler}/prodigal.log"
+        "{project}/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
     run:
         shell("zcat {input} | prodigal -d {output.nucleotide} -a {output.orfs} -i /dev/stdin -m -o {log} -p meta -q")
         shell("cut -f1 -d ' ' {output.orfs} > {output.orfscleaned}")
