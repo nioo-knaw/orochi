@@ -107,10 +107,10 @@ rule trimmomatic:
         forward="{project}/unpack/{sample}_1.fastq.gz",
         reverse="{project}/unpack/{sample}_2.fastq.gz",
     output:
-        fw_paired=temp("{project}/trimmomatic/{sample}_forward_paired.fq.gz"),
-        fw_unpaired=temp("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz"),
-        rev_paired=temp("{project}/trimmomatic/{sample}_reverse_paired.fq.gz"),
-        rev_unpaired=temp("{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz"),
+        fw_paired=protected("{project}/trimmomatic/{sample}_forward_paired.fq.gz"),
+        fw_unpaired=protected("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz"),
+        rev_paired=protected("{project}/trimmomatic/{sample}_reverse_paired.fq.gz"),
+        rev_unpaired=protected("{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz"),
     params:
         adapters = config["adapters"]
     log:
@@ -836,10 +836,10 @@ rule samtools_flagstat:
 
 rule prepare_mmgenome:
     input:
-        "{project}/assembly/megahit/{kmers}/final.contigs.fa.gz"
+        "{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa.gz"
     output:
-        gzip="{project}/assembly/megahit/{kmers}/assembly.fa.gz",
-        fasta=temp("{project}/assembly/megahit/{kmers}/assembly.fa")
+        gzip="{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
+        fasta=temp("{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa")
     run:
         shell("zcat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
