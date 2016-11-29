@@ -815,8 +815,9 @@ rule bwa_mem_unpaired:
 
 rule samtools_merge:
     input:
-        expand("{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else \
-               "{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_forward_paired.bam", sample=config["data"])
+        #expand("{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else \
+        #       "{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_forward_paired.bam", sample=config["data"])
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam"
     output:
         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
     shell:
@@ -876,17 +877,22 @@ rule mmgenome_bwa_index:
 rule bamm_mmgenome:
     input:
         contigs="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz", 
-        forward = "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
-        "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
-        reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
-        "{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
-        unpaired = "{project}/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
+        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz",
+#        forward = "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
+#        "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+#        reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
+#        "{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
+#        unpaired = "{project}/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
         index="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz.bwt"
     output:
-        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
-        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
+#        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
+#        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
+         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam",
+         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam.bai"
     log:
-        "{project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log"
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/{treatment}.log"
     params:
         outdir="{project}/bamm/{assembler}/{treatment}/{kmers}"
     threads: 16
