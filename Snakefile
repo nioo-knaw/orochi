@@ -58,8 +58,8 @@ rule merge_and_rename:
         forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
         reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
     output:
-        forward=temp("{project}/unpack/{sample}_1.fastq.gz"),
-        reverse=temp("{project}/unpack/{sample}_2.fastq.gz"),
+        forward=protected("{project}/unpack/{sample}_1.fastq.gz"),
+        reverse=protected("{project}/unpack/{sample}_2.fastq.gz"),
     threads: 16
     run:
         if os.path.splitext(input[0])[1] == ".bz2":
@@ -820,14 +820,19 @@ rule samtools_merge:
         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam"
     output:
         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
+    conda:
+        "envs/samtools.yaml"
     shell:
         "samtools merge {output} {input}"
     
 rule samtools_flagstat:
     input:
-        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
+#        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam"
     output:
         "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
+    conda:
+        "envs/samtools.yaml"
     shell:
         "samtools flagstat {input} > {output}"
 
