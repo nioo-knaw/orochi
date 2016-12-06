@@ -20,7 +20,13 @@ rule final:
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
-                   {project}/megagta/{sample}/opts.txt".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/megagta/{sample}/opts.txt \
+                   {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna.gz \
+                   {project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_forward.bam".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+
+
+#                   {project}/genecatalog/{assembler}/{kmers}/allgenecalled.centroids.fna \
+#                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 #{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz \
 #{project}/genecatalog/{assembler}/all.coverage.tsv
@@ -901,6 +907,8 @@ rule bamm_mmgenome:
     params:
         outdir="{project}/bamm/{assembler}/{treatment}/{kmers}"
     threads: 16
+    conda:
+        "envs/bwa.yaml"
     shell: "set +u ;source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; set -u; bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
 rule mmgenome_coverage:
@@ -1091,11 +1099,13 @@ rule genemark:
 #TODO: Fix header, few duplicates present after merging    
 rule orfs_unique:
     input:
-        nucleotide="{project}/mmgenome/{assembler}/orfs.fna",
-        protein="{project}/mmgenome/{assembler}/orfs.faa",
+#        nucleotide="{project}/mmgenome/{assembler}/orfs.fna",
+#        protein="{project}/mmgenome/{assembler}/orfs.faa",
+         nucleotide="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna",
+         protein="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa"
     output:
-        nucleotide="{project}/mmgenome/{assembler}/orfs.fna.gz",
-        protein="{project}/mmgenome/{assembler}/orfs.faa.gz"
+        nucleotide="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna.gz",
+        protein="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz"
     params:
         # TODO: does this needs to be changed?
         prefix="prefix"
@@ -1118,22 +1128,31 @@ rule genemark_merge:
         shell("zcat {input.nucleotide} | gzip > {output.nucleotide}")
         shell("zcat {input.protein} | gzip > {output.protein}")
 
+rule assembly_merge:
+    input:
+        expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.fna.gz", treatment=config["treatment"])
+    output:
+        "{project}/genecatalog/{assembler}/{kmers}/all.fna.gz" 
+    shell: "zcat {input} | gzip >  {output}"
+
 rule genecatalog:
     input:
-        "{project}/mmgenome/{assembler}/orfs.fna.gz"
+        "{project}/genecatalog/{assembler}/{kmers}/all.fna.gz"
     output:
-        clusters="{project}/genecatalog/{assembler}/allgenecalled.clusters.uc",
-        fasta="{project}/genecatalog/{assembler}/allgenecalled.centroids.fna"
-    threads: 16
+        clusters="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.clusters.uc",
+        fasta="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.centroids.fna"
+    threads: 24
+    conda:
+        "envs/vsearch.yaml"
     shell: "vsearch -cluster_fast {input} -id 0.95 -idprefix 4 -target_cov .9 -consout {output.fasta} -uc {output.clusters} -threads {threads}"
 
 rule genecatalog_aa:
     input:
-        genecatalog="{project}/genecatalog/{assembler}/allgenecalled.centroids.fna",
-        protein="{project}/mmgenome/{assembler}/orfs.faa.gz"
+        genecatalog="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.centroids.fna",
+        protein=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.faa.gz", treatment=config["treatment"])
     output:
-        nucleotide="{project}/genecatalog/{assembler}/allgenecalled.fna.gz",
-        protein="{project}/genecatalog/{assembler}/allgenecalled.faa.gz"
+        nucleotide="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz",
+        protein="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz"
     run: 
         # Select the headers of the nucleotide sequences in the genecatalog
         # Select the seqids inbetween the = and ;
@@ -1146,39 +1165,42 @@ rule genecatalog_aa:
 
 rule genecatalog_bwa_index:
    input:
-       genes="{project}/genecatalog/{assembler}/allgenecalled.fna.gz"
+       genes="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz"
    output:
-       index="{project}/genecatalog/{assembler}/allgenecalled.fna.gz.bwt"
+       index="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz.bwt"
    shell: "bwa index {input}"
 
 rule map_to_genes:
     input:
-        genes="{project}/genecatalog/{assembler}/allgenecalled.fna.gz",
-        index="{project}/genecatalog/{assembler}/allgenecalled.fna.gz.bwt",
-        forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq",
-        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq",
-        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq"
+        genes="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz",
+        index="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz.bwt",
+        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
+#        forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq",
+#        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq",
+#        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq"
     output:
-        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.bam",
-        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.bam.bai",
-        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.bam",
-        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.bam.bai"
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_forward.bam",
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_forward.bam.bai",
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_unpaired.bam",
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_unpaired.bam.bai"
 
     log:
-        "{project}/genecatalog/{assembler}/{sample}/mapping.log"
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/mapping.log"
     params:
-        outdir="{project}/genecatalog/{assembler}/{sample}"
+        outdir="{project}/genecatalog/{assembler}/treatment}/{kmers}/"
     threads: 16
     # Use --kept to re/multi use preindexed reference. Otherwise with --force the indexes are rebuild every time
     shell: "source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
 
 rule coveragetable: 
     input: 
-        paired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.bam",
-        unpaired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.bam"
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_1.bam",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_unpaired.bam"
     output:
-        paired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.coverage.tsv",
-        unpaired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_1.coverage.tsv",
+        unpaired = "{project}/genec:atalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"
     threads: 16
     run:
         shell("source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; bamm parse -c {output.paired} -m counts -b {input.paired} -t {threads}")
@@ -1186,10 +1208,10 @@ rule coveragetable:
 
 rule fixcounts:
     input:
-        paired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_1.coverage.tsv",
-        unpaired = "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"  
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_1.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"  
     output:
-        "{project}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}.coverage.tsv",
+        "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}.coverage.tsv",
     run:
         import pandas as pd
         import numpy as np
@@ -1211,9 +1233,9 @@ rule fixcounts:
 
 rule combine_counts:
     input:
-        expand("{{project}}/genecatalog/{assembler}/{sample}/allgenecalled.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
+        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{sample}/allgenecalled.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
     output:
-        "{project}/genecatalog/{assembler}/all.coverage.tsv"
+        "{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     run:       
         # Each file has 3 columns: gene,length,count. Get the total. 
         nc = len(input)*3
