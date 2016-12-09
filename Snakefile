@@ -22,10 +22,10 @@ rule final:
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/megagta/{sample}/opts.txt \
                    {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna.gz \
-                   {project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_forward.bam".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 
-#                   {project}/genecatalog/{assembler}/{kmers}/allgenecalled.centroids.fna \
+#                   {project}/genecatalog/{assembler}/{kmers}/all.centroids.fna \
 #                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 #{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz \
@@ -1128,12 +1128,16 @@ rule genemark_merge:
         shell("zcat {input.nucleotide} | gzip > {output.nucleotide}")
         shell("zcat {input.protein} | gzip > {output.protein}")
 
-rule assembly_merge:
+rule orfs_merge:
     input:
-        expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.fna.gz", treatment=config["treatment"])
+        nucleotide=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.fna.gz", treatment=config["treatment"]),
+        protein=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.faa.gz", treatment=config["treatment"])
     output:
-        "{project}/genecatalog/{assembler}/{kmers}/all.fna.gz" 
-    shell: "zcat {input} | gzip >  {output}"
+        nucleotide="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz",
+        protein="{project}/genecatalog/{assembler}/{kmers}/all.faa.gz"
+    run:
+        shell("zcat {input.nucleotide} | gzip >  {output.nucleotide}")
+        shell("zcat {input.protein} | gzip >  {output.protein}")
 
 rule genecatalog:
     input:
@@ -1149,10 +1153,11 @@ rule genecatalog:
 rule genecatalog_aa:
     input:
         genecatalog="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.centroids.fna",
+#        protein="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz",
         protein=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.faa.gz", treatment=config["treatment"])
     output:
         nucleotide="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz",
-        protein="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz"
+        protein="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz",
     run: 
         # Select the headers of the nucleotide sequences in the genecatalog
         # Select the seqids inbetween the = and ;
@@ -1161,19 +1166,20 @@ rule genecatalog_aa:
         # Make sure the nucleotide sequences have the same as the proteins
         shell("awk -F'[=;]' '/^>/ {{$0=\">\"$2}}1' {input.genecatalog} | gzip > {output.nucleotide}")
 
-# bwa index 1511KMI-0007/genecatalog/allgenecalled.centroids.fa
 
 rule genecatalog_bwa_index:
    input:
-       genes="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz"
+       genes="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz"
    output:
-       index="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz.bwt"
+       index="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz.bwt"
+   conda:
+        "envs/bwa.yaml"
    shell: "bwa index {input}"
 
 rule map_to_genes:
     input:
-        genes="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz",
-        index="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz.bwt",
+        genes="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz",
+        index="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz.bwt",
         forward = "{project}/treatment/{treatment}_forward.fastq.gz",
         reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
         unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
@@ -1181,10 +1187,10 @@ rule map_to_genes:
 #        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq",
 #        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq"
     output:
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_forward.bam",
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_forward.bam.bai",
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_unpaired.bam",
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/allgenecalled.{treatment}_unpaired.bam.bai"
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam",
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam.bai",
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_unpaired.bam",
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_unpaired.bam.bai"
 
     log:
         "{project}/genecatalog/{assembler}/{treatment}/{kmers}/mapping.log"
@@ -1196,11 +1202,11 @@ rule map_to_genes:
 
 rule coveragetable: 
     input: 
-        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_1.bam",
-        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_unpaired.bam"
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_1.bam",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.bam"
     output:
-        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_1.coverage.tsv",
-        unpaired = "{project}/genec:atalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_1.coverage.tsv",
+        unpaired = "{project}/genec:atalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"
     threads: 16
     run:
         shell("source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; bamm parse -c {output.paired} -m counts -b {input.paired} -t {threads}")
@@ -1208,10 +1214,10 @@ rule coveragetable:
 
 rule fixcounts:
     input:
-        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_1.coverage.tsv",
-        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"  
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_1.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"  
     output:
-        "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}.coverage.tsv",
+        "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}.coverage.tsv",
     run:
         import pandas as pd
         import numpy as np
@@ -1233,7 +1239,7 @@ rule fixcounts:
 
 rule combine_counts:
     input:
-        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{sample}/allgenecalled.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
+        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{sample}/all.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
     output:
         "{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     run:       
@@ -1318,14 +1324,14 @@ rule to_hdf5:
 
 rule diamond_genes:
     input:
-        fasta="{project}/genecatalog/allgenecalled.fna.gz"
+        fasta="{project}/genecatalog/all.fna.gz"
     output:
-        tsv="{project}/genecatalog/allgenecalled.diamond.nr.tsv",
-        taxonomy="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy.tsv"
+        tsv="{project}/genecatalog/all.diamond.nr.tsv",
+        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy.tsv"
     params:
         reference=config["diamond_database"],
         version="0.8.20",
-        output="{project}/genecatalog/allgenecalled.diamond.nr",
+        output="{project}/genecatalog/all.diamond.nr",
         format="tab",
         tmp="/tmp",
         megan_version=config['megan_version'],
@@ -1338,13 +1344,13 @@ rule diamond_genes:
 
 rule kraken_genes:
     input:
-        fasta="{project}/genecatalog/allgenecalled.fna.gz"
+        fasta="{project}/genecatalog/all.fna.gz"
     output:
-        kraken = "{project}/genecatalog/allgenecalled.kraken",
-        taxonomy = "{project}/genecatalog/allgenecalled.kraken.taxonomy",
-        report = "{project}/genecatalog/allgenecalled.kraken.report"
+        kraken = "{project}/genecatalog/all.kraken",
+        taxonomy = "{project}/genecatalog/all.kraken.taxonomy",
+        report = "{project}/genecatalog/all.kraken.report"
     log:
-        "{project}/genecatalog/allgenecalled.kraken.log"
+        "{project}/genecatalog/all.kraken.log"
     threads: 16
     run:
         shell("/data/tools/kraken/0.10.5-beta/bin/kraken --preload --db /data/db/kraken/ --threads {threads} --fasta-input {input} --gzip-compressed --check-names --output {output.kraken} 2> {log}")
@@ -1353,10 +1359,10 @@ rule kraken_genes:
 
 rule kraken_filter:
     input:
-        taxonomy = "{project}/genecatalog/allgenecalled.kraken.taxonomy",
+        taxonomy = "{project}/genecatalog/all.kraken.taxonomy",
         biom="{project}/genecatalog/all.coverage.tsv"
     output:
-        taxonomy = "{project}/genecatalog/allgenecalled.kraken.filtered.taxonomy",
+        taxonomy = "{project}/genecatalog/all.kraken.filtered.taxonomy",
     run:
         # Add missing genes as unclassified
         # The list needs to be complete in order to merge with the BIOM file
@@ -1377,7 +1383,7 @@ rule kraken_filter:
 rule biom_add_kraken_taxonomy:
     input:
         biom="{project}/genecatalog/all.coverage.norm.tpm.biom",
-        taxonomy = "{project}/genecatalog/allgenecalled.kraken.filtered.taxonomy",
+        taxonomy = "{project}/genecatalog/all.kraken.filtered.taxonomy",
     output:
        "{project}/genecatalog/all.coverage.norm.tpm.taxonomy.kraken.biom"
     run:
@@ -1385,10 +1391,10 @@ rule biom_add_kraken_taxonomy:
 
 rule diamond_genes_filter:
     input:
-        taxonomy="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy.tsv",
+        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy.tsv",
         biom="{project}/genecatalog/all.coverage.tsv"
     output:
-        taxonomy="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy-filtered.tsv"
+        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy-filtered.tsv"
     params:
         minscore="80"
     run:
@@ -1429,16 +1435,16 @@ rule diamond_genes_filter:
 
 rule diamond_genes_split:
     input:
-        taxonomy="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy-filtered.tsv"
+        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy-filtered.tsv"
     output:
-        taxonomy="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy-filtered-split.tsv"
+        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy-filtered-split.tsv"
     shell: "cat {input} | tr ';' '\t' > {output}"
 
 
 rule biom_add_diamond_taxonomy:
     input:
         biom="{project}/genecatalog/all.coverage.norm.tpm.biom",
-        taxonomy="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy-filtered.tsv"
+        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy-filtered.tsv"
     output:
        "{project}/genecatalog/all.coverage.norm.tpm.taxonomy.biom"
     run:
@@ -1447,8 +1453,8 @@ rule biom_add_diamond_taxonomy:
 rule merge_taxonomy:
     input:
         table="{project}/genecatalog/all.coverage.norm.tpm.tsv",
-        taxdiamond="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy-filtered.tsv",
-        taxkraken="{project}/genecatalog/allgenecalled.kraken.filtered.taxonomy",
+        taxdiamond="{project}/genecatalog/all.diamond.nr-taxonomy-filtered.tsv",
+        taxkraken="{project}/genecatalog/all.kraken.filtered.taxonomy",
     output:
         "{project}/genecatalog/all.coverage.norm.tpm.taxonomy.tsv"
     run:
@@ -1474,7 +1480,7 @@ rule merge_taxonomy:
 #
 rule taxator_align:
     input:
-        fasta="{project}/genecatalog/allgenecalled.fna.gz"
+        fasta="{project}/genecatalog/all.fna.gz"
     output:
         alignment="{project}/genecatalog/taxator-tk/R1.alignments.gz"
     threads: 16
@@ -1484,7 +1490,7 @@ rule taxator_align:
 
 rule taxator_predict:
     input:
-        fasta="{project}/genecatalog/allgenecalled.fna",
+        fasta="{project}/genecatalog/all.fna",
         alignment="{project}/genecatalog/taxator-tk/R1.alignments.gz"
     output:
         "{project}/genecatalog/taxator-tk/R1.gff"
@@ -1509,11 +1515,11 @@ rule taxator_annotate:
 
 rule uproc_genes:
     input:
-        "{project}/genecatalog/allgenecalled.faa.gz"
+        "{project}/genecatalog/all.faa.gz"
     output:
-        kegg="{project}/genecatalog/uproc/allgenecalled.uproc.kegg.txt",
-        cog="{project}/genecatalog/uproc/allgenecalled.uproc.cog.txt",
-        pfam="{project}/genecatalog/uproc/allgenecalled.uproc.pfam.txt",
+        kegg="{project}/genecatalog/uproc/all.uproc.kegg.txt",
+        cog="{project}/genecatalog/uproc/all.uproc.cog.txt",
+        pfam="{project}/genecatalog/uproc/all.uproc.pfam.txt",
     threads: 8
     run:
         shell("uproc-prot --preds -o {output.kegg} /data/db/uproc/kegg_20140317/ /data/db/uproc/model {input}")
@@ -1522,10 +1528,10 @@ rule uproc_genes:
 
 rule uproc_filter_ko:
     input:
-        kegg="{project}/genecatalog/uproc/allgenecalled.uproc.kegg.txt",
+        kegg="{project}/genecatalog/uproc/all.uproc.kegg.txt",
         biom="{project}/genecatalog/all.coverage.tsv"
     output:
-        kegg="{project}/genecatalog/uproc/allgenecalled.uproc.kegg.filtered.txt",
+        kegg="{project}/genecatalog/uproc/all.uproc.kegg.filtered.txt",
     run:
         kegg_dict = {}
         for line in open(input.kegg):
@@ -1553,9 +1559,9 @@ rule uproc_filter_ko:
 
 rule uproc_filter_pfam:
     input:
-        uproc="{project}/genecatalog/uproc/allgenecalled.uproc.pfam.txt"
+        uproc="{project}/genecatalog/uproc/all.uproc.pfam.txt"
     output:
-        "{project}/genecatalog/uproc/allgenecalled.uproc.pfam.filtered.txt"
+        "{project}/genecatalog/uproc/all.uproc.pfam.filtered.txt"
     params:
         pfam="/data/db/uproc/pfam28/Pfam-A.clans.tsv.gz"
     run:
@@ -1581,7 +1587,7 @@ rule uproc_filter_pfam:
 rule add_ko:
     input:
         table="{project}/genecatalog/all.coverage.norm.tpm.taxonomy.tsv",
-        ko="{project}/genecatalog/uproc/allgenecalled.uproc.kegg.filtered.txt"
+        ko="{project}/genecatalog/uproc/all.uproc.kegg.filtered.txt"
     output:
         "{project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.tsv",
     run:
@@ -1600,7 +1606,7 @@ rule add_ko:
 rule add_pfam:
     input:
         table="{project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.tsv",
-        annot="{project}/genecatalog/uproc/allgenecalled.uproc.pfam.filtered.txt"
+        annot="{project}/genecatalog/uproc/all.uproc.pfam.filtered.txt"
     output:
         "{project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv",
     run:
@@ -1620,7 +1626,7 @@ rule add_pfam:
 rule add_taxlevels:
     input:
         table="{project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv",
-        taxonomy="{project}/genecatalog/allgenecalled.diamond.nr-taxonomy-filtered-split.tsv"
+        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy-filtered-split.tsv"
     output:
         table="{project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.taxlevels.tsv",
     run:
