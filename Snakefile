@@ -22,7 +22,8 @@ rule final:
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/megagta/{sample}/opts.txt \
                    {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna.gz \
-                   {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam \
+                   {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.flagstat.txt".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 
 #                   {project}/genecatalog/{assembler}/{kmers}/all.centroids.fna \
@@ -1201,6 +1202,18 @@ rule map_to_genes:
         "envs/bwa.yaml"
     # Use --kept to re/multi use preindexed reference. Otherwise with --force the indexes are rebuild every time
     shell: "set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; set -u; bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
+
+rule gene_mapping_stats:
+    input:
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam"
+    output:
+        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.flagstat.txt"
+    conda:
+        "envs/samtools.yaml"
+    shell:
+        "samtools flagstat {input} > {output}"
+
+
 
 rule coveragetable: 
     input: 
