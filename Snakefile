@@ -21,7 +21,6 @@ rule final:
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/megagta/{sample}/opts.txt \
-                   {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna.gz \
                    {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 
@@ -1130,14 +1129,14 @@ rule genemark_merge:
 
 rule orfs_merge:
     input:
-        nucleotide=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.fna.gz", treatment=config["treatment"]),
-        protein=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.faa.gz", treatment=config["treatment"])
+        nucleotide=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.fna", treatment=config["treatment"]),
+        protein=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.faa", treatment=config["treatment"])
     output:
         nucleotide="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz",
         protein="{project}/genecatalog/{assembler}/{kmers}/all.faa.gz"
     run:
-        shell("zcat {input.nucleotide} | gzip >  {output.nucleotide}")
-        shell("zcat {input.protein} | gzip >  {output.protein}")
+        shell("cat {input.nucleotide} | gzip >  {output.nucleotide}")
+        shell("cat {input.protein} | gzip >  {output.protein}")
 
 rule genecatalog:
     input:
