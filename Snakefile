@@ -1195,10 +1195,12 @@ rule map_to_genes:
     log:
         "{project}/genecatalog/{assembler}/{treatment}/{kmers}/mapping.log"
     params:
-        outdir="{project}/genecatalog/{assembler}/treatment}/{kmers}/"
-    threads: 16
+        outdir="{project}/genecatalog/{assembler}/{treatment}/{kmers}/"
+    threads: 32
+    conda:
+        "envs/bwa.yaml"
     # Use --kept to re/multi use preindexed reference. Otherwise with --force the indexes are rebuild every time
-    shell: "source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
+    shell: "set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.0/env.sh; set -u; bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
 
 rule coveragetable: 
     input: 
