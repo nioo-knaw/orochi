@@ -24,7 +24,8 @@ rule final:
                    {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz \
                    {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam \
                    {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.flagstat.txt \
-                   {project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_forward.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_forward.coverage.tsv \
+                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 
 #                   {project}/genecatalog/{assembler}/{kmers}/all.centroids.fna \
@@ -1220,7 +1221,7 @@ rule coveragetable:
         unpaired = "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_unpaired.bam"
     output:
         paired = "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_forward.coverage.tsv",
-        unpaired = "{project}/genec:atalog/{assembler}/{kmers}/{treatment}/all.{treatment}_unpaired.coverage.tsv"
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_unpaired.coverage.tsv"
     threads: 16
     conda:
         "envs/bwa.yaml"
@@ -1230,10 +1231,10 @@ rule coveragetable:
 
 rule fixcounts:
     input:
-        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_1.coverage.tsv",
-        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"  
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_forward.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_unpaired.coverage.tsv"  
     output:
-        "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}.coverage.tsv",
+        "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}.coverage.tsv",
     run:
         import pandas as pd
         import numpy as np
@@ -1255,7 +1256,7 @@ rule fixcounts:
 
 rule combine_counts:
     input:
-        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{sample}/all.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
+        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{treatment}/all.{treatment}.coverage.tsv", treatment=config["treatment"], assembler=config["assembler"])
     output:
         "{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     run:       
