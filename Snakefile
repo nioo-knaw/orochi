@@ -25,7 +25,8 @@ rule final:
                    {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam \
                    {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.flagstat.txt \
                    {project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_forward.coverage.tsv \
-                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
+                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 
 #                   {project}/genecatalog/{assembler}/{kmers}/all.centroids.fna \
@@ -1341,10 +1342,10 @@ rule to_hdf5:
 
 rule diamond_genes:
     input:
-        fasta="{project}/genecatalog/all.fna.gz"
+        fasta="{project}/genecatalog/{treatment}/{kmers}/all.fna.gz"
     output:
-        tsv="{project}/genecatalog/all.diamond.nr.tsv",
-        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy.tsv"
+        tsv="{project}/genecatalog/{treatment}/{kmers}/all.diamond.nr.daa",
+#        taxonomy="{project}/genecatalog/{treatment}/{kmers}/all.diamond.nr-taxonomy.tsv"
     params:
         reference=config["diamond_database"],
         version="0.8.20",
@@ -1353,11 +1354,11 @@ rule diamond_genes:
         tmp="/tmp",
         megan_version=config['megan_version'],
         megan_mapping=config['megan_mapping']
-    threads: 16
-    run:
-        shell("/data/tools/diamond/{params.version}/bin/diamond blastx --sensitive -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}")
-        shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
-        shell("java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {output.tsv} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping} -o {output.taxonomy}")
+    threads: 32
+    shell: "/data/tools/diamond/{params.version}/bin/diamond blastx --sensitive -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}"
+ #        shell("/data/tools/diamond/{params.version}/bin/diamond blastx --sensitive -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}")
+ #       shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
+ #       shell("java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {output.tsv} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping} -o {output.taxonomy}")
 
 rule kraken_genes:
     input:
@@ -1532,11 +1533,11 @@ rule taxator_annotate:
 
 rule uproc_genes:
     input:
-        "{project}/genecatalog/all.faa.gz"
+        "{project}/genecatalog/{treatments}/{kmers}/all.faa.gz"
     output:
-        kegg="{project}/genecatalog/uproc/all.uproc.kegg.txt",
-        cog="{project}/genecatalog/uproc/all.uproc.cog.txt",
-        pfam="{project}/genecatalog/uproc/all.uproc.pfam.txt",
+        kegg="{project}/genecatalog/uproc/{treatment}/{kmers}/all.uproc.kegg.txt",
+        cog="{project}/genecatalog/uproc/{treatment}/{kmers}/all.uproc.cog.txt",
+        pfam="{project}/genecatalog/uproc/{treatment}/{kmers}/all.uproc.pfam.txt",
     threads: 8
     run:
         shell("uproc-prot --preds -o {output.kegg} /data/db/uproc/kegg_20140317/ /data/db/uproc/model {input}")
