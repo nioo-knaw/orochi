@@ -11,22 +11,17 @@ min_version("3.5.4")
 configfile: "config.json"
 
 rule final:
-    input: expand("{project}/stats/raw.readstat.csv \
-                   {project}/stats/trimmed.readstat.csv \
-                   {project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                   {project}/nonpareil/{treatment}.nonpareil.png \
-                   {project}/host_filtering/{sample}_R1_paired_filtered.fastq \
-                   {project}/diamond/{project}.RData \
+    input: expand("{project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
-                   {project}/megagta/{sample}/opts.txt \
                    {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz \
-                   {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam \
-                   {project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.flagstat.txt \
-                   {project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_forward.coverage.tsv \
+                   {project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam \
+                   {project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.flagstat.txt \
+                   {project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
-                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
+                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 
 #                   {project}/genecatalog/{assembler}/{kmers}/all.centroids.fna \
@@ -1182,22 +1177,25 @@ rule map_to_genes:
     input:
         genes="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz",
         index="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz.bwt",
-        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
+        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \ 
+           else expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
+        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
+           else expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
+        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
+           else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
 #        forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq",
 #        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq",
 #        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq"
     output:
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam",
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam.bai",
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_unpaired.bam",
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_unpaired.bam.bai"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam.bai",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_unpaired.bam",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_unpaired.bam.bai"
 
     log:
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/mapping.log"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/mapping.log"
     params:
-        outdir="{project}/genecatalog/{assembler}/{treatment}/{kmers}/"
+        outdir="{project}/genecatalog/{assembler}/{sample}/{kmers}/"
     threads: 32
     conda:
         "envs/bwa.yaml"
@@ -1206,9 +1204,9 @@ rule map_to_genes:
 
 rule gene_mapping_stats:
     input:
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam"
     output:
-        "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.flagstat.txt"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.flagstat.txt"
     conda:
         "envs/samtools.yaml"
     shell:
@@ -1218,11 +1216,11 @@ rule gene_mapping_stats:
 
 rule coveragetable: 
     input: 
-        paired = "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_forward.bam",
-        unpaired = "{project}/genecatalog/{assembler}/{treatment}/{kmers}/all.{treatment}_unpaired.bam"
+        paired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam",
+        unpaired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_unpaired.bam"
     output:
-        paired = "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_forward.coverage.tsv",
-        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_unpaired.coverage.tsv"
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"
     threads: 16
     conda:
         "envs/bwa.yaml"
@@ -1232,10 +1230,10 @@ rule coveragetable:
 
 rule fixcounts:
     input:
-        paired = "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_forward.coverage.tsv",
-        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}_unpaired.coverage.tsv"  
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"  
     output:
-        "{project}/genecatalog/{assembler}/{kmers}/{treatment}/all.{treatment}.coverage.tsv",
+        "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}.coverage.tsv",
     run:
         import pandas as pd
         import numpy as np
@@ -1257,7 +1255,7 @@ rule fixcounts:
 
 rule combine_counts:
     input:
-        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{treatment}/all.{treatment}.coverage.tsv", treatment=config["treatment"], assembler=config["assembler"])
+        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{sample}/all.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
     output:
         "{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     run:       
@@ -1342,23 +1340,34 @@ rule to_hdf5:
 
 rule diamond_genes:
     input:
-        fasta="{project}/genecatalog/{treatment}/{kmers}/all.fna.gz"
+        fasta="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz"
     output:
-        tsv="{project}/genecatalog/{treatment}/{kmers}/all.diamond.nr.daa",
-#        taxonomy="{project}/genecatalog/{treatment}/{kmers}/all.diamond.nr-taxonomy.tsv"
+        tsv="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa",
+#        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv"
     params:
         reference=config["diamond_database"],
         version="0.8.20",
-        output="{project}/genecatalog/all.diamond.nr",
+        output="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr",
         format="tab",
         tmp="/tmp",
         megan_version=config['megan_version'],
         megan_mapping=config['megan_mapping']
+    priority: 20
     threads: 32
     shell: "/data/tools/diamond/{params.version}/bin/diamond blastx --sensitive -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}"
  #        shell("/data/tools/diamond/{params.version}/bin/diamond blastx --sensitive -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}")
  #       shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
  #       shell("java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {output.tsv} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping} -o {output.taxonomy}")
+
+rule diamond_genes_lca:
+    input:
+        "{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa"
+    output:
+        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv"
+    params:
+        megan_version=config['megan_version'],
+        megan_mapping=config['megan_mapping']
+    shell: "java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping} -o {output.taxonomy}"
 
 rule kraken_genes:
     input:
