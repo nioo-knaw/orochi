@@ -1438,14 +1438,14 @@ rule diamond_genes_filter:
             s = line.split(';')
             for i in range(2,len(s),2):                
                 try:
-                    level,value = re.match('^\[(.*)\]\s(.*)', s[i].strip()).groups()                    
-                    if int(s[i+1]) >= minscore:
-                        taxdict[level] = value
+                    level, value = s[i].strip().split('__')
+                    if int(s[i+1]) >= 80:
+                        taxdict[level] = s[i].strip()
                 except:
                     pass
             taxonomy = []
-            for level in ["SuperKingdom","Phylum","Class","Order","Family","Genus","Species"]:
-                taxonomy.append(taxdict.setdefault(level, "unclassified"))
+            for level in ["d","p","c","o","f","g","s"]:
+                taxonomy.append(taxdict.setdefault(level, "%s_unclassified" % level))
 
             taxstring = ";".join(taxonomy)
             genestring = ";".join(s[0:1])
