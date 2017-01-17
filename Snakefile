@@ -16,8 +16,8 @@ rule final:
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz \
-                   {project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam \
-                   {project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.flagstat.txt \
+                   {project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam \
+                   {project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.flagstat.txt \
                    {project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
@@ -1177,20 +1177,20 @@ rule map_to_genes:
     input:
         genes="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz",
         index="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz.bwt",
-        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \ 
-           else expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
-        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
-           else expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
-        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
-           else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
+        forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] \ 
+           else "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] \
+           else "{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
+        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] \
+           else "{project}/trimmomatic/{sample}_forward_unpaired.fq.gz"
 #        forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq",
 #        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq",
 #        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq"
     output:
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam",
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam.bai",
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_unpaired.bam",
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_unpaired.bam.bai"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam.bai",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_unpaired.bam",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_unpaired.bam.bai"
 
     log:
         "{project}/genecatalog/{assembler}/{sample}/{kmers}/mapping.log"
@@ -1204,9 +1204,9 @@ rule map_to_genes:
 
 rule gene_mapping_stats:
     input:
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam"
     output:
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.flagstat.txt"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.flagstat.txt"
     conda:
         "envs/samtools.yaml"
     shell:
@@ -1216,8 +1216,8 @@ rule gene_mapping_stats:
 
 rule coveragetable: 
     input: 
-        paired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward.bam",
-        unpaired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_unpaired.bam"
+        paired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam",
+        unpaired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_unpaired.bam"
     output:
         paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv",
         unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"
@@ -1267,9 +1267,9 @@ rule combine_counts:
 
 rule normalize:
     input:
-        "{project}/genecatalog/all.coverage.tsv"
+        "{project}/genecatalog/{kmers}/all.coverage.tsv"
     output:
-       "{project}/genecatalog/all.coverage.norm.tpm.tsv"
+       "{project}/genecatalog/{kmers}/all.coverage.norm.tpm.tsv"
     run:
         import pandas as pd
         df = pd.read_table(input[0])
@@ -1332,9 +1332,9 @@ rule ags_microbecensus:
 
 rule to_hdf5:
     input:
-        "{project}/genecatalog/all.coverage.norm.tpm.tsv"
+        "{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     output:
-        "{project}/genecatalog/all.coverage.norm.tpm.biom"
+        "{project}/genecatalog/{assembler}/{kmers}/all.coverage.biom"
     run: 
        shell("set +u; source /data/tools/biom-format/2.1.5/env.sh; set -u; biom convert -i {input} -o {output} --to-hdf5")
 
@@ -1409,7 +1409,7 @@ rule kraken_filter:
 
 rule biom_add_kraken_taxonomy:
     input:
-        biom="{project}/genecatalog/all.coverage.norm.tpm.biom",
+        biom="{project}/genecatalog/all.coverage.biom",
         taxonomy = "{project}/genecatalog/all.kraken.filtered.taxonomy",
     output:
        "{project}/genecatalog/all.coverage.norm.tpm.taxonomy.kraken.biom"
@@ -1418,10 +1418,10 @@ rule biom_add_kraken_taxonomy:
 
 rule diamond_genes_filter:
     input:
-        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy.tsv",
-        biom="{project}/genecatalog/all.coverage.tsv"
+        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv",
+        biom="{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     output:
-        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy-filtered.tsv"
+        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy-filtered.tsv"
     params:
         minscore="80"
     run:
@@ -1470,20 +1470,20 @@ rule diamond_genes_split:
 
 rule biom_add_diamond_taxonomy:
     input:
-        biom="{project}/genecatalog/all.coverage.norm.tpm.biom",
-        taxonomy="{project}/genecatalog/all.diamond.nr-taxonomy-filtered.tsv"
+        biom="{project}/genecatalog/{assembler}/{kmers}/all.coverage.biom",
+        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy-filtered.tsv"
     output:
-       "{project}/genecatalog/all.coverage.norm.tpm.taxonomy.biom"
+       "{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.biom"
     run:
         shell("set +u; source /data/tools/biom-format/2.1.5/env.sh; set -u; biom add-metadata -i {input.biom} -o {output} --observation-metadata-fp {input.taxonomy} --observation-header gene,taxonomy --sc-separated taxonomy")
 
 rule merge_taxonomy:
     input:
-        table="{project}/genecatalog/all.coverage.norm.tpm.tsv",
-        taxdiamond="{project}/genecatalog/all.diamond.nr-taxonomy-filtered.tsv",
-        taxkraken="{project}/genecatalog/all.kraken.filtered.taxonomy",
+        table="{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv",
+        taxdiamond="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy-filtered.tsv",
+#        taxkraken="{project}/genecatalog/all.kraken.filtered.taxonomy",
     output:
-        "{project}/genecatalog/all.coverage.norm.tpm.taxonomy.tsv"
+        "{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.tsv"
     run:
         import pandas as pd
         df = pd.read_table(input.table)
@@ -1492,11 +1492,11 @@ rule merge_taxonomy:
         taxdiamond = pd.read_table(input.taxdiamond,header=None, names=['gene','taxdiamond'])
         taxdiamond.index = taxdiamond.gene
 
-        taxkraken = pd.read_table(input.taxkraken,header=None, names=['gene','taxkraken'])
-        taxkraken.index = taxkraken.gene
+#        taxkraken = pd.read_table(input.taxkraken,header=None, names=['gene','taxkraken'])
+#        taxkraken.index = taxkraken.gene
 
 
-        table_with_taxonomy = pd.concat([df,taxdiamond.taxdiamond, taxkraken.taxkraken],axis=1)
+        table_with_taxonomy = pd.concat([df,taxdiamond.taxdiamond],axis=1)
 
         # Write final output to disk
         table_with_taxonomy.to_csv(output[0], sep='\t', index=False)
