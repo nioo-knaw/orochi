@@ -659,19 +659,22 @@ rule megahit:
 
 rule spades:
     input:
-        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \ 
-           else expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
-        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
-           else expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
-        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
-           else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
+        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
+#        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \ 
+#           else expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
+#        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
+#           else expand("{{project}}/trimmomatic/{sample}_reverse_paired.fq.gz", sample=config["data"]),
+#        unpaired=expand("{{project}}/host_filtering/{sample}_unpaired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
+#           else expand("{{project}}/trimmomatic/{sample}_forward_unpaired.fq.gz", sample=config["data"])
     output:
-        temp("{project}/assembly/spades/contigs.fasta")
+        temp("{project}/assembly/spades/{treatment}/{kmers}/contigs.fasta")
     params:
-        outdir="{project}/assembly/spades/",
-        kmers=config["kmers"]
+        outdir="{project}/assembly/spades/{treatment}/{kmers}/",
+        kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
     log:
-        "{project}/assembly/spades/spades.log"
+        "{project}/assembly/spades/{treatment}/{kmers}/spades.log"
     threads: 32
     run:
         forward_str = " -1 ".join(input.forward)
@@ -857,10 +860,10 @@ rule prepare_mmgenome:
 
 rule prepare_mmgenome_spades:
     input:
-        "{project}/assembly/spades/contigs.fasta"
+        "{project}/assembly/spades/{treatment}/{kmers}/contigs.fasta"
     output:
-        gzip=protected("{project}/assembly/spades/assembly.fa.gz"),
-        fasta=temp("{project}/assembly/spades/assembly.fa")
+        gzip=protected("{project}/assembly/spades/{treatment}/{kmers}/assembly.fa.gz"),
+        fasta=temp("{project}/assembly/spades/{treatment}/{kmers}/assembly.fa")
     run:
         shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
