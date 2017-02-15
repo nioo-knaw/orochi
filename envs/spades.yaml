@@ -1,0 +1,4 @@
+channels:
+  - bioconda
+dependencies:
+  - bwa == 3.10.0

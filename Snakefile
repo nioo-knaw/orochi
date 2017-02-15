@@ -676,11 +676,13 @@ rule spades:
     log:
         "{project}/assembly/spades/{treatment}/{kmers}/spades.log"
     threads: 32
+    conda:
+        "envs/samtools.yaml"
     run:
         #forward_str = " -1 ".join(input.forward)
         #reverse_str = " -2 ".join(input.reverse) 
         #unpaired_str = " -s ".join(input.unpaired)  
-        shell("ulimit -m 700000000; /data/tools/SPAdes/3.9.0/bin/metaspades.py -m 700 -1 {input.forward} -2 {input.reverse} -s {input.unpaired} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
+        shell("metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} -s {input.unpaired} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
 
 # Interleave paired end reads and convert to fasta
 rule idba_prepare:
