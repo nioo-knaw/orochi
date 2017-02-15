@@ -1,4 +1,4 @@
 channels:
   - bioconda
 dependencies:
-  - bwa == 3.10.0
+  - spades == 3.10.0

@@ -677,7 +677,7 @@ rule spades:
         "{project}/assembly/spades/{treatment}/{kmers}/spades.log"
     threads: 32
     conda:
-        "envs/samtools.yaml"
+        "envs/spades.yaml"
     run:
         #forward_str = " -1 ".join(input.forward)
         #reverse_str = " -2 ".join(input.reverse) 
