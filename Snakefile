@@ -21,7 +21,8 @@ rule final:
                    {project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
-                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv \
+                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 
 #                   {project}/genecatalog/{assembler}/{kmers}/all.centroids.fna \
