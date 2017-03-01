@@ -138,7 +138,9 @@ rule readstat_raw:
         protected("{project}/stats/raw.readstat.csv")
     log:
         "{project}/stats/raw.readstat.log"
-    shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/readstats.py {input} --csv -o {output} 2> {log}"
+    conda:
+        "envs/khmer.yaml"
+    shell: "readstats.py {input} --csv -o {output} 2> {log}"
  
 rule readstat_trim:
     input:
@@ -151,7 +153,7 @@ rule readstat_trim:
         protected("{project}/stats/trimmed.readstat.csv")
     log:
         "{project}/stats/trimmed.readstat.log"
-    shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/readstats.py {input} --csv -o {output} 2> {log}"
+    shell: "readstats.py {input} --csv -o {output} 2> {log}"
 
 rule host_removal:
     input:
@@ -463,7 +465,9 @@ rule interleave:
 #        reverse = lambda wildcards: config["data_dir"] + config["data"][wildcards.sample]['reverse']
     output:
         "{project}/unpack/{sample}.fastq"
-    shell: "set +u; source ~/.virtualenvs/khmer/bin/activate; set -u; /data/tools/khmer/scripts/interleave-reads.py -o {output} {input}"
+    conda:
+        "envs/khmer.yaml"
+    shell: "interleave-reads.py -o {output} {input}"
 
 rule interleave_merge:
     input:
