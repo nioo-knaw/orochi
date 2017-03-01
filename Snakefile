@@ -13,6 +13,7 @@ configfile: "config.json"
 rule final:
     input: expand("{project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
+                   {project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz \
@@ -929,9 +930,10 @@ rule bamm_samples:
         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
 #         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam",
-#         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam.bai"
+#         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam.bai",
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log"
     log:
-        "{project}/bamm/{assembler}/{treatment}/{kmers}/{treatment}.log"
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log"
     params:
         outdir="{project}/bamm/{assembler}/{treatment}/{kmers}"
     threads: 16
