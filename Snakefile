@@ -13,6 +13,7 @@ configfile: "config.json"
 rule final:
     input: expand("{project}/trimmomatic/{sample}_forward_paired.fq.gz \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
+                   {project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz \
@@ -21,7 +22,8 @@ rule final:
                    {project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
-                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
+                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv \
+                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 
 #                   {project}/genecatalog/{assembler}/{kmers}/all.centroids.fna \
@@ -912,6 +914,30 @@ rule bamm_mmgenome:
          "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam.bai"
     log:
         "{project}/bamm/{assembler}/{treatment}/{kmers}/{treatment}.log"
+    params:
+        outdir="{project}/bamm/{assembler}/{treatment}/{kmers}"
+    threads: 16
+    conda:
+        "envs/bwa.yaml"
+    shell: "set +u ;source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
+
+rule bamm_samples:
+    input:
+        contigs="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz", 
+        forward = "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
+        "{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
+        unpaired = "{project}/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
+        index="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz.bwt"
+    output:
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
+#         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam",
+#         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam.bai",
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log"
+    log:
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log"
     params:
         outdir="{project}/bamm/{assembler}/{treatment}/{kmers}"
     threads: 16
