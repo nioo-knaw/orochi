@@ -684,11 +684,7 @@ rule spades:
     threads: 32
     conda:
         "envs/spades.yaml"
-    run:
-        #forward_str = " -1 ".join(input.forward)
-        #reverse_str = " -2 ".join(input.reverse) 
-        #unpaired_str = " -s ".join(input.unpaired)  
-        shell("metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} -s {input.unpaired} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null")
+    shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} -s {input.unpaired} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
 
 # Interleave paired end reads and convert to fasta
 rule idba_prepare:
@@ -1259,9 +1255,7 @@ rule coveragetable:
     threads: 16
     conda:
         "envs/bwa.yaml"
-    run:
-        shell("set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm parse -c {output.paired} -m counts -b {input.paired} -t {threads}")
-        shell("set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm parse -c {output.unpaired} -m counts -b {input.unpaired} -t {threads}")
+    shell: "set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm parse -c {output.paired} -m counts -b {input.paired} -t {threads} && set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm parse -c {output.unpaired} -m counts -b {input.unpaired} -t {threads}"
 
 rule fixcounts:
     input:

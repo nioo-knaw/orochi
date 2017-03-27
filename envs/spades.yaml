@@ -1,4 +1,5 @@
 channels:
+  - r
   - bioconda
 dependencies:
-  - spades == 3.10.0
+  - spades ==3.10.1
