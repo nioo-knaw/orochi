@@ -265,14 +265,14 @@ rule merge_per_treatment:
         unpaired=lambda wildcards: expand("{project}/host_filtering/{sample}_unpaired_filtered.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
              else expand("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz", project=config["project"], sample=config["treatment"][wildcards.treatment])
     output:
-        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
+        forward = temporary("{project}/treatment/{treatment}_forward.fastq"),
+        reverse = temporary("{project}/treatment/{treatment}_reverse.fastq"),
+        unpaired = temporary("{project}/treatment/{treatment}_unpaired.fastq")
     run: 
         if config['host_removal']:
-            shell("cat {input.forward} | gzip -c > {output.forward}")
-            shell("cat {input.reverse} | gzip -c > {output.reverse}")
-            shell("cat {input.unpaired} | gzip -c > {output.unpaired}")
+            shell("cat {input.forward}  > {output.forward}")
+            shell("cat {input.reverse}  > {output.reverse}")
+            shell("cat {input.unpaired} > {output.unpaired}")
         else:
             shell("zcat {input.forward} | gzip -c > {output.forward}")
             shell("zcat {input.reverse} | gzip -c > {output.reverse}")
@@ -636,19 +636,19 @@ rule combine_reads:
 
 rule megahit:
     input:
-        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
+        forward = "{project}/treatment/{treatment}_forward.fastq",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq"
     output:
         contigs="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
         contigs_gzip="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa.gz",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
-        opts="{project}/assembly/megahit/{treatment}/{kmers}/opts.txt"
+        opts=protected("{project}/assembly/megahit/{treatment}/{kmers}/opts.txt")
     params:
         dir="{project}/assembly/megahit/{treatment}/{kmers}/",
         kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
     log: "{project}/assembly/megahit/{treatment}/{kmers}/megahit.log"
-    threads: 16
+    threads: 32
     run:
         #forward_str = ",".join(input.forward)
         #reverse_str = ",".join(input.reverse) 
@@ -893,10 +893,10 @@ rule mmgenome_bwa_index:
 
 rule bamm_mmgenome:
     input:
-        contigs="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz", 
-        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz",
+        contigs="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
+        forward = "{project}/treatment/{treatment}_forward.fastq",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq",
 #        forward = "{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
 #        "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
 #        reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
@@ -957,10 +957,12 @@ rule mmgenome_orfs:
         orfscleaned="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
     log:
         "{project}/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
-    run:
-        shell("zcat {input} | prodigal -d {output.nucleotide} -a {output.orfs} -i /dev/stdin -m -o {log} -p meta -q")
-        shell("cut -f1 -d ' ' {output.orfs} > {output.orfscleaned}")
-
+    conda: 
+        "envs/prodigal.yaml"
+    shell: """
+        zcat {input} | prodigal -d {output.nucleotide} -a {output.orfs} -i /dev/stdin -m -o {log} -p meta -q
+        cut -f1 -d ' ' {output.orfs} > {output.orfscleaned}
+    """
 rule mmgenome_essential:
     input:
         "{project}/mmgenome/{assembler}/orfs.clean.faa"
