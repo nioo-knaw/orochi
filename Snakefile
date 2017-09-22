@@ -755,6 +755,8 @@ rule bamm:
     params:
         outdir="{project}/bamm/"
     threads: 16
+    conda:
+        "envs/mapping.yaml"
     shell: "source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; bamm make --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
 # This rule also produces bam files per sample... Not desired result.
