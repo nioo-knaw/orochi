@@ -756,8 +756,8 @@ rule bamm:
         outdir="{project}/bamm/"
     threads: 16
     conda:
-        "envs/mapping.yaml"
-    shell: "source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; bamm make --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
+        "envs/bamm.yaml"
+    shell: "bamm make --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
 # This rule also produces bam files per sample... Not desired result.
 rule bamm_all:
@@ -774,11 +774,13 @@ rule bamm_all:
     params:
         outdir="{project}/bamm/"
     threads: 16
+    conda:
+        "envs/bamm.yaml"
     run: 
         #make pairs of forward and reverse fastq files
         for i, element in enumerate(input.reverse, 1):
             input.forward.insert(i * 2 - 1, element)
-        shell("source /data/tools/BamM/dev/env.sh; bamm make --force -d {input.contigs} -c {input.forward} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}")
+        shell("bamm make --force -d {input.contigs} -c {input.forward} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}")
 
 # samtools merge all.bam *.bam
 # bamm parse -c coverage.tsv -m counts -b 1511KMI-0007/bamm/all.bam -t 16
@@ -916,8 +918,8 @@ rule bamm_mmgenome:
         outdir="{project}/bamm/{assembler}/{treatment}/{kmers}"
     threads: 16
     conda:
-        "envs/bwa.yaml"
-    shell: "set +u ;source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
+        "envs/bamm.yaml"
+    shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
 rule bamm_samples:
     input:
@@ -940,15 +942,17 @@ rule bamm_samples:
         outdir="{project}/bamm/{assembler}/{treatment}/{kmers}"
     threads: 16
     conda:
-        "envs/bwa.yaml"
-    shell: "set +u ;source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
+        "envs/bamm.yaml"
+    shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
 rule mmgenome_coverage:
     input:
         expand("{{project}}/bamm/assembly.{sample}_1.bam", sample=config["data"])
     output:
         "{project}/mmgenome/coverage.pmean.tsv"
-    shell: "source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; bamm parse -c {output} -m pmean -b {input}"
+    conda:
+        "envs/bamm.yaml"
+    shell: "bamm parse -c {output} -m pmean -b {input}"
 
 rule mmgenome_orfs:
     input:
@@ -1115,7 +1119,9 @@ rule bamm_per_sample:
     params:
         outdir="{project}/bamm/{sample}"
     threads: 16
-    shell: "source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; bamm make --force -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
+    conda:
+        "envs/bamm.yaml"
+    shell: "bamm make --force -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
 
 # zcat 1511KMI-0007/megahit_per_sample/MPR1-1n-CUR/final.contigs.fa.gz | gmhmmp -a -d -f G -m /data/tools/metagenemark/3.26/model/MetaGeneMark_v1.mod -o test.gff /dev/stdin
 # zcat 1511KMI-0007/megahit_per_sample/MPR1-1n-CUR/final.contigs.fa.gz | /data/tools/prodigal/2.62/bin/prodigal -d prodigal.fna -a prodigal.faa -i /dev/stdin -m -f gff -o prodigal.gff -p meta
@@ -1234,8 +1240,10 @@ rule map_to_genes:
     threads: 32
     conda:
         "envs/bwa.yaml"
+    conda:
+        "envs/bamm.yaml"
     # Use --kept to re/multi use preindexed reference. Otherwise with --force the indexes are rebuild every time
-    shell: "set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
+    shell: "set -u; bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
 
 rule gene_mapping_stats:
     input:
@@ -1258,8 +1266,11 @@ rule coveragetable:
         unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"
     threads: 16
     conda:
-        "envs/bwa.yaml"
-    shell: "set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm parse -c {output.paired} -m counts -b {input.paired} -t {threads} && set +u; source /data/tools/samtools/1.3/env.sh; source /data/tools/BamM/1.7.3/env.sh; set -u; bamm parse -c {output.unpaired} -m counts -b {input.unpaired} -t {threads}"
+        "envs/bamm.yaml"
+    shell: """
+           bamm parse -c {output.paired} -m counts -b {input.paired} -t {threads}
+           bamm parse -c {output.unpaired} -m counts -b {input.unpaired} -t {threads} 
+           """ 
 
 rule fixcounts:
     input:
