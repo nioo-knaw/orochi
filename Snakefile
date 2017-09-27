@@ -11,8 +11,7 @@ min_version("3.5.4")
 configfile: "config.json"
 
 rule final:
-    input: expand("{project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                   {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
+    input: expand("{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/bamm/{assembler}/{treatment}/{kmers}/{sample}.log \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
@@ -636,9 +635,9 @@ rule combine_reads:
 
 rule megahit:
     input:
-        forward = "{project}/treatment/{treatment}_forward.fastq",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq"
+        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
     output:
         contigs="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
         contigs_gzip="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa.gz",
@@ -774,8 +773,6 @@ rule bamm_all:
     params:
         outdir="{project}/bamm/"
     threads: 16
-    conda:
-        "envs/bamm.yaml"
     run: 
         #make pairs of forward and reverse fastq files
         for i, element in enumerate(input.reverse, 1):
