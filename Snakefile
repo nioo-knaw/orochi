@@ -883,9 +883,9 @@ rule prepare_mmgenome_idba:
 
 rule mmgenome_bwa_index:
     input:
-         "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
+         "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa"
     output:
-        "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz.bwt"
+        "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     log: "{project}/assembly/{assembler}/{treatment}/{kmers}/bwa-index.log"
     shell: "/data/tools/bwa/default/bin/bwa index {input} > {log}"
 
@@ -900,7 +900,7 @@ rule bamm_mmgenome:
 #        reverse = "{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
 #        "{project}/trimmomatic/{sample}_reverse_paired.fq.gz",
 #        unpaired = "{project}/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "{project}/trimmomatic/{sample}_unpaired_combined.fq.gz",
-        index="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz.bwt"
+        index="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
 #        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
 #        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
