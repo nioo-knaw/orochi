@@ -16,9 +16,6 @@ rule final:
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz \
-                   {project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam \
-                   {project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.flagstat.txt \
-                   {project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv \
@@ -1193,28 +1190,30 @@ rule genecatalog_aa:
     output:
         nucleotide="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz",
         protein="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz",
-    run: 
+    conda:
+        "envs/seqtk.yaml"
+    shell: """ 
         # Select the headers of the nucleotide sequences in the genecatalog
         # Select the seqids inbetween the = and ;
         # Select all the protein sequences with the same seqids
-        shell("grep '>' {input.genecatalog} | awk -F'[=;]' '{{print $2}}' | seqtk subseq {input.protein} /dev/stdin | gzip > {output.protein}")
+        grep '>' {input.genecatalog} | awk -F'[=;]' '{{print $2}}' | seqtk subseq {input.protein} /dev/stdin | gzip > {output.protein}
         # Make sure the nucleotide sequences have the same as the proteins
-        shell("awk -F'[=;]' '/^>/ {{$0=\">\"$2}}1' {input.genecatalog} | gzip > {output.nucleotide}")
+        awk -F'[=;]' '/^>/ {{$0=\">\"$2}}1' {input.genecatalog} | gzip > {output.nucleotide}"""
 
 
 rule genecatalog_bwa_index:
    input:
-       genes="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz"
+       genes="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz"
    output:
-       index="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz.bwt"
+       index="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz.bwt"
    conda:
         "envs/bwa.yaml"
    shell: "bwa index {input}"
 
 rule map_to_genes:
     input:
-        genes="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz",
-        index="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz.bwt",
+        genes="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz",
+        index="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz.bwt",
         forward="{project}/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] \ 
            else "{project}/trimmomatic/{sample}_forward_paired.fq.gz",
         reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] \
@@ -1225,10 +1224,10 @@ rule map_to_genes:
 #        reverse="{project}/host_filtering/{sample}_R2_paired_filtered.fastq",
 #        unpaired="{project}/host_filtering/{sample}_unpaired_filtered.fastq"
     output:
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam",
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam.bai",
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_unpaired.bam",
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_unpaired.bam.bai"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_forward_paired.bam",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_forward_paired.bam.bai",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_unpaired_filteredstq.bam" if config['host_removal'] else "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_forward_unpaired.bam",
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_unpaired_filteredstq.bam.bai" if config['host_removal'] else "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_forward_unpaired.bam.bai"
 
     log:
         "{project}/genecatalog/{assembler}/{sample}/{kmers}/mapping.log"
@@ -1240,13 +1239,13 @@ rule map_to_genes:
     conda:
         "envs/bamm.yaml"
     # Use --kept to re/multi use preindexed reference. Otherwise with --force the indexes are rebuild every time
-    shell: "set -u; bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
+    shell: "bamm make --kept -d {input.genes} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} --keep_unmapped -t {threads} 2> {log}"
 
 rule gene_mapping_stats:
     input:
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_forward_paired.bam",
     output:
-        "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.flagstat.txt"
+        "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_forward_paired.flagstat.txt"
     conda:
         "envs/samtools.yaml"
     shell:
@@ -1256,11 +1255,11 @@ rule gene_mapping_stats:
 
 rule coveragetable: 
     input: 
-        paired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_paired.bam",
-        unpaired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/all.{sample}_forward_unpaired.bam"
+        paired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_forward_paired.bam",
+        unpaired = "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_unpaired_filteredstq.bam" if config['host_removal'] else "{project}/genecatalog/{assembler}/{sample}/{kmers}/allgenecalled.{sample}_forward_unpaired.bam"
     output:
-        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv",
-        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_forward.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"
     threads: 16
     conda:
         "envs/bamm.yaml"
@@ -1271,10 +1270,10 @@ rule coveragetable:
 
 rule fixcounts:
     input:
-        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_forward.coverage.tsv",
-        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}_unpaired.coverage.tsv"  
+        paired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_forward.coverage.tsv",
+        unpaired = "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}_unpaired.coverage.tsv"  
     output:
-        "{project}/genecatalog/{assembler}/{kmers}/{sample}/all.{sample}.coverage.tsv",
+        "{project}/genecatalog/{assembler}/{kmers}/{sample}/allgenecalled.{sample}.coverage.tsv",
     run:
         import pandas as pd
         import numpy as np
@@ -1296,7 +1295,7 @@ rule fixcounts:
 
 rule combine_counts:
     input:
-        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{sample}/all.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
+        expand("{{project}}/genecatalog/{{assembler}}/{{kmers}}/{sample}/allgenecalled.{sample}.coverage.tsv", sample=config["data"], assembler=config["assembler"])
     output:
         "{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     run:       
@@ -1381,7 +1380,7 @@ rule to_hdf5:
 
 rule diamond_genes:
     input:
-        fasta="{project}/genecatalog/{assembler}/{kmers}/all.fna.gz"
+        fasta="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz"
     output:
         tsv="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa",
 #        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv"
@@ -1412,7 +1411,7 @@ rule diamond_genes_lca:
 
 rule kraken_genes:
     input:
-        fasta="{project}/genecatalog/all.fna.gz"
+        fasta="{project}/genecatalog/allgenecalled.fna.gz"
     output:
         kraken = "{project}/genecatalog/all.kraken",
         taxonomy = "{project}/genecatalog/all.kraken.taxonomy",
@@ -1548,7 +1547,7 @@ rule merge_taxonomy:
 #
 rule taxator_align:
     input:
-        fasta="{project}/genecatalog/all.fna.gz"
+        fasta="{project}/genecatalog/allgenecalled.fna.gz"
     output:
         alignment="{project}/genecatalog/taxator-tk/R1.alignments.gz"
     threads: 16
@@ -1558,7 +1557,7 @@ rule taxator_align:
 
 rule taxator_predict:
     input:
-        fasta="{project}/genecatalog/all.fna",
+        fasta="{project}/genecatalog/allgenecalled.fna",
         alignment="{project}/genecatalog/taxator-tk/R1.alignments.gz"
     output:
         "{project}/genecatalog/taxator-tk/R1.gff"
