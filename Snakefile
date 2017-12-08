@@ -20,41 +20,6 @@ rule final:
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.ko.pfam.taxlevels.aggregated.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
-
-#                   {project}/genecatalog/{assembler}/{kmers}/all.centroids.fna \
-#                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
-
-#{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz \
-#{project}/genecatalog/{assembler}/all.coverage.tsv
-
-"""
-rule final:
-        input: expand("{project}/trimming/{sample}_unpaired/forward_reads.fastq \
-                       {project}/trimmomatic/{sample}_forward_paired.fq.gz \
-                       {project}/gunzip/{sample}.fastq \
-                       {project}/stats/raw.readstat.csv \
-                       {project}/stats/trimmed.readstat.csv \
-                       {project}/diamond/{sample}.diamond.nr-taxonomy.tsv \
-                       {project}/diamond/{sample}.diamond.nr-taxonomy-filtered.tsv \
-                       {project}/diamond/{sample}.diamond.nr-taxonomy-filtered.qiime.txt \
-                       {project}/diamond/{project}.RData \
-                       {project}/extract_16S/{sample}.bbduk.fa.gz \
-                       {project}/extract_16S/taxonomy/{project}.biom \
-                       {project}/extract_16S/megahit/{sample}.gff \
-                       {project}/extract_16S/megahit/{sample}/final.contigs.fa.rdp \
-                       {project}/stats/{assembler}.quast.report.txt \
-                       {project}/stats/{assembler}.assembly.flagstat.txt \
-                       {project}/microbecensus/{sample}.ags.txt \
-                       {project}/genecatalog/{assembler}/all.coverage.tsv
-                       {project}/genecatalog/all.coverage.norm.tpm.biom \
-                       {project}/genecatalog/allgenecalled.diamond.nr-taxonomy.tsv \
-                       {project}/genecatalog/all.coverage.norm.tpm.taxonomy.biom \
-                       {project}/genecatalog/uproc/allgenecalled.uproc.kegg.txt \
-                       {project}/genecatalog/uproc/allgenecalled.uproc.cog.txt \
-                       {project}/genecatalog/uproc/allgenecalled.uproc.pfam.txt \
-                       {project}/genecatalog/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv".split(), project=config["project"], sample=config["data"], assembler=config["assembler"])
-"""
-
 rule merge_and_rename:
     input:
         forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
