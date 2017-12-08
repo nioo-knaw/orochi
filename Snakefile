@@ -1544,11 +1544,11 @@ rule taxator_annotate:
 
 rule uproc_genes:
     input:
-        "{project}/genecatalog/{assembler}/{kmers}/all.faa.gz"
+        "{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz"
     output:
-        kegg="{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.kegg.txt",
-        cog="{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.cog.txt",
-        pfam="{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.pfam.txt",
+        kegg="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.kegg.txt",
+        cog="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.cog.txt",
+        pfam="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.pfam.txt",
     threads: 8
     run:
         shell("uproc-prot --preds -o {output.kegg} /data/db/uproc/kegg_20140317/ /data/db/uproc/model {input}")
@@ -1557,10 +1557,10 @@ rule uproc_genes:
 
 rule uproc_filter_ko:
     input:
-        kegg="{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.kegg.txt",
+        kegg="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.kegg.txt",
         biom="{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     output:
-        kegg="{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.kegg.filtered.txt",
+        kegg="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.kegg.filtered.txt",
     run:
         kegg_dict = {}
         for line in open(input.kegg):
@@ -1588,9 +1588,9 @@ rule uproc_filter_ko:
 
 rule uproc_filter_pfam:
     input:
-        uproc="{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.pfam.txt"
+        uproc="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.pfam.txt"
     output:
-        "{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.pfam.filtered.txt"
+        "{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.pfam.filtered.txt"
     params:
         pfam="/data/db/uproc/pfam28/Pfam-A.clans.tsv.gz"
     run:
@@ -1616,7 +1616,7 @@ rule uproc_filter_pfam:
 rule add_ko:
     input:
         table="{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.tsv",
-        ko="{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.kegg.filtered.txt"
+        ko="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.kegg.filtered.txt"
     output:
         "{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.ko.tsv",
     run:
@@ -1635,9 +1635,9 @@ rule add_ko:
 rule add_pfam:
     input:
         table="{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.ko.tsv",
-        annot="{project}/genecatalog/uproc/{assembler}/{kmers}/all.uproc.pfam.filtered.txt"
+        annot="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.pfam.filtered.txt"
     output:
-        "{project}/genecatalog/{assembler}/{kmers}/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv",
+        "{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.ko.pfam.tsv",
     run:
         import pandas as pd
         df = pd.read_table(input.table)
@@ -1654,7 +1654,7 @@ rule add_pfam:
 
 rule add_taxlevels:
     input:
-        table="{project}/genecatalog/{assembler}/{kmers}/all.coverage.norm.tpm.taxonomy.ko.pfam.tsv",
+        table="{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.ko.pfam.tsv",
         taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy-filtered-split.tsv"
     output:
         table="{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.ko.pfam.taxlevels.tsv",
