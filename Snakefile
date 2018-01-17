@@ -1541,6 +1541,17 @@ rule taxator_annotate:
         "{project}/genecatalog/taxator-tk/R1.taxonomy"
     shell: "/data/tools/taxator-tk/taxator-tk/Build-x86_64/taxknife -f 2 -m annotate -a -s path  < {input} > {output}"
 
+rule eggnog_mapper_diamond:
+    input:
+        "{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz"
+    output:
+        "{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz.emapper.seed_orthologs"
+    conda:
+        "envs/eggnog-mapper.yaml"
+    threads: 16
+    shell: "emapper.py --dmnd_db /data/db/eggnogdb/4.5.1/eggnog_proteins.dmnd -m diamond --no_annot --no_file_comments --cpu {threads} -i {input} -o {input}" 
+
+
 
 rule uproc_genes:
     input:
