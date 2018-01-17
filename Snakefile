@@ -234,13 +234,13 @@ rule merge_per_treatment:
             shell("cat {input.reverse}  > {output.reverse}")
             shell("cat {input.unpaired} > {output.unpaired}")
         else:
-            shell("zcat {input.forward} | gzip -c > {output.forward}")
-            shell("zcat {input.reverse} | gzip -c > {output.reverse}")
-            shell("zcat {input.unpaired} | gzip -c > {output.unpaired}")
+            shell("cat {input.forward}  > {output.forward}")
+            shell("cat {input.reverse}  > {output.reverse}")
+            shell("cat {input.unpaired} > {output.unpaired}")
 
 rule nonpareil:
     input:
-        "{project}/treatment/{treatment}_forward.fastq.gz"
+        "{project}/treatment/{treatment}_forward.fastq"
     output:
         "{project}/nonpareil/{treatment}.nonpareil.npo"
     params:
@@ -596,9 +596,9 @@ rule combine_reads:
 
 rule megahit:
     input:
-        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
+        forward = "{project}/treatment/{treatment}_forward.fastq",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq"
     output:
         contigs="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
         contigs_gzip="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa.gz",
@@ -625,9 +625,9 @@ rule megahit:
 
 rule spades:
     input:
-        forward = "{project}/treatment/{treatment}_forward.fastq.gz",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq.gz",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq.gz"
+        forward = "{project}/treatment/{treatment}_forward.fastq",
+        reverse = "{project}/treatment/{treatment}_reverse.fastq",
+        unpaired = "{project}/treatment/{treatment}_unpaired.fastq"
 #        forward=expand("{{project}}/host_filtering/{sample}_R1_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \ 
 #           else expand("{{project}}/trimmomatic/{sample}_forward_paired.fq.gz", sample=config["data"]),
 #        reverse=expand("{{project}}/host_filtering/{sample}_R2_paired_filtered.fastq", sample=config["data"]) if config['host_removal'] \
