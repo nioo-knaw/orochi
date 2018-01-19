@@ -683,9 +683,11 @@ rule quast:
         outdir="{project}/assembly/{assembler}/{treatment}/{kmers}/quast"
     log:
         "{project}/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
+    conda:
+        "envs/quast.yaml"
     threads: 16
     run:
-        shell("python2.7 /data/tools/quast/4.1/bin/metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}")
+        shell("metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}")
         shell("cp {output.quast} {output.stats}")
 
 rule barrnap_cross_assembly_all:
