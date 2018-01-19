@@ -1364,15 +1364,31 @@ rule diamond_genes:
  #       shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
  #       shell("java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {output.tsv} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping} -o {output.taxonomy}")
 
-rule diamond_genes_lca:
+#rule diamond_genes_lca:
+#    input:
+#        "{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa"
+#    output:
+#        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv"
+#    params:
+#        megan_version=config['megan_version'],
+#        megan_mapping=config['megan_mapping']
+#    shell: "java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping} -o {output.taxonomy}"
+
+rule diamond_taxonomy_and_kegg:
     input:
         "{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa"
     output:
-        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv"
-    params:
-        megan_version=config['megan_version'],
-        megan_mapping=config['megan_mapping']
-    shell: "java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping} -o {output.taxonomy}"
+        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv",
+        kegg="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-kegg.tsv"
+    shell: "/data/tools/megan-ue/6.10.6/tools/blast2lca -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t /data/db/megan/prot_acc2tax-Oct2017X1.abin -a2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --kegg"
+
+rule diamond_annotation:
+    input:
+        "{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa"
+    output:
+        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-megan.rma",
+    shell: "/data/tools/megan-ue/6.10.6/tools/daa2rma -i {input} -ms 50 -me 0.01 -top 50 --acc2taxa /data/db/megan/prot_acc2tax-Oct2017X1.abin --acc2eggnog /data/db/megan/acc2eggnog-Oct2016X.abin --acc2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --acc2interpro2go /data/db/megan/acc2interpro-Nov2016XX.abin --acc2seed /data/db/megan/acc2seed-May2015XX.abin --out {output}"
+
 
 rule kraken_genes:
     input:
