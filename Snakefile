@@ -686,9 +686,10 @@ rule quast:
     conda:
         "envs/quast.yaml"
     threads: 16
-    run:
-        shell("metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}")
-        shell("cp {output.quast} {output.stats}")
+    shell:"""
+        metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}
+        cp {output.quast} {output.stats}
+        """
 
 rule barrnap_cross_assembly_all:
     input:
@@ -1553,7 +1554,16 @@ rule eggnog_mapper_diamond:
     threads: 16
     shell: "emapper.py --dmnd_db /data/db/eggnogdb/4.5.1/eggnog_proteins.dmnd -m diamond --no_annot --no_file_comments --cpu {threads} -i {input} -o {input}" 
 
-
+rule eggnog_mapper_annotation:
+    input:
+        seq="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz",
+        diamond="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz.emapper.seed_orthologs"
+    output:
+        "{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz.emapper.annotations"
+    conda:
+        "envs/eggnog-mapper.yaml"
+    threads: 16
+    shell: "emapper.py --annotate_hits_table {input.diamond} --no_file_comments --cpu {threads} --data_dir /scratch -o {input.seq}"
 
 rule uproc_genes:
     input:
