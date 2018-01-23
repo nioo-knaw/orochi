@@ -11,7 +11,8 @@ min_version("3.5.4")
 configfile: "config.json"
 
 rule final:
-    input: expand("{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
+    input: expand("{project}/diamond/{sample}.1.daa \
+                   {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
@@ -281,19 +282,22 @@ rule megagta:
 
 rule diamond_per_sample:
     input:
-        "{project}/trimmomatic/{sample}_forward_paired.fq.gz"
+        forward="{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        reverse="{project}/trimmomatic/{sample}_reverse_paired.fq.gz"
     output:
-        tsv=temp("{project}/diamond/{sample}.diamond.nr.daa")
+        forward="{project}/diamond/{sample}.1.daa",
+        reverse="{project}/diamond/{sample}.2.daa",
     params:
         reference=config["diamond_database"],
-        version="0.8.20",
         output="{project}/diamond/{sample}.diamond.nr",
-        format="tab",
-        tmp="/tmp"        
+        tmp="/scratch/tmp"
+    conda:
+        "envs/diamond.yaml"
     threads: 32
-    run:
-        shell("/data/tools/diamond/{params.version}/bin/diamond blastx -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}")
-        #shell("/data/tools/diamond/{params.version}/bin/diamond view -f {params.format} -a {params.output}.daa -o {output.tsv}")
+    shell:"""
+        diamond blastx -c 1 --db {params.reference} -t {params.tmp} -p {threads} -q {input.forward} --daa {output.forward}
+        diamond blastx -c 1 --db {params.reference} -t {params.tmp} -p {threads} -q {input.reverse} --daa {output.reverse}
+        """
 
 rule diamond_lca:
     input:
