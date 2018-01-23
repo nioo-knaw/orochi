@@ -8,7 +8,8 @@ from snakemake.utils import R
 
 min_version("3.5.4")
 
-configfile: "config.json"
+if os.path.isfile("config.json"):
+    configfile: "config.json"
 
 rule final:
     input: expand("{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
