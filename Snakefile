@@ -12,7 +12,8 @@ if os.path.isfile("config.json"):
     configfile: "config.json"
 
 rule final:
-    input: expand("{project}/diamond/{sample}.1.daa \
+    input: expand("{project}/extract_16S/{sample}.bbduk.fa.gz \
+                   {project}/diamond/{sample}.1.daa \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
@@ -482,8 +483,8 @@ rule kraken2phyloseq:
 
 rule extract_16S:
     input:
-        forward="{project}/trimming/{sample}_1.fastq.gz",
-        reverse="{project}/trimming/{sample}_2.fastq.gz"
+        forward="{project}/trimmomatic/{sample}_forward_paired.fq.gz",
+        reverse="{project}/trimmomatic/{sample}_reverse_paired.fq.gz"
     output:
         "{project}/extract_16S/{sample}.bbduk.fa.gz"
     log:
