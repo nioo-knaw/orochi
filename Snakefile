@@ -8,7 +8,8 @@ from snakemake.utils import R
 
 min_version("3.5.4")
 
-configfile: "config.json"
+if os.path.isfile("config.json"):
+    configfile: "config.json"
 
 rule final:
     input: expand("{project}/diamond/{sample}.1.daa \
@@ -809,7 +810,7 @@ rule samtools_merge:
 rule samtools_flagstat:
     input:
 #        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
-        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam"
+        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forwardstq.bam"
     output:
         "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     conda:
@@ -875,8 +876,8 @@ rule bamm_mmgenome:
     output:
 #        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
 #        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
-         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam",
-         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forward.bam.bai"
+         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forwardstq.bam",
+         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forwardstq.bam.bai"
     log:
         "{project}/bamm/{assembler}/{treatment}/{kmers}/{treatment}.log"
     params:
