@@ -1149,7 +1149,7 @@ rule genecatalog:
     output:
         clusters="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.clusters.uc",
         fasta="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.centroids.fna"
-    threads: 24
+    threads: 64
     conda:
         "envs/vsearch.yaml"
     shell: "vsearch -cluster_fast {input} -id 0.95 -idprefix 4 -target_cov .9 -consout {output.fasta} -uc {output.clusters} -threads {threads}"
