@@ -6,7 +6,7 @@
     "host_removal" : False,
     "reference_index": "/data/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic",
     "diamond_database": "/data/db/blast/nr/20180111/nr-diamond-0.9.14",
-    "megan_version" : "6.5.8",
+    "megan_version" : "6.10.8",
     "megan_mapping" : "/data/db/megan/prot_acc2tax-Oct2017X1.abin",
     "silva_ref" : "/data/db/qiime/Silva119_release/rep_set/97/Silva_119_rep_set97.fna",
     "silva_taxonomy" : "/data/db/qiime/Silva119_release/consensus_majority_taxonomy_SILVA119/consensus_taxonomy/97/taxonomy_97_7_levels_consensus.txt",
