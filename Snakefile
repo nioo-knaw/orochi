@@ -13,7 +13,7 @@ if os.path.isfile("config.json"):
 
 rule final:
     input: expand("{project}/extract_16S/{sample}.bbduk.fa.gz \
-                   {project}/diamond/{sample}.1.daa \
+                   {project}/diamond/{sample}.rma \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
@@ -311,6 +311,14 @@ rule diamond_lca:
         megan_mapping=config['megan_mapping']
     # shell: "/data/tools/MEGAN/mtools/mtools/bin/lcamapper.sh -i {input} -f Detect -ms 50 -me 0.01 -tp 50 -gt /data/tools/MEGAN/mtools/mtools/data/gi_taxid_prot-4March2015.bin -o {output}"
     shell: "java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping}"
+
+rule diamond_paired_annotation:
+    input:
+        "{project}/diamond/{sample}.1.daa",
+        "{project}/diamond/{sample}.2.daa",
+    output:
+        taxonomy="{project}/diamond/{sample}.rma",
+    shell: "/data/tools/megan-ue/6.10.8/tools/daa2rma -i {input} --paired -ms 50 -me 0.01 -top 50 --acc2taxa /data/db/megan/prot_acc2tax-Oct2017X1.abin --acc2eggnog /data/db/megan/acc2eggnog-Oct2016X.abin --acc2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --acc2interpro2go /data/db/megan/acc2interpro-Nov2016XX.abin --acc2seed /data/db/megan/acc2seed-May2015XX.abin --out {output}"
 
 rule seq_names_forward:
     input:
