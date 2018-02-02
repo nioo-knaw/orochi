@@ -1411,13 +1411,17 @@ rule kraken_genes:
         kraken = "{project}/genecatalog/all.kraken",
         taxonomy = "{project}/genecatalog/all.kraken.taxonomy",
         report = "{project}/genecatalog/all.kraken.report"
+    params:
+      db = "/scratch/kraken-refseq-86"
     log:
         "{project}/genecatalog/all.kraken.log"
     threads: 16
-    run:
-        shell("/data/tools/kraken/0.10.5-beta/bin/kraken --preload --db /data/db/kraken/ --threads {threads} --fasta-input {input} --gzip-compressed --check-names --output {output.kraken} 2> {log}")
-        shell("/data/tools/kraken/0.10.5-beta/bin/kraken-translate --db /data/db/kraken/ --mpa-format {output.kraken} > {output.taxonomy}")
-        shell("/data/tools/kraken/0.10.5-beta/bin/kraken-mpa-report --db /data/db/kraken/  {output.kraken} > {output.report}")
+    conda:
+       "env/kraken.yaml"
+    shell: """
+        kraken --preload --db {params.db} --threads {threads} --fasta-input {input} --gzip-compressed --check-names --output {output.kraken} 2> {log}")
+        kraken-translate --db {params.db} --mpa-format {output.kraken} > {output.taxonomy}")
+        kraken-mpa-report --db {params.db}  {output.kraken} > {output.report}")
 
 rule kraken_filter:
     input:
