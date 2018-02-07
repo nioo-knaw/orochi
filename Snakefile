@@ -1419,10 +1419,10 @@ rule kraken_genes:
     conda:
        "env/kraken.yaml"
     shell: """
-        kraken --preload --db {params.db} --threads {threads} --fasta-input {input} --gzip-compressed --check-names --output {output.kraken} 2> {log}")
-        kraken-translate --db {params.db} --mpa-format {output.kraken} > {output.taxonomy}")
-        kraken-mpa-report --db {params.db}  {output.kraken} > {output.report}")
-
+        kraken --preload --db {params.db} --threads {threads} --fasta-input {input} --gzip-compressed --check-names --output {output.kraken} 2> {log}
+        kraken-translate --db {params.db} --mpa-format {output.kraken} > {output.taxonomy}
+        kraken-mpa-report --db {params.db}  {output.kraken} > {output.report}
+        """
 rule kraken_filter:
     input:
         taxonomy = "{project}/genecatalog/all.kraken.taxonomy",
