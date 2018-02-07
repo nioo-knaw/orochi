@@ -13,7 +13,7 @@ if os.path.isfile("config.json"):
 
 rule final:
     input: expand("{project}/extract_16S/{sample}.bbduk.fa.gz \
-                   {project}/diamond/{sample}.1.daa \
+                   {project}/diamond/{sample}.rma \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
@@ -311,6 +311,14 @@ rule diamond_lca:
         megan_mapping=config['megan_mapping']
     # shell: "/data/tools/MEGAN/mtools/mtools/bin/lcamapper.sh -i {input} -f Detect -ms 50 -me 0.01 -tp 50 -gt /data/tools/MEGAN/mtools/mtools/data/gi_taxid_prot-4March2015.bin -o {output}"
     shell: "java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/{params.megan_version}/jars/MEGAN.jar:/data/tools/MEGAN/{params.megan_version}/jars/data.jar' megan.tools.Blast2LCA -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t {params.megan_mapping}"
+
+rule diamond_paired_annotation:
+    input:
+        "{project}/diamond/{sample}.1.daa",
+        "{project}/diamond/{sample}.2.daa",
+    output:
+        taxonomy="{project}/diamond/{sample}.rma",
+    shell: "/data/tools/megan-ue/6.10.8/tools/daa2rma -i {input} --paired -ms 50 -me 0.01 -top 50 --acc2taxa /data/db/megan/prot_acc2tax-Oct2017X1.abin --acc2eggnog /data/db/megan/acc2eggnog-Oct2016X.abin --acc2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --acc2interpro2go /data/db/megan/acc2interpro-Nov2016XX.abin --acc2seed /data/db/megan/acc2seed-May2015XX.abin --out {output}"
 
 rule seq_names_forward:
     input:
@@ -1386,14 +1394,14 @@ rule diamond_taxonomy_and_kegg:
     output:
         taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv",
         kegg="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-kegg.tsv"
-    shell: "/data/tools/megan-ue/6.10.6/tools/blast2lca -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t /data/db/megan/prot_acc2tax-Oct2017X1.abin -a2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --kegg"
+    shell: "/data/tools/megan-ue/6.10.8/tools/blast2lca -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t /data/db/megan/prot_acc2tax-Oct2017X1.abin -a2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --kegg"
 
 rule diamond_annotation:
     input:
         "{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa"
     output:
         taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-megan.rma",
-    shell: "/data/tools/megan-ue/6.10.6/tools/daa2rma -i {input} -ms 50 -me 0.01 -top 50 --acc2taxa /data/db/megan/prot_acc2tax-Oct2017X1.abin --acc2eggnog /data/db/megan/acc2eggnog-Oct2016X.abin --acc2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --acc2interpro2go /data/db/megan/acc2interpro-Nov2016XX.abin --acc2seed /data/db/megan/acc2seed-May2015XX.abin --out {output}"
+    shell: "/data/tools/megan-ue/6.10.8/tools/daa2rma -i {input} -ms 50 -me 0.01 -top 50 --acc2taxa /data/db/megan/prot_acc2tax-Oct2017X1.abin --acc2eggnog /data/db/megan/acc2eggnog-Oct2016X.abin --acc2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --acc2interpro2go /data/db/megan/acc2interpro-Nov2016XX.abin --acc2seed /data/db/megan/acc2seed-May2015XX.abin --out {output}"
 
 
 rule kraken_genes:
@@ -1403,13 +1411,17 @@ rule kraken_genes:
         kraken = "{project}/genecatalog/all.kraken",
         taxonomy = "{project}/genecatalog/all.kraken.taxonomy",
         report = "{project}/genecatalog/all.kraken.report"
+    params:
+      db = "/scratch/kraken-refseq-86"
     log:
         "{project}/genecatalog/all.kraken.log"
     threads: 16
-    run:
-        shell("/data/tools/kraken/0.10.5-beta/bin/kraken --preload --db /data/db/kraken/ --threads {threads} --fasta-input {input} --gzip-compressed --check-names --output {output.kraken} 2> {log}")
-        shell("/data/tools/kraken/0.10.5-beta/bin/kraken-translate --db /data/db/kraken/ --mpa-format {output.kraken} > {output.taxonomy}")
-        shell("/data/tools/kraken/0.10.5-beta/bin/kraken-mpa-report --db /data/db/kraken/  {output.kraken} > {output.report}")
+    conda:
+       "env/kraken.yaml"
+    shell: """
+        kraken --preload --db {params.db} --threads {threads} --fasta-input {input} --gzip-compressed --check-names --output {output.kraken} 2> {log}")
+        kraken-translate --db {params.db} --mpa-format {output.kraken} > {output.taxonomy}")
+        kraken-mpa-report --db {params.db}  {output.kraken} > {output.report}")
 
 rule kraken_filter:
     input:
