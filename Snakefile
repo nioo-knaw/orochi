@@ -1158,8 +1158,8 @@ rule genecatalog:
 rule genecatalog_aa:
     input:
         genecatalog="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.centroids.fna",
-#        protein="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa.gz",
-        protein=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.faa.gz", treatment=config["treatment"])
+        protein="{project}/genecatalog/{assembler}/{kmers}/all.faa.gz",
+#        protein=expand("{{project}}/mmgenome/{{assembler}}/{treatment}/{{kmers}}/orfs.faa.gz", treatment=config["treatment"])
     output:
         nucleotide="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz",
         protein="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz",
