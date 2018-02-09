@@ -569,9 +569,9 @@ rule megahit_16S_cross_assembly:
     input:
         expand("{{project}}/extract_16S/{sample}.bbduk.fa.gz", sample=config["data"])
     output:
-        contigs="{project}/extract_16S/megahit/cross_assembly/final.contigs.fa"
+        contigs="{project}/extract_16S/cross_assembly/final.contigs.fa"
     params:
-        dir="{project}/extract_16S/megahit/cross_assembly/"
+        dir="{project}/extract_16S/cross_assembly/"
     threads: 8
     run:
         input_str = ",".join(input) 
@@ -579,7 +579,7 @@ rule megahit_16S_cross_assembly:
 
 rule barrnap_cross_assembly:
     input:
-        "{project}/extract_16S/megahit/cross_assembly/final.contigs.fa"
+        "{project}/extract_16S/cross_assembly/final.contigs.fa"
     output:
         "{project}/16S_assembly/barrnap.gff"
     log: "{project}/16S_assembly/barrnap.log"
@@ -589,9 +589,9 @@ rule barrnap_cross_assembly:
 
 rule rdp_16S_cross_assembly:
     input:
-        contigs="{project}/extract_16S/megahit/cross_assebmly/final.contigs.fa"
+        contigs="{project}/extract_16S/cross_assebmly/final.contigs.fa"
     output:
-        contigs="{project}/extract_16S/megahit/cross_assembly/final.contigs.fa.rdp"
+        contigs="{project}/extract_16S/cross_assembly/final.contigs.fa.rdp"
     shell: "java -Xmx1g -jar /data/tools/rdp-classifier/2.10/classifier.jar classify -c 0.8 {input} -f filterbyconf -o {output}"
 
 rule combine_reads:
