@@ -15,7 +15,7 @@ rule final:
     input: expand("{project}/extract_16S/{sample}.bbduk.fa.gz \
                    {project}/diamond/{sample}.rma \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
-                   {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
+                   {project}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
@@ -692,7 +692,6 @@ rule quast:
         "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
         quast="{project}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt",
-        stats="{project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt"
     params:
         outdir="{project}/assembly/{assembler}/{treatment}/{kmers}/quast"
     log:
@@ -700,10 +699,29 @@ rule quast:
     conda:
         "envs/quast.yaml"
     threads: 16
-    shell:"""
-        metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}
-        cp {output.quast} {output.stats}
-        """
+    shell: "metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}"
+
+rule quast_format:
+    input:
+        "{project}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt"
+    output:
+        "{project}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt"
+    params:
+       run="{assembler}-{treatment}-{kmers}"
+    shell: "printf '{params.run}\t' > {output} && cat {input} | sed 's/   */:/g' | cut -d : -f 2 | tr '\n' '\t' | cut -f 2- >> {output}"
+
+rule quast_merge:
+    input:
+        quast = expand("{{project}}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+        full = expand("{{project}}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+    output:
+        "{project}/stats/quast.report.txt"
+    run:
+         # Get only the first origin quast output file and get the first column for use as header
+         firstfile = input.full[0]
+         shell("cat {firstfile} | sed 's/   */:/g' | cut -d : -f 1 | tr '\n' '\t' | head -n 1 > {output} && printf '\n' >> {output}")
+         # Add the result rows
+         shell("cat {input.quast} >> {output}")
 
 rule barrnap_cross_assembly_all:
     input:
