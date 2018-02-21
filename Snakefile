@@ -16,7 +16,7 @@ rule final:
                    {project}/diamond/{sample}.rma \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt \
-                   {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
+                   {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv \
@@ -844,6 +844,29 @@ rule samtools_flagstat:
         "envs/samtools.yaml"
     shell:
         "samtools flagstat {input} > {output}"
+
+rule flagstat_convert:
+    input:
+        "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
+    output:
+        "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt"
+    params:
+       run="{assembler}-{treatment}-{kmers}"
+    # Create a linearized output
+    # First add the assembly name as first column
+    # Get the first column of the flagstat output and use tabs in stead of newlines as delimiter
+    shell: "printf '{params.run}\t' > {output} && cut -d' ' -f 1 {input} | paste -s -d '\t' >> {output}"
+
+rule flagstat_merge:
+    input:
+        expand("{{project}}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+    output:
+        "{project}/stats/flagstat.report.txt"
+    run:
+         # Add a header
+         shell("echo 'Assembly\ttotal_reads\tsecondary\tsupplementary\tduplicates\tmapped\tpaired\tread1\tread2\tproperly_paired\twith_itself_and_mate_mapped\tsingeltons\twith_mate_mapped_different_chr\twith_mate_mapped_different_chr_q5' > {output}")
+         # Add the result rows
+         shell("cat {input} >> {output}")
 
 #
 # mmgenome
