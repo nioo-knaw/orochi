@@ -17,6 +17,7 @@ rule final:
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
                    {project}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt \
                    {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt \
+                   {project}/report/{project}.report.nb.html \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv \
@@ -1783,4 +1784,28 @@ rule aggregate_taxonomy_and_ko:
         ko_groupby = features.groupby(['ko_best','Family'])
         ko_mean = ko_groupby.aggregate(np.sum)
         ko_mean.to_csv(open(output.table, 'w'),sep='\t')
+
+rule create_rdata:
+    input:
+        quast="{project}/stats/quast.report.txt",
+        flagstat="{project}/stats/flagstat.report.txt"
+    output:
+        rdata = "{project}.RData"
+    run:
+       R("""
+       quast <- read.delim("{input.quast}")
+       flagstat <- read.delim("{input.flagstat}")
+       save.image(file="{output.rdata}")
+       """)
+
+rule report:
+    input:
+        rdata = "{project}.RData"
+    output:
+        "{project}/report/{project}.report.nb.html"
+    params:
+        prefix="{project}/report/{project}.report",
+    conda: "envs/report.yaml"
+    script:
+        "report.Rmd"
 
