@@ -1,0 +1,1 @@
+Note, this is a work-in-progress pipeline, so contact bioinformatics-support@nioo.knaw.nl for more information. Currenty work is done to reorganize the pipeline is [modules] (https://gitlab.bioinf.nioo.knaw.nl/pipelines/orochi/tree/modules). Contributions are highly welcome.
