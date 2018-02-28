@@ -8,6 +8,8 @@ from snakemake.utils import R
 if os.path.isfile("config.json"):
     configfile: "config.json"
 
+output = []
+
 if True:
     include:
        "rules/data.input.rules"
@@ -15,12 +17,15 @@ if True:
 if True:
     include:
         "rules/pre-processing/trimmomatic.rules"
+    output.append(rules.trimmomatic.output.fw_paired)
+
 if True:
     include:
         "rules/assembly/mapping.rules"
     include:
         "rules/assembly/stats.rules"
 
+# Assembly
 if config["assembler"] == "megahit":
     include:
         "rules/assembly/megahit.rules"
@@ -30,18 +35,20 @@ if config["assembler"] == "spades":
     include:
         "rules/assembly/spades.rules"
 
+# Binning
 if True:
     include:
-        "rules/binning/metabat.rules"
-
+        "rules/binning/metabat.rules",
+    output.append(rules.metabat.output.depth)
+    include:
+        "rules/binning/mmgenome.rules",
+    output.append(rules.mmgenome_load_data.output[0])
+     
+# Reporting
 if True:
     include:
         "rules/report/report.rules"
-
-output = []
-output.append(rules.trimmomatic.output.fw_paired)
-output.append(rules.report.output[0])
-output.append(rules.metabat.output.depth)
+    output.append(rules.report.output[0])
 
 rule final:
     input: expand(output,\
