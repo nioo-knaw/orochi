@@ -2,7 +2,7 @@ rule mmgenome_coverage:
     input:
         expand("{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_forward_paired.bam", sample=config["data"]) 
     output:
-        "{project}/mmgenome/{assembler}/{treatment}/{kmers}/coverage.pmean.tsv"
+        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/coverage.pmean.tsv"
     conda:
         "../../envs/bamm.yaml"
     shell: "bamm parse -c {output} -m pmean -b {input}"
@@ -11,9 +11,9 @@ rule mmgenome_orfs:
     input:
         "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
-        orfs="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa",
-        nucleotide="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna",
-        orfscleaned="{project}/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
+        orfs="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa",
+        nucleotide="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna",
+        orfscleaned="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
     log:
         "{project}/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
     conda: 
@@ -25,12 +25,12 @@ rule mmgenome_orfs:
 
 rule mmgenome_essential:
     input:
-        "{project}/mmgenome/{assembler}/orfs.clean.faa"
+        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
     output:
-        prediction="{project}/mmgenome/{assembler}/assembly.hmm.orfs.txt",
-        essential="{project}/mmgenome/{assembler}/essential.txt"
+        prediction="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.hmm.orfs.txt",
+        essential="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/essential.txt"
     log:
-       "{project}/mmgenome/{assembler}/prodigal.log"
+       "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
     run:
         shell("hmmsearch --tblout {output.prediction} --cut_tc --notextw ~/install/mmgenome/scripts/essential.hmm {input} > {log}")
         shell("echo 'scaffold orf hmm.id' > {output.essential}")
@@ -38,11 +38,11 @@ rule mmgenome_essential:
 
 rule mmgenome_extract_essential:
     input:
-        prediction="{project}/mmgenome/{assembler}/assembly.hmm.orfs.txt",
-        orfs="{project}/mmgenome/{assembler}/orfs.clean.faa"
+        prediction="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.hmm.orfs.txt",
+        orfs="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
     output:
-        posorfs="{project}/mmgenome/{assembler}/list.of.positive.orfs.txt",
-        faa="{project}/mmgenome/{assembler}/assembly.orfs.hmm.faa"
+        posorfs="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/list.of.positive.orfs.txt",
+        faa="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.faa"
     run:
         shell("grep -v '^#' {input.prediction} | cut -f1 -d ' ' > {output.posorfs}")
         shell("perl ~/install/mmgenome/scripts/extract.using.header.list.pl -l {output.posorfs} -s {input.orfs} -o {output.faa}")
@@ -51,10 +51,10 @@ rule mmgenome_extract_essential:
 # TODO: add the MEGAN command
 rule mmgenome_essential_annotate:
     input:
-        faa="{project}/mmgenome/{assembler}/assembly.orfs.hmm.faa"
+        faa="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.faa"
     output:
-        blast="{project}/mmgenome/{assembler}/assembly.orfs.hmm.blast.xml",
-        tax="{project}/mmgenome/{assembler}/tax.txt"
+        blast="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast.xml",
+        tax="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
     threads: 16
     run:
         shell("blastp -query {input.faa} -db /data/db/blast/nr/20150311/nr -evalue 1e-5 -num_threads {threads} -max_target_seqs 5 -outfmt 5 -out {output.blast}")
@@ -64,9 +64,9 @@ rule mmgenome_essential_annotate:
 rule mmgenome_load_data:
      input:
          assembly="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz",
-         essential="{project}/mmgenome/{assembler}/essential.txt",
-         coverage="{project}/mmgenome/{assembler}/coverage.pmean.tsv",
-         tax="{project}/mmgenome/{assembler}/tax.txt"
+         essential="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/essential.txt",
+         coverage="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/coverage.pmean.tsv",
+         tax="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
      output:
          "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{project}.RData"
      run:
