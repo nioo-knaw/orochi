@@ -17,7 +17,7 @@ if True:
 if True:
     include:
         "rules/pre-processing/trimmomatic.smk"
-    output.append(rules.trimmomatic.output.fw_paired)
+    output.append(rules.trimmomatic.output.r2)
 
 if True:
     include:

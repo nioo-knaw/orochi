@@ -9,12 +9,13 @@ rule trimmomatic:
         r2=protected("{project}/trimmomatic/{sample}_reverse_paired.fq.gz"),
         r2_unpaired=protected("{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz"),
     log:
-        "{project}/trimmomatic/{sample}.log" 
+        "{project}/trimmomatic/{sample}.log"
+    threads: 16 
     params:
         # list of trimmers (see manual)
-        trimmer=["ILLUMINACLIP:{config["adapters"]}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:30 MINLEN:100"],
+        #trimmer=["ILLUMINACLIP:{config["adapters"]}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:30 MINLEN:100"],
         # optional parameters
-        extra="-threads {threads}"
+        extra="-threads {snakemake.threads}"
     wrapper:
         "0.22.0/bio/trimmomatic/pe"
 
