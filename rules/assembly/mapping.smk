@@ -1,33 +1,3 @@
-rule rename_megahit:
-    input:
-        "{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
-    output:
-        gzip="{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
-        fasta=temp("{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa")
-    run:
-        shell("zcat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
-        shell("gzip -c {output.fasta} > {output.gzip}")
-
-rule rename_spades:
-    input:
-        "{project}/assembly/spades/{treatment}/{kmers}/contigs.fasta"
-    output:
-        gzip=protected("{project}/assembly/spades/{treatment}/{kmers}/assembly.fa.gz"),
-        fasta=temp("{project}/assembly/spades/{treatment}/{kmers}/assembly.fa")
-    run:
-        shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
-        shell("gzip -c {output.fasta} > {output.gzip}")
-
-rule rename_idba:
-    input:
-        "{project}/assembly/idba/scaffold.fa"
-    output:
-        gzip="{project}/assembly/idba/assembly.fa.gz",
-        fasta=temp("{project}/assembly/idba/assembly.fa")
-    run:
-        shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
-        shell("gzip -c {output.fasta} > {output.gzip}")
-
 rule treatment_bwa_index:
     input:
          "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa"
