@@ -1,6 +1,6 @@
 rule rename_megahit:
     input:
-        "{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa.gz"
+        "{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
     output:
         gzip="{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
         fasta=temp("{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa")
