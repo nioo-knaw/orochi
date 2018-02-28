@@ -12,42 +12,42 @@ output = []
 
 if True:
     include:
-       "rules/data.input.rules"
+       "rules/data.input.smk"
 
 if True:
     include:
-        "rules/pre-processing/trimmomatic.rules"
+        "rules/pre-processing/trimmomatic.smk"
     output.append(rules.trimmomatic.output.fw_paired)
 
 if True:
     include:
-        "rules/assembly/mapping.rules"
+        "rules/assembly/mapping.smk"
     include:
-        "rules/assembly/stats.rules"
+        "rules/assembly/stats.smk"
 
 # Assembly
 if config["assembler"] == "megahit":
     include:
-        "rules/assembly/megahit.rules"
+        "rules/assembly/megahit.smk"
 
 
 if config["assembler"] == "spades":
     include:
-        "rules/assembly/spades.rules"
+        "rules/assembly/spades.smk"
 
 # Binning
 if True:
     include:
-        "rules/binning/metabat.rules",
+        "rules/binning/metabat.smk",
     output.append(rules.metabat.output.depth)
     include:
-        "rules/binning/mmgenome.rules",
+        "rules/binning/mmgenome.smk",
     output.append(rules.mmgenome_load_data.output[0])
      
 # Reporting
 if True:
     include:
-        "rules/report/report.rules"
+        "rules/report/report.smk"
     output.append(rules.report.output[0])
 
 rule final:
