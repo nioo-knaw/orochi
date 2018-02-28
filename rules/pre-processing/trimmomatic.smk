@@ -1,19 +1,23 @@
 # Trim adapters and low quality regions
 rule trimmomatic:
     input:
-        forward="{project}/unpack/{sample}_1.fastq.gz",
-        reverse="{project}/unpack/{sample}_2.fastq.gz",
+        r1="{project}/unpack/{sample}_1.fastq.gz",
+        r2="{project}/unpack/{sample}_2.fastq.gz",
     output:
-        fw_paired=protected("{project}/trimmomatic/{sample}_forward_paired.fq.gz"),
-        fw_unpaired=protected("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz"),
-        rev_paired=protected("{project}/trimmomatic/{sample}_reverse_paired.fq.gz"),
-        rev_unpaired=protected("{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz"),
-    params:
-        adapters = config["adapters"]
+        r1=protected("{project}/trimmomatic/{sample}_forward_paired.fq.gz"),
+        r1_unpaired=protected("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz"),
+        r2=protected("{project}/trimmomatic/{sample}_reverse_paired.fq.gz"),
+        r2_unpaired=protected("{project}/trimmomatic/{sample}_reverse_unpaired.fq.gz"),
     log:
         "{project}/trimmomatic/{sample}.log" 
-    threads: 16
-    shell: "java -jar /data/tools/Trimmomatic/0.36/trimmomatic-0.36.jar PE -threads {threads} -phred33 {input.forward} {input.reverse} {output.fw_paired} {output.fw_unpaired} {output.rev_paired} {output.rev_unpaired} ILLUMINACLIP:{params.adapters}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:30 MINLEN:100 2> {log}"
+    params:
+        # list of trimmers (see manual)
+        trimmer=["ILLUMINACLIP:{config["adapters"]}:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:30 MINLEN:100"],
+        # optional parameters
+        extra="-threads {threads}"
+    wrapper:
+        "0.22.0/bio/trimmomatic/pe"
+
 
 rule trimmomatic_combine_unpaired:
     input:
