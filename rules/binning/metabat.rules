@@ -1,11 +1,10 @@
 rule metabat:
     input: 
-        contigs="{project}/assembly/{assembler}/assembly.fa",
-        #bam=expand("{{project}}/mapped/{sample}.bam", sample=config["data"]),
-        bam=expand("{{project}}/bamm/{{assembler}}/assembly.{sample}_1.bam", sample=config["data"])
+        contigs="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
+        bam=expand("{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_forward_paired.bam", sample=config["data"]) 
     output:
-        depth="{project}/metabat/depth.txt",
-        bin="{project}/metabat/bin.1.fa"
+        depth="{project}/binning/{assembler}/{treatment}/{kmers}/metabat/depth.txt",
+        bin="{project}/binning/{assembler}/{treatment}/{kmers}/metabat/bin.1.fa"
     params:
         prefix="{project}/metabat/bin"
     log: "{project}/metabat/metabat.log"

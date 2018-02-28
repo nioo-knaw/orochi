@@ -19,8 +19,6 @@ if True:
     include:
         "rules/assembly/mapping.rules"
     include:
-        "rules/assembly/megahit.rules"
-    include:
         "rules/assembly/stats.rules"
 
 if config["assembler"] == "megahit":

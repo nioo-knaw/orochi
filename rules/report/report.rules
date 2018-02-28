@@ -18,7 +18,7 @@ rule report:
         "{project}/report/{project}.report.nb.html"
     params:
         prefix="{project}/report/{project}.report",
-    conda: "envs/report.yaml"
+    conda: "../../envs/report.yaml"
     script:
         "report.Rmd"
 
