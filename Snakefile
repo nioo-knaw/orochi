@@ -34,11 +34,16 @@ if config["assembler"] == "spades":
 
 if True:
     include:
+        "rules/binning/metabat.rules"
+
+if True:
+    include:
         "rules/report/report.rules"
 
 output = []
 output.append(rules.trimmomatic.output.fw_paired)
 output.append(rules.report.output[0])
+output.append(rules.metabat.output.depth)
 
 rule final:
     input: expand(output,\
