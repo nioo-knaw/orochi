@@ -41,7 +41,7 @@ rule bamm_samples:
     log:
         "{project}/bamm/{sample}.log"
     params:
-        outdir="{project}/bamm/"
+        outdir="{project}/bamm/{assembler}/{treatment}/{kmers}/"
     threads: 16
     conda:
         "../../envs/bamm.yaml"
