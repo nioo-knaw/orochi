@@ -31,10 +31,13 @@ rule mmgenome_essential:
         essential="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/essential.txt"
     log:
        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
-    run:
-        shell("hmmsearch --tblout {output.prediction} --cut_tc --notextw ~/install/mmgenome/scripts/essential.hmm {input} > {log}")
-        shell("echo 'scaffold orf hmm.id' > {output.essential}")
-        shell("tail -n+4 {output.prediction} | sed 's/ * / /g' | cut -f1,4 -d ' ' | sed 's/_/ /' >> essential.txt")
+    conda:
+       "../../envs/mmgenome.yaml"
+    shell: """
+        hmmsearch --tblout {output.prediction} --cut_tc --notextw ~/install/mmgenome/scripts/essential.hmm {input} > {log}
+        echo 'scaffold orf hmm.id' > {output.essential}
+        tail -n+4 {output.prediction} | sed 's/ * / /g' | cut -f1,4 -d ' ' | sed 's/_/ /' >> essential.txt
+        """
 
 rule mmgenome_extract_essential:
     input:
@@ -56,10 +59,13 @@ rule mmgenome_essential_annotate:
         blast="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast.xml",
         tax="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
     threads: 16
-    run:
-        shell("blastp -query {input.faa} -db /data/db/blast/nr/20150311/nr -evalue 1e-5 -num_threads {threads} -max_target_seqs 5 -outfmt 5 -out {output.blast}")
+    conda:
+       "../../envs/mmgenome.yaml"
+    shell: """
+        blastp -query {input.faa} -db /data/db/blast/nr/20150311/nr -evalue 1e-5 -num_threads {threads} -max_target_seqs 5 -outfmt 5 -out {output.blast}
         # Here we need to run MEGAN first
-        shell("perl ~/install/mmgenome/scripts/hmm.majority.vote.pl -i {output.blast} -o {output.tax}")
+        perl ~/install/mmgenome/scripts/hmm.majority.vote.pl -i {output.blast} -o {output.tax}
+        """
 
 rule mmgenome_load_data:
      input:

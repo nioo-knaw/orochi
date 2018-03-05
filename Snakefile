@@ -45,10 +45,10 @@ if True:
     output.append(rules.mmgenome_load_data.output[0])
      
 # Reporting
-if True:
-    include:
-        "rules/report/report.smk"
-    output.append(rules.report.output[0])
+#if True:
+#    include:
+#        "rules/report/report.smk"
+#    output.append(rules.report.output[0])
 
 rule final:
     input: expand(output,\
