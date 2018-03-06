@@ -33,10 +33,11 @@ rule mmgenome_essential:
        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
     conda:
        "../../envs/mmgenome.yaml"
+# TODO: remove hardcoded path
     shell: """
         hmmsearch --tblout {output.prediction} --cut_tc --notextw ~/install/mmgenome/scripts/essential.hmm {input} > {log}
-        echo 'scaffold orf hmm.id' > {output.essential}
-        tail -n+4 {output.prediction} | sed 's/ * / /g' | cut -f1,4 -d ' ' | sed 's/_/ /' >> essential.txt
+        echo "scaffold orf hmm.id" > {output.essential}
+        tail -n+4 {output.prediction} | sed "s/ * / /g" | cut -f1,4 -d " " | sed "s/_/ /" >> {output.essential}
         """
 
 rule mmgenome_extract_essential:
@@ -52,6 +53,7 @@ rule mmgenome_extract_essential:
 
 # TODO: replace by diamond
 # TODO: add the MEGAN command
+# TODO: Update db ref and move to config
 rule mmgenome_essential_annotate:
     input:
         faa="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.faa"
@@ -78,6 +80,7 @@ rule mmgenome_load_data:
      run:
          # TODO: make sample name independant
          R("""
+devtools::install_github("MadsAlbertsen/mmgenome/mmgenome")
 library(mmgenome)
 ess <- read.table("{input.essential}", header = T, sep = " ")
 coverage = read.csv("{input.coverage}", header=T,sep="\t")

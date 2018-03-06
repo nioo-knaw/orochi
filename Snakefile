@@ -37,9 +37,9 @@ if config["assembler"] == "spades":
 
 # Binning
 if True:
-    include:
-        "rules/binning/metabat.smk",
-    output.append(rules.metabat.output.depth)
+#    include:
+#        "rules/binning/metabat.smk",
+#    output.append(rules.metabat.output.depth)
     include:
         "rules/binning/mmgenome.smk",
     output.append(rules.mmgenome_load_data.output[0])
