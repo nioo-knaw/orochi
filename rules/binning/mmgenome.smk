@@ -32,7 +32,7 @@ rule mmgenome_essential:
     log:
        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
     conda:
-       "../../envs/mmgenome.yaml"
+       "../../envs/mmgenome_prepare.yaml"
 # TODO: remove hardcoded path
     shell: """
         hmmsearch --tblout {output.prediction} --cut_tc --notextw ~/install/mmgenome/scripts/essential.hmm {input} > {log}
@@ -62,7 +62,7 @@ rule mmgenome_essential_annotate:
         blast="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast.xml",
     threads: 16
     conda:
-       "../../envs/mmgenome.yaml"
+       "../../envs/mmgenome_prepare.yaml"
     message: "Finding essential genes - Extracting consensus taxonomic assignment"
     shell: """
         blastp -query {input.faa} -db /data/db/blast/nr/20150311/nr -evalue 1e-5 -num_threads {threads} -max_target_seqs 5 -outfmt 5 -out {output.blast}
@@ -123,4 +123,4 @@ rule mmgenome_load_data:
      conda:
          "../../envs/mmgenome.yaml"
      script:
-         "mmgenome.R"
+         "../../mmgenome.R"
