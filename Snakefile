@@ -15,8 +15,9 @@ rule final:
     input: expand("{project}/extract_16S/{sample}.bbduk.fa.gz \
                    {project}/diamond/{sample}.rma \
                    {project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz \
-                   {project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt \
-                   {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt \
+                   {project}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt \
+                   {project}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt \
+                   {project}/report/{project}.report.nb.html \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv \
@@ -692,7 +693,6 @@ rule quast:
         "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
         quast="{project}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt",
-        stats="{project}/stats/{treatment}/{kmers}/{assembler}.quast.report.txt"
     params:
         outdir="{project}/assembly/{assembler}/{treatment}/{kmers}/quast"
     log:
@@ -700,10 +700,29 @@ rule quast:
     conda:
         "envs/quast.yaml"
     threads: 16
-    shell:"""
-        metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}
-        cp {output.quast} {output.stats}
-        """
+    shell: "metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}"
+
+rule quast_format:
+    input:
+        "{project}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt"
+    output:
+        "{project}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt"
+    params:
+       run="{assembler}-{treatment}-{kmers}"
+    shell: "printf '{params.run}\t' > {output} && cat {input} | sed 's/   */:/g' | cut -d : -f 2 | tr '\n' '\t' | cut -f 2- >> {output}"
+
+rule quast_merge:
+    input:
+        quast = expand("{{project}}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+        full = expand("{{project}}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+    output:
+        "{project}/stats/quast.report.txt"
+    run:
+         # Get only the first origin quast output file and get the first column for use as header
+         firstfile = input.full[0]
+         shell("cat {firstfile} | sed 's/   */:/g' | cut -d : -f 1 | tr '\n' '\t' | head -n 1 > {output} && printf '\n' >> {output}")
+         # Add the result rows
+         shell("cat {input.quast} >> {output}")
 
 rule barrnap_cross_assembly_all:
     input:
@@ -826,6 +845,29 @@ rule samtools_flagstat:
         "envs/samtools.yaml"
     shell:
         "samtools flagstat {input} > {output}"
+
+rule flagstat_convert:
+    input:
+        "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
+    output:
+        "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt"
+    params:
+       run="{assembler}-{treatment}-{kmers}"
+    # Create a linearized output
+    # First add the assembly name as first column
+    # Get the first column of the flagstat output and use tabs in stead of newlines as delimiter
+    shell: "printf '{params.run}\t' > {output} && cut -d' ' -f 1 {input} | paste -s -d '\t' >> {output}"
+
+rule flagstat_merge:
+    input:
+        expand("{{project}}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+    output:
+        "{project}/stats/flagstat.report.txt"
+    run:
+         # Add a header
+         shell("echo 'Assembly\ttotal_reads\tsecondary\tsupplementary\tduplicates\tmapped\tpaired\tread1\tread2\tproperly_paired\twith_itself_and_mate_mapped\tsingeltons\twith_mate_mapped_different_chr\twith_mate_mapped_different_chr_q5' > {output}")
+         # Add the result rows
+         shell("cat {input} >> {output}")
 
 #
 # mmgenome
@@ -1742,4 +1784,28 @@ rule aggregate_taxonomy_and_ko:
         ko_groupby = features.groupby(['ko_best','Family'])
         ko_mean = ko_groupby.aggregate(np.sum)
         ko_mean.to_csv(open(output.table, 'w'),sep='\t')
+
+rule create_rdata:
+    input:
+        quast="{project}/stats/quast.report.txt",
+        flagstat="{project}/stats/flagstat.report.txt"
+    output:
+        rdata = "{project}.RData"
+    run:
+       R("""
+       quast <- read.delim("{input.quast}")
+       flagstat <- read.delim("{input.flagstat}")
+       save.image(file="{output.rdata}")
+       """)
+
+rule report:
+    input:
+        rdata = "{project}.RData"
+    output:
+        "{project}/report/{project}.report.nb.html"
+    params:
+        prefix="{project}/report/{project}.report",
+    conda: "envs/report.yaml"
+    script:
+        "report.Rmd"
 
