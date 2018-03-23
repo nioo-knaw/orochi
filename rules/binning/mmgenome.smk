@@ -1,11 +1,20 @@
 rule mmgenome_coverage:
     input:
-        expand("{{project}}/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{sample}_forward_paired.bam", sample=config["data"]) 
+         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam"
     output:
-        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/coverage.pmean.tsv"
+        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.tsv"
     conda:
         "../../envs/bamm.yaml"
     shell: "bamm parse -c {output} -m pmean -b {input}"
+
+rule mmgenome_coverage_rename:
+    input:
+        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.tsv"
+    output:
+        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.renamed.tsv"
+    params:
+        sample="{sample}"
+    shell: """echo "contig\tLength\t{params.sample}" > {output} && tail -n +2 {input} >> {output}"""
 
 rule mmgenome_orfs:
     input:
@@ -116,11 +125,14 @@ rule mmgenome_load_data:
      input:
          assembly="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz",
          essential="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/essential.txt",
-         coverage="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/coverage.pmean.tsv",
+         coverage=expand("{{project}}/binning/mmgenome/{{assembler}}/{{treatment}}/{{kmers}}/{sample}.coverage.pmean.renamed.tsv", sample=config["data"]),
          tax="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
      output:
          "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{project}.RData"
+     params:
+         samples = config["data"].keys()
      conda:
          "../../envs/mmgenome.yaml"
      script:
          "../../mmgenome.R"
+
