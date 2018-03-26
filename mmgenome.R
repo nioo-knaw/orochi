@@ -12,5 +12,5 @@ tax <- read.table(snakemake@input$tax, header = T, sep = "\t")
 
 d <- mmload(assembly = assembly, coverage = snakemake@params$samples, essential=ess, tax=tax, tax.expand = "Proteobacteria", tax.freq = 85)
 rm(list = c("assembly"))
-save.image(file=snakemake@output[1])
+save.image(file=snakemake@output$mmgenome)
 

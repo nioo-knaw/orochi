@@ -130,7 +130,7 @@ rule mmgenome_load_data:
          coverage=expand("{{project}}/binning/mmgenome/{{assembler}}/{{treatment}}/{{kmers}}/{sample}.coverage.pmean.renamed.tsv", sample=config["data"]),
          tax="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
      output:
-         "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{project}.RData"
+         mmgenome="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{project}.RData"
      params:
          samples = config["data"].keys()
      conda:
