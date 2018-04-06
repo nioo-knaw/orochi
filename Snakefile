@@ -16,9 +16,16 @@ if True:
 
 if True:
     include:
-        "rules/pre-processing/trimmomatic.smk"
-    output.append(rules.trimmomatic.output.r2)
+#        "rules/pre-processing/trimmomatic.smk"
+#    output.append(rules.trimmomatic.output.r2)
+        "rules/pre-processing/bbduk.smk"
 
+# Read-based analysis
+if True:
+    include:
+        "rules/read-based-analysis/fraggenescan.smk"
+    output.append(rules.predict_genes.output[0])
+ 
 if True:
     include:
         "rules/assembly/mapping.smk"
