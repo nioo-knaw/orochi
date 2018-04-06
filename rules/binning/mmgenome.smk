@@ -77,7 +77,7 @@ rule mmgenome_essential_annotate:
     shell: """
         blastp -query {input.faa} -db /data/db/blast/nr/20150311/nr -evalue 1e-5 -num_threads {threads} -max_target_seqs 5 -outfmt 5 -out {output.blast}
         # Here we need to run MEGAN first
-        java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/6.10.8/jars/MEGAN.jar:/data/tools/MEGAN/6.10.8/jars/data.jar' megan.tools.Blast2LCA -i {output.blast}v -f BlastXML -ms 50 -me 0.01 -top 50 -a2t /data/db/megan/prot_acc2tax-Oct2017X1.abin
+        java -Xmx32G -Djava.awt.headless=true -Duser.language=en -Duser.region=US -cp '/data/tools/MEGAN/6.10.8/jars/MEGAN.jar:/data/tools/MEGAN/6.10.8/jars/data.jar' megan.tools.Blast2LCA -i {output.blast} -f BlastXML -ms 50 -me 0.01 -top 50 -a2t /data/db/megan/prot_acc2tax-Oct2017X1.abin
         """
 
 rule mmgenome_filter_megan:
@@ -136,5 +136,5 @@ rule mmgenome_load_data:
      conda:
          "../../envs/mmgenome.yaml"
      script:
-         "../../mmgenome.R"
+         "../../mmgenome_load_data.R"
 

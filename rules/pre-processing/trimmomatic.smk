@@ -38,9 +38,9 @@ rule merge_per_treatment:
         unpaired=lambda wildcards: expand("{project}/host_filtering/{sample}_unpaired_filtered.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
              else expand("{project}/trimmomatic/{sample}_forward_unpaired.fq.gz", project=config["project"], sample=config["treatment"][wildcards.treatment])
     output:
-        forward = temporary("{project}/treatment/{treatment}_forward.fastq"),
-        reverse = temporary("{project}/treatment/{treatment}_reverse.fastq"),
-        unpaired = temporary("{project}/treatment/{treatment}_unpaired.fastq")
+        forward = protected("{project}/treatment/{treatment}_forward.fastq"),
+        reverse = protected("{project}/treatment/{treatment}_reverse.fastq"),
+        unpaired = protected("{project}/treatment/{treatment}_unpaired.fastq")
     run: 
         if config['host_removal']:
             shell("cat {input.forward}  > {output.forward}")

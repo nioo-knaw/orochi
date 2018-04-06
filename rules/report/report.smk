@@ -13,7 +13,8 @@ rule create_rdata:
 
 rule report:
     input:
-        rdata = "{project}/report/{project}.RData"
+        rdata = "{project}/report/{project}.RData",
+        mmgenome=expand("{{project}}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{{project}}.RData", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         "{project}/report/{project}.report.nb.html"
     params:
