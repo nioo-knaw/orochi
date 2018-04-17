@@ -27,7 +27,7 @@ if True:
     output.append(rules.predict_genes.output[0])
     include:
         "rules/read-based-analysis/diamond.smk"
-    output.append(rules.diamond_fraggenescan.output[0])
+    output.append(rules.diamond_taxonomy_and_kegg.output.taxonomy)
 
  
 if True:
