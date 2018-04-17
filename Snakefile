@@ -25,6 +25,10 @@ if True:
     include:
         "rules/read-based-analysis/fraggenescan.smk"
     output.append(rules.predict_genes.output[0])
+    include:
+        "rules/read-based-analysis/diamond.smk"
+    output.append(rules.diamond_fraggenescan.output[0])
+
  
 if True:
     include:
