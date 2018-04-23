@@ -1407,7 +1407,7 @@ rule diamond_genes:
 #        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv"
     params:
         reference=config["diamond_database"],
-        version="0.9.13",
+        version="0.9.14",
         output="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr",
         format="tab",
         tmp="/tmp",
