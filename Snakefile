@@ -1702,7 +1702,12 @@ rule uproc_filter_pfam:
         pfam_dict = {}
         for line in open(input.uproc):
             id, gene, length, pfam, score = line.strip().split(',')
-            pfam_dict.setdefault(gene,[]).append(pfam)
+            if gene in pfam_dict:
+                if pfam_dict[gene]['score'] < score:
+                    pfam_dict[gene] = {'pfam' : pfam, 'score': score}
+            else:
+                pfam_dict[gene] = {'pfam' : pfam, 'score': score}
+#            pfam_dict.setdefault(gene,[]).append(pfam)
         
         out = open(output[0], 'w')
         for gene in pfam_dict:
