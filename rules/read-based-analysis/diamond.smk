@@ -21,5 +21,6 @@ rule diamond_taxonomy_and_kegg:
     output:
         taxonomy="{project}/read-based/diamond/{sample}_forward_paired.diamond.nr-taxonomy.tsv",
         kegg="{project}/read-based/diamond/{sample}_forward_paired.diamond.nr-kegg.tsv"
+    threads: 32
     shell: "/data/tools/megan-ue/6.10.8/tools/blast2lca -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t /data/db/megan/prot_acc2tax-Mar2018X1.abin -a2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --kegg"
 
