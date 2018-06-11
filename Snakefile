@@ -28,7 +28,9 @@ if True:
     include:
         "rules/read-based-analysis/diamond.smk"
     output.append(rules.diamond_taxonomy_and_kegg.output.taxonomy)
-
+    include:
+        "rules/read-based-analysis/uproc.smk"
+    output.append(rules.uproc.output.cog)
  
 #if True:
 #    include:
