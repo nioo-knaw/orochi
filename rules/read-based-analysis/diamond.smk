@@ -13,7 +13,7 @@ rule diamond_fraggenescan:
         megan_mapping=config['megan_mapping']
     priority: 20
     threads: 32
-    shell: "/data/tools/diamond/{params.version}/bin/diamond blastx --sensitive -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}"
+    shell: "/data/tools/diamond/{params.version}/bin/diamond blastx -c 1 -d {params.reference} -t {params.tmp} -p {threads} -q {input} -a {params.output}"
 
 rule diamond_taxonomy_and_kegg:
     input:
