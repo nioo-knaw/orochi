@@ -39,7 +39,7 @@ rule bamm_samples:
         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
     log:
-        "{project}/bamm/{sample}.log"
+        "{project}/bamm/{sample}_{assembler}_{treatment}_{kmers}.log"
     params:
         outdir="{project}/bamm/{assembler}/{treatment}/{kmers}/"
     threads: 16
