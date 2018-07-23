@@ -20,8 +20,8 @@ rule final:
                    {project}/report/{project}.report.nb.html \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv \
                    {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa \
-                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv \
-                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.tsv \
+                   {project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.txt \
+                   {project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.txt \
                    {project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.ko.pfam.taxlevels.aggregated.tsv".split(),  project=config["project"], sample=config["data"], treatment=config["treatment"], assembler=config["assembler"], kmers=config["assembly-klist"])
 
 rule merge_and_rename:
@@ -1404,10 +1404,10 @@ rule diamond_genes:
         fasta="{project}/genecatalog/{assembler}/{kmers}/allgenecalled.fna.gz"
     output:
         tsv="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa",
-#        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv"
+#        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.txt"
     params:
         reference=config["diamond_database"],
-        version="0.9.14",
+        version="0.9.22",
         output="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr",
         format="tab",
         tmp="/tmp",
@@ -1424,7 +1424,7 @@ rule diamond_genes:
 #    input:
 #        "{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa"
 #    output:
-#        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv"
+#        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.txt"
 #    params:
 #        megan_version=config['megan_version'],
 #        megan_mapping=config['megan_mapping']
@@ -1434,8 +1434,8 @@ rule diamond_taxonomy_and_kegg:
     input:
         "{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr.daa"
     output:
-        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv",
-        kegg="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-kegg.tsv"
+        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.txt",
+        kegg="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-kegg.txt"
     shell: "/data/tools/megan-ue/6.10.8/tools/blast2lca -i {input} -f DAA -ms 50 -me 0.01 -top 50 -a2t /data/db/megan/prot_acc2tax-Oct2017X1.abin -a2kegg /data/db/megan/acc2kegg-Dec2017X1-ue.abin --kegg"
 
 rule diamond_annotation:
@@ -1499,7 +1499,7 @@ rule biom_add_kraken_taxonomy:
 
 rule diamond_genes_filter:
     input:
-        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.tsv",
+        taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy.txt",
         biom="{project}/genecatalog/{assembler}/{kmers}/all.coverage.tsv"
     output:
         taxonomy="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy-filtered.tsv"
@@ -1564,7 +1564,7 @@ rule merge_taxonomy:
         taxdiamond="{project}/genecatalog/{assembler}/{kmers}/all.diamond.nr-taxonomy-filtered.tsv",
 #        taxkraken="{project}/genecatalog/all.kraken.filtered.taxonomy",
     output:
-        "{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.tsv"
+        "{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.txt"
     run:
         import pandas as pd
         df = pd.read_table(input.table)
@@ -1719,7 +1719,7 @@ rule uproc_filter_pfam:
 
 rule add_ko:
     input:
-        table="{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.tsv",
+        table="{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.txt",
         ko="{project}/genecatalog/uproc/{assembler}/{kmers}/allgenecalled.uproc.kegg.filtered.txt"
     output:
         "{project}/genecatalog/{assembler}/{kmers}/all.coverage.taxonomy.ko.tsv",
