@@ -68,8 +68,3 @@ function dataURItoBlob(dataURI, callback) {
     return bb;
 }
 </script>
-
-<script>
-dataURL = "`r base64enc::dataURI(file = snakemake@input$rdata, mime = 'application/octet-stream', encoding = 'base64')`"
-download(dataURItoBlob(dataURL), "#rdata", "`r basename(snakemake@input$rdata)`", 'text/plain')
-</script>
