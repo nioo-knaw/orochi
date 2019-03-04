@@ -49,7 +49,7 @@ rule skewer:
         forward="{project}/skewer/{sample}_1.fastq",
         reverse="{project}/skewer/{sample}_2.fastq",
     log:
-        "{project}/skewer/skewer.log"
+        "{project}/skewer/skewer_{sample}.log"
     threads: 16
     run:
         shell("/data/tools/skewer/0.2.2/bin/skewer -x AGATGTGTATAAGAGACAG -m head -1 -t {threads} --quiet {input.forward} 2>> skewer.head.log | /data/tools/skewer/0.2.2/bin/skewer -x CTGTCTCTTATACACATCT -m tail -t {threads} --quiet -1 - 2>> skewer.tail.log > {output.forward}")
@@ -136,9 +136,8 @@ rule host_removal:
         refindex=config["reference_index"],
         fr_unmapped_prefix="{project}/host_filtering/{sample}_fr_unmapped_pairs",
         s_unmapped_prefix="{project}/host_filtering/{sample}_s_unmapped",
-    log: "log/host_removal_{sample}.log"
+    log: "{project}/log/host_removal_{sample}.log"
     threads: 32
-    benchmark:"benchmark/bowtie2_filtering.log"
     run:
         shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -1 {input.fw_paired} -2 {input.rev_paired} -S {output.fr_mapped_and_unmapped} --un-conc {params.fr_unmapped_prefix} 2>> {log} ")
         shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive -p {threads} -x {params.refindex} -U {input.fw_unpaired} -U {input.rev_unpaired} -S {output.s_mapped_and_unmapped} --un {params.s_unmapped_prefix} 2>> {log}")
@@ -161,9 +160,8 @@ rule filter_reads:
     params:
       refindex=config["reference_index"],
 
-    log: "log/host_filtering_{sample}.log"
+    log: "{project}/log/host_filtering_{sample}.log"
     threads: 32
-    benchmark:"benchmark/bowtie2_filtering.log"
     run:
       shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.fw_paired} -p {threads} -x {params.refindex} -U {input.fw_paired} -S {output.fw_mapped_and_unmapped} 2>> {log}")
       shell("/data/tools/bowtie2/2.2.9/bin/bowtie2 --very-sensitive --un {output.rev_paired} -p {threads} -x {params.refindex} -U {input.rev_paired} -S {output.rev_mapped_and_unmapped} 2>> {log}")
