@@ -1,5 +1,4 @@
 channels:
-  - r
   - bioconda
 dependencies:
-  - bwa ==0.7.15
+  - bwa ==0.7.17

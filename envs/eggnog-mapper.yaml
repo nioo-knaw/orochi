@@ -1,4 +1,4 @@
 channels:
   - bioconda
 dependencies:
-  - eggnog-mapper
+  - eggnog-mapper==1.0.3
