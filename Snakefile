@@ -291,7 +291,7 @@ rule diamond_per_sample:
     params:
         reference=config["diamond_database"],
         output="{project}/diamond/{sample}.diamond.nr",
-        tmp="/scratch/tmp"
+        tmp="/tmp"
     conda:
         "envs/diamond.yaml"
     threads: 32
