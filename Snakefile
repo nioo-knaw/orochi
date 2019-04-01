@@ -1794,12 +1794,8 @@ rule create_rdata:
         flagstat="{project}/stats/flagstat.report.txt"
     output:
         rdata = "{project}.RData"
-    run:
-       R("""
-       quast <- read.delim("{input.quast}")
-       flagstat <- read.delim("{input.flagstat}")
-       save.image(file="{output.rdata}")
-       """)
+    script:
+       "stats.R"
 
 rule report:
     input:
