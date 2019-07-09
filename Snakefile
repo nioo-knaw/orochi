@@ -181,7 +181,7 @@ rule pair_filtered_reads:
     sep=" "
   threads: 1
   run:
-    shell("python2.7 ../src/fastqCombinePairedEnd.py {input.forward} {input.rev} {output.forward} {output.rev} {output.single} {params.sep}")
+    shell("python2.7 ./scripts/fastqCombinePairedEnd.py {input.forward} {input.rev} {output.forward} {output.rev} {output.single} {params.sep}")
 
 rule split_unpaired:
     input:
