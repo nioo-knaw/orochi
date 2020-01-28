@@ -657,7 +657,7 @@ rule spades:
     threads: 32
     conda:
         "envs/spades.yaml"
-    shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} -s {input.unpaired} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
+    shell: "spades.py --bio -m 1200 -1 {input.forward} -2 {input.reverse} -s {input.unpaired} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
 
 # Interleave paired end reads and convert to fasta
 rule idba_prepare:
