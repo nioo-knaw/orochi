@@ -19,5 +19,13 @@ This will create a local copy of the pipeline in a folder called `orochi`
 
 4. Enter the pipeline folder with `cd orochi`
 
+5. The configuration of the pipeline needs to be set in a file called `config.json`. There is an example file which you can copy and adjust
+```
+cp config.sample.json config.json
+```
+
+Take a look at the `config.json` file
+ 
+
 ### Example Report
 [![example report](orochi-report-screenshot.png)](http://nioo0025.nioo.int/~mattiash/orochi.report.nb.html "Example report Orochi pipeline - Click to open!")
