@@ -9,9 +9,9 @@ Note, this is a work-in-progress pipeline, so contact bioinformatics-support@nio
 ### Getting started
 
 1. Logon to the place where you will analysis your data, e.g. server
-2. Create a local copy of the pipeline in a project folder, replace `<my-project>` with the name of your project
+2. Create a local copy of the pipeline in a project folder
 ```
-git clone https://gitlab.bioinf.nioo.knaw.nl/pipelines/orochi.git <my-project>
+git clone https://gitlab.bioinf.nioo.knaw.nl/pipelines/orochi.git
 ``` 
 
 ### Example Report
