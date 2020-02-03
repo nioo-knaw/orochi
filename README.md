@@ -13,6 +13,11 @@ Note, this is a work-in-progress pipeline, so contact bioinformatics-support@nio
 ```
 git clone https://gitlab.bioinf.nioo.knaw.nl/pipelines/orochi
 ``` 
+3. Enter your (NIOO) username and password
+
+This will create a local copy of the pipeline in a folder called `orochi`
+
+4. Enter the pipeline folder with `cd orochi`
 
 ### Example Report
 [![example report](orochi-report-screenshot.png)](http://nioo0025.nioo.int/~mattiash/orochi.report.nb.html "Example report Orochi pipeline - Click to open!")
