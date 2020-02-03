@@ -25,7 +25,16 @@ cp config.sample.json config.json
 ```
 
 Take a look at the `config.json` file
- 
+6. Adjust settings like:
+   - project name
+   - host genome
+   - data files
+   - treatment/assembly groups
+
+7. Check if the config file is correct and which steps will be run
+```
+snakemake -n
+```
 
 ### Example Report
 [![example report](orochi-report-screenshot.png)](http://nioo0025.nioo.int/~mattiash/orochi.report.nb.html "Example report Orochi pipeline - Click to open!")
