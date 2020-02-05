@@ -37,6 +37,11 @@ Take a look at the `config.json` file
 snakemake -n
 ```
 
+8. Run the pipeline. `-j` specifies the number of threads. Conda is the package manager
+```
+snakemake -j 8 --use-conda
+```
+
 8. Look at a diagram of all the steps in the workflow
 
 ```
