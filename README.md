@@ -25,6 +25,7 @@ cp config.sample.json config.json
 ```
 
 Take a look at the `config.json` file
+
 6. Adjust settings like:
    - project name
    - host genome
@@ -34,6 +35,13 @@ Take a look at the `config.json` file
 7. Check if the config file is correct and which steps will be run
 ```
 snakemake -n
+```
+
+8. Look at a diagram of all the steps in the workflow
+
+```
+snakemake --rulegraph | dot -Tpng > workflow.png
+display workflow.png
 ```
 
 ### Example Report
