@@ -37,11 +37,6 @@ Take a look at the `config.json` file
 snakemake -n
 ```
 
-8. Run the pipeline. `-j` specifies the number of threads. Conda is the package manager
-```
-snakemake -j 8 --use-conda
-```
-
 8. Look at a diagram of all the steps in the workflow
 
 ```
@@ -49,5 +44,9 @@ snakemake --rulegraph | dot -Tpng > workflow.png
 display workflow.png
 ```
 
+9. Run the pipeline. `-j` specifies the number of threads. Conda is the package manager
+```
+snakemake -j 8 --use-conda
+```
 ### Example Report
 [![example report](orochi-report-screenshot.png)](http://nioo0025.nioo.int/~mattiash/orochi.report.nb.html "Example report Orochi pipeline - Click to open!")
