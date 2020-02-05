@@ -44,7 +44,7 @@ snakemake --rulegraph | dot -Tpng > workflow.png
 display workflow.png
 ```
 
-9. Run the pipeline. `-j` specifies the number of threads. Conda is the package manager
+9. Run the pipeline. `-j` specifies the number of threads. Conda is the package manager. Optionally do this in a tmux session.
 ```
 snakemake -j 8 --use-conda
 ```
