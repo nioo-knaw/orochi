@@ -621,6 +621,8 @@ rule megahit:
         dir="{project}/assembly/megahit/{treatment}/{kmers}/",
         kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
     log: "{project}/assembly/megahit/{treatment}/{kmers}/megahit.log"
+    conda:
+        "envs/megahit.yaml"
     threads: 32
     run:
         #forward_str = ",".join(input.forward)
