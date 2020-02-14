@@ -614,7 +614,6 @@ rule megahit:
         unpaired = "{project}/treatment/{treatment}_unpaired.fastq"
     output:
         contigs="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
-        contigs_gzip="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa.gz",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
         opts=protected("{project}/assembly/megahit/{treatment}/{kmers}/opts.txt")
     params:
@@ -635,8 +634,17 @@ rule megahit:
         # bulk            '--min-count 3 --k-list 31,51,71,91,99 --no-mercy'  (experimental, standard bulk sequencing with >= 30x depth)
         # single-cell     '--min-count 3 --k-list 21,33,55,77,99,121 --merge_level 20,0.96' (experimental, single cell data)
 
-        shell("ulimit -m 700000000; /data/tools/megahit/1.0.6/megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} -r {input.unpaired} 2> {log}")
-        shell("gzip -c {output.contigs} > {output.contigs_gzip}")
+        shell("ulimit -m 700000000; megahit --continue --out-dir {params.dir} -m 0.9 --max-read-len 302 --cpu-only -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} -r {input.unpaired} 2> {log}")
+
+rule rename_megahit:
+    input:
+        "{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
+    output:
+        gzip="{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
+        fasta=temp("{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa")
+    run:
+        shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
+        shell("gzip -c {output.fasta} > {output.gzip}")
 
 rule spades:
     input:
