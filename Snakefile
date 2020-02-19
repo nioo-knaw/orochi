@@ -623,7 +623,7 @@ rule megahit:
     conda:
         "envs/megahit.yaml"
     threads: 32
-    shell: "ulimit -m 700000000; megahit --continue --out-dir {params.dir} --tmp-dir /tmp -m 0.9 -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} -r {input.unpaired} 2> {log}"
+    shell: "ulimit -m 700000000; megahit --out-dir {params.dir} --tmp-dir /tmp -m 0.9 -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} -r {input.unpaired} 2> {log}"
 
 rule rename_megahit:
     input:
