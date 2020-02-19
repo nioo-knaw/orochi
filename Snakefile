@@ -615,7 +615,7 @@ rule megahit:
     output:
         contigs="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
-        opts=protected("{project}/assembly/megahit/{treatment}/{kmers}/opts.txt")
+        opts=protected("{project}/assembly/megahit/{treatment}/{kmers}/opts.json")
     params:
         dir="{project}/assembly/megahit/{treatment}/{kmers}/",
         kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
@@ -623,7 +623,7 @@ rule megahit:
     conda:
         "envs/megahit.yaml"
     threads: 32
-    shell: "ulimit -m 700000000; megahit --out-dir {params.dir} --tmp-dir /tmp -m 0.9 -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} -r {input.unpaired} 2> {log}"
+    shell: "ulimit -m 700000000; megahit --force --out-dir {params.dir} --tmp-dir /tmp -m 0.9 -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} -r {input.unpaired} 2> {log}"
 
 rule rename_megahit:
     input:
@@ -632,7 +632,7 @@ rule rename_megahit:
         gzip="{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
         fasta=temp("{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa")
     run:
-        shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
+        shell("cat {input}/final.contigs.fa | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
 
 rule spades:
