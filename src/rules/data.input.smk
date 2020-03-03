@@ -3,8 +3,8 @@ rule merge_and_rename:
         forward = lambda wildcards: config["data"][wildcards.sample]['forward'],
         reverse = lambda wildcards: config["data"][wildcards.sample]['reverse']
     output:
-        forward=protected("{project}/unpack/{sample}_1.fastq.gz"),
-        reverse=protected("{project}/unpack/{sample}_2.fastq.gz"),
+        forward=protected("scratch/unpack/{sample}_1.fastq.gz"),
+        reverse=protected("scratch/unpack/{sample}_2.fastq.gz"),
     threads: 16
     run:
         if os.path.splitext(input[0])[1] == ".bz2":

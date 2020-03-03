@@ -1,7 +1,7 @@
 rule filter_contaminants:
      input:
-        forward="{project}/unpack/{sample}_1.fastq.gz",
-        reverse="{project}/unpack/{sample}_2.fastq.gz",
+        forward=rules.merge_and_rename.output.forward,
+        reverse=rules.merge_and_rename.output.reverse
      output:
         forward="{project}/filter/{sample}_R1.fasta",
         reverse="{project}/filter/{sample}_R2.fasta",

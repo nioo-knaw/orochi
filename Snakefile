@@ -12,55 +12,56 @@ output = []
 
 if True:
     include:
-       "rules/data.input.smk"
+       "src/rules/data.input.smk"
 
 if True:
     include:
 #        "rules/pre-processing/trimmomatic.smk"
 #    output.append(rules.trimmomatic.output.r2)
-        "rules/pre-processing/bbduk.smk"
+        "src/rules/pre-processing/bbduk.smk"
+    output.append(rules.filter_contaminants.output[0])
 
 # Read-based analysis
-if True:
+if False:
     include:
-        "rules/read-based-analysis/fraggenescan.smk"
+        "src/rules/read-based-analysis/fraggenescan.smk"
     output.append(rules.predict_genes.output[0])
     include:
-        "rules/read-based-analysis/diamond.smk"
+        "src/rules/read-based-analysis/diamond.smk"
     output.append(rules.diamond_taxonomy_and_kegg.output.taxonomy)
     include:
-        "rules/read-based-analysis/uproc.smk"
+        "src/rules/read-based-analysis/uproc.smk"
     output.append(rules.uproc.output.cog)
  
 #if True:
 #    include:
-#        "rules/assembly/mapping.smk"
+#        "src/rules/assembly/mapping.smk"
 #    include:
-#        "rules/assembly/stats.smk"
+#        "src/rules/assembly/stats.smk"
 
 # Assembly
 #if config["assembler"] == "megahit":
 #    include:
-#        "rules/assembly/megahit.smk"
+#        "src/rules/assembly/megahit.smk"
 
 
 #if config["assembler"] == "spades":
 #    include:
-#        "rules/assembly/spades.smk"
+#        "src/rules/assembly/spades.smk"
 
 # Binning
 #if True:
 #    include:
-#        "rules/binning/metabat.smk",
+#        "src/rules/binning/metabat.smk",
 #    output.append(rules.metabat.output.depth)
 #    include:
-#        "rules/binning/mmgenome.smk",
+#        "src/rules/binning/mmgenome.smk",
 #    output.append(rules.mmgenome_load_data.output[0])
      
 # Reporting
 #if True:
 #    include:
-#        "rules/report/report.smk"
+#        "src/rules/report/report.smk"
 #    output.append(rules.report.output[0])
 
 rule final:
