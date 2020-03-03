@@ -1,16 +1,16 @@
 rule megahit:
     input:
-        forward = "{project}/treatment/{treatment}_forward.fastq",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq"
+        forward = "scratch/treatment/{treatment}_forward.fastq",
+        reverse = "scratch/treatment/{treatment}_reverse.fastq",
+        unpaired = "scratch/treatment/{treatment}_unpaired.fastq"
     output:
-        contigs="{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
+        contigs="scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
-        opts=protected("{project}/assembly/megahit/{treatment}/{kmers}/opts.txt")
+        opts=protected("scratch/assembly/megahit/{treatment}/{kmers}/opts.txt")
     params:
-        dir="{project}/assembly/megahit/{treatment}/{kmers}/",
+        dir="scratch/assembly/megahit/{treatment}/{kmers}/",
         kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
-    log: "{project}/assembly/megahit/{treatment}/{kmers}/megahit.log"
+    log: "scratch/assembly/megahit/{treatment}/{kmers}/megahit.log"
     threads: 32
     conda:
         "../../envs/megahit.yaml"
@@ -24,10 +24,10 @@ rule megahit:
 
 rule rename_megahit:
     input:
-        "{project}/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
+        "scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
     output:
-        gzip="{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
-        fasta=temp("{project}/assembly/megahit/{treatment}/{kmers}/assembly.fa")
+        gzip="scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
+        fasta=temp("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa")
     run:
         shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")

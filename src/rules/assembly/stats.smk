@@ -1,12 +1,12 @@
 rule quast:
     input:
-        "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
+        "scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
-        quast="{project}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt",
+        quast="scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt",
     params:
-        outdir="{project}/assembly/{assembler}/{treatment}/{kmers}/quast"
+        outdir="scratch/assembly/{assembler}/{treatment}/{kmers}/quast"
     log:
-        "{project}/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
+        "scratch/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
     conda:
         "../../envs/quast.yaml"
     threads: 16
@@ -14,19 +14,19 @@ rule quast:
 
 rule quast_format:
     input:
-        "{project}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt"
+        "scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt"
     output:
-        "{project}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt"
+        "scratch/stats/{assembler}/{treatment}/{kmers}/quast.report.txt"
     params:
        run="{assembler}-{treatment}-{kmers}"
     shell: "printf '{params.run}\t' > {output} && cat {input} | sed 's/   */:/g' | cut -d : -f 2 | tr '\n' '\t' | cut -f 2- >> {output}"
 
 rule quast_merge:
     input:
-        quast = expand("{{project}}/stats/{assembler}/{treatment}/{kmers}/quast.report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
-        full = expand("{{project}}/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+        quast = expand("scratch/stats/{assembler}/{treatment}/{kmers}/quast.report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+        full = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
     output:
-        "{project}/stats/quast.report.txt"
+        "scratch/stats/quast.report.txt"
     run:
          # Get only the first origin quast output file and get the first column for use as header
          firstfile = input.full[0]
@@ -37,10 +37,10 @@ rule quast_merge:
 
 rule samtools_flagstat:
     input:
-#        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
-        "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forwardstq.bam"
+#        "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.bam"
+        "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forwardstq.bam"
     output:
-        "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
+        "scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     conda:
         "../../envs/samtools.yaml"
     shell:
@@ -48,9 +48,9 @@ rule samtools_flagstat:
 
 rule flagstat_convert:
     input:
-        "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
+        "scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     output:
-        "{project}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt"
+        "scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt"
     params:
        run="{assembler}-{treatment}-{kmers}"
     # Create a linearized output
@@ -60,9 +60,9 @@ rule flagstat_convert:
 
 rule flagstat_merge:
     input:
-        expand("{{project}}/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
+        expand("scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.linear.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
     output:
-        "{project}/stats/flagstat.report.txt"
+        "scratch/stats/flagstat.report.txt"
     run:
          # Add a header
          shell("echo 'Assembly\ttotal_reads\tsecondary\tsupplementary\tduplicates\tmapped\tpaired\tread1\tread2\tproperly_paired\twith_itself_and_mate_mapped\tsingeltons\twith_mate_mapped_different_chr\twith_mate_mapped_different_chr_q5' > {output}")

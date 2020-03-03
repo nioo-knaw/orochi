@@ -1,10 +1,10 @@
 rule predict_genes:
     input:
-        "{project}/filter/{sample}_R1.fasta"
+        "scratch/filter/{sample}_R1.fasta"
     output:
-        "{project}/read-based/fraggenescan/{sample}_forward_paired.ffn"
+        "scratch/read-based/fraggenescan/{sample}_forward_paired.ffn"
     params:
-        prefix="{project}/read-based/fraggenescan/{sample}_forward_paired"
+        prefix="scratch/read-based/fraggenescan/{sample}_forward_paired"
     conda:
         "../../envs/fraggenescan.yaml"
     threads: 32

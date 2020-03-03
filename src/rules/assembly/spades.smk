@@ -1,15 +1,15 @@
 rule spades:
     input:
-        forward = "{project}/treatment/{treatment}_forward.fastq",
-        reverse = "{project}/treatment/{treatment}_reverse.fastq",
-        unpaired = "{project}/treatment/{treatment}_unpaired.fastq"
+        forward = "scratch/treatment/{treatment}_forward.fastq",
+        reverse = "scratch/treatment/{treatment}_reverse.fastq",
+        unpaired = "scratch/treatment/{treatment}_unpaired.fastq"
     output:
-        temp("{project}/assembly/spades/{treatment}/{kmers}/contigs.fasta")
+        temp("scratch/assembly/spades/{treatment}/{kmers}/contigs.fasta")
     params:
-        outdir="{project}/assembly/spades/{treatment}/{kmers}/",
+        outdir="scratch/assembly/spades/{treatment}/{kmers}/",
         kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
     log:
-        "{project}/assembly/spades/{treatment}/{kmers}/spades.log"
+        "scratch/assembly/spades/{treatment}/{kmers}/spades.log"
     threads: 32
     conda:
         "envs/spades.yaml"
@@ -17,10 +17,10 @@ rule spades:
 
 rule rename_spades:
     input:
-        "{project}/assembly/spades/{treatment}/{kmers}/contigs.fasta"
+        "scratch/assembly/spades/{treatment}/{kmers}/contigs.fasta"
     output:
-        gzip=protected("{project}/assembly/spades/{treatment}/{kmers}/assembly.fa.gz"),
-        fasta=temp("{project}/assembly/spades/{treatment}/{kmers}/assembly.fa")
+        gzip=protected("scratch/assembly/spades/{treatment}/{kmers}/assembly.fa.gz"),
+        fasta=temp("scratch/assembly/spades/{treatment}/{kmers}/assembly.fa")
     run:
         shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")

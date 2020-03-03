@@ -1,9 +1,9 @@
 rule create_rdata:
     input:
-        quast="{project}/stats/quast.report.txt",
-        flagstat="{project}/stats/flagstat.report.txt"
+        quast="scratch/stats/quast.report.txt",
+        flagstat="scratch/stats/flagstat.report.txt"
     output:
-        rdata = "{project}/report/{project}.RData"
+        rdata = "scratch/report/orochi.RData"
     run:
        R("""
        quast <- read.delim("{input.quast}")
@@ -13,12 +13,12 @@ rule create_rdata:
 
 rule report:
     input:
-        rdata = "{project}/report/{project}.RData",
-        mmgenome=expand("{{project}}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{{project}}.RData", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"])
+        rdata = "scratch/report/orochi.RData",
+        mmgenome=expand("scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/orochi.RData", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        "{project}/report/{project}.report.nb.html"
+        "scratch/report/scratch.report.nb.html"
     params:
-        prefix="{project}/report/{project}.report",
+        prefix="scratch/report/scratch.report",
     conda: "../../envs/report.yaml"
     script:
         "report.Rmd"

@@ -3,14 +3,14 @@ rule filter_contaminants:
         forward=rules.merge_and_rename.output.forward,
         reverse=rules.merge_and_rename.output.reverse
      output:
-        forward="{project}/filter/{sample}_R1.fasta",
-        reverse="{project}/filter/{sample}_R2.fasta",
-        stats="{project}/stats/{sample}_contaminants_stats.txt"
+        forward="scratch/filter/{sample}_R1.fasta",
+        reverse="scratch/filter/{sample}_R2.fasta",
+        stats="scratch/stats/{sample}_contaminants_stats.txt"
      params:
          phix="refs/phix.fasta",
          adapters="refs/illumina_scriptseq_and_truseq_adapters.fa",
          quality="25"
-     log: "{project}/filter/{sample}.log"
+     log: "scratch/filter/{sample}.log"
      conda: "../../envs/bbmap.yaml"
      threads: 16
      shell:"""bbduk.sh -Xmx8g in={input.forward} in2={input.reverse} out={output.forward} out2={output.reverse} \

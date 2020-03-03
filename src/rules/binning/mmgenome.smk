@@ -1,30 +1,30 @@
 rule mmgenome_coverage:
     input:
-         "{project}/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam"
+         "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam"
     output:
-        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.tsv"
+        "scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.tsv"
     conda:
         "../../envs/bamm.yaml"
     shell: "bamm parse -c {output} -m pmean -b {input}"
 
 rule mmgenome_coverage_rename:
     input:
-        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.tsv"
+        "scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.tsv"
     output:
-        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.renamed.tsv"
+        "scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/{sample}.coverage.pmean.renamed.tsv"
     params:
         sample="{sample}"
     shell: """echo "contig\tLength\t{params.sample}" > {output} && tail -n +2 {input} >> {output}"""
 
 rule mmgenome_orfs:
     input:
-        "{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
+        "scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
-        orfs="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa",
-        nucleotide="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna",
-        orfscleaned="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
+        orfs="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.faa",
+        nucleotide="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.fna",
+        orfscleaned="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
     log:
-        "{project}/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
+        "scratch/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
     conda: 
         "../../envs/prodigal.yaml"
     shell: """
@@ -34,12 +34,12 @@ rule mmgenome_orfs:
 
 rule mmgenome_essential:
     input:
-        "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
+        "scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
     output:
-        prediction="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.hmm.orfs.txt",
-        essential="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/essential.txt"
+        prediction="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.hmm.orfs.txt",
+        essential="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/essential.txt"
     log:
-       "{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
+       "scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/prodigal.log"
     conda:
        "../../envs/mmgenome_prepare.yaml"
 # TODO: remove hardcoded path
@@ -51,11 +51,11 @@ rule mmgenome_essential:
 
 rule mmgenome_extract_essential:
     input:
-        prediction="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.hmm.orfs.txt",
-        orfs="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
+        prediction="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.hmm.orfs.txt",
+        orfs="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/orfs.clean.faa"
     output:
-        posorfs="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/list.of.positive.orfs.txt",
-        faa="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.faa"
+        posorfs="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/list.of.positive.orfs.txt",
+        faa="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.faa"
     run:
         shell("grep -v '^#' {input.prediction} | cut -f1 -d ' ' > {output.posorfs}")
         shell("perl ~/install/mmgenome/scripts/extract.using.header.list.pl -l {output.posorfs} -s {input.orfs} -o {output.faa}")
@@ -66,10 +66,10 @@ rule mmgenome_extract_essential:
 # https://madsalbertsen.github.io/multi-metagenome/docs/step5.html
 rule mmgenome_essential_annotate:
     input:
-        faa="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.faa"
+        faa="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.faa"
     output:
-        blast="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast.xml",
-        taxonomy="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast-taxonomy.txt" 
+        blast="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast.xml",
+        taxonomy="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast-taxonomy.txt" 
     threads: 16
     conda:
        "../../envs/mmgenome_prepare.yaml"
@@ -82,9 +82,9 @@ rule mmgenome_essential_annotate:
 
 rule mmgenome_filter_megan:
     input:
-        taxonomy="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast-taxonomy.txt",
+        taxonomy="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast-taxonomy.txt",
     output:
-        taxonomy="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast-taxonomy-filtered.txt"
+        taxonomy="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast-taxonomy-filtered.txt"
     params:
         minscore="80"
     run:
@@ -118,19 +118,19 @@ rule mmgenome_filter_megan:
 
 rule mmgenome_consensus_tax:
    input:
-       taxonomy="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast-taxonomy-filtered.txt"
+       taxonomy="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/assembly.orfs.hmm.blast-taxonomy-filtered.txt"
    output:
-       essential="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
+       essential="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
    shell: "perl ~/src/orochi/scripts/hmm.majority.vote.pl -i {input.taxonomy} -o {output.essential}"
 
 rule mmgenome_load_data:
      input:
-         assembly="{project}/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz",
-         essential="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/essential.txt",
-         coverage=expand("{{project}}/binning/mmgenome/{{assembler}}/{{treatment}}/{{kmers}}/{sample}.coverage.pmean.renamed.tsv", sample=config["data"]),
-         tax="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
+         assembly="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz",
+         essential="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/essential.txt",
+         coverage=expand("scratch/binning/mmgenome/{{assembler}}/{{treatment}}/{{kmers}}/{sample}.coverage.pmean.renamed.tsv", sample=config["data"]),
+         tax="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/tax.txt"
      output:
-         mmgenome="{project}/binning/mmgenome/{assembler}/{treatment}/{kmers}/{project}.RData"
+         mmgenome="scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/orochi.RData"
      params:
          samples = config["data"].keys()
      conda:
