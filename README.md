@@ -4,8 +4,11 @@
 This repo is a rewrite of the initial Orochi pipeline for shotgun metagenomics and still in development. It does not perform a full analysis yet.
 
 ### What changed compared to Orochi 0.1?
-  - Rules are now organized into modules. There is a set of core modules that do the QC, assembly and annotation. Additional modules can be added as extension, for example the detection of secondary metabolite biosynthesis gene clusters with antismash
-  - QC step is now performed with bbduk in stead of trimmomatic to 1) trim poly-G tails from Novaseq sequences 2) remove low complexity reads 3) remove phix reads
+  - Rules are now organized into modules. 
+    - There is a set of core modules that do the QC, assembly and annotation.
+    - Additional modules can be added as extension, for example the detection of secondary metabolite biosynthesis gene clusters with antismash
+    - Modules are automatically detected in the main Snakefile
+  - The QC step is now performed with bbduk in stead of trimmomatic to 1) trim poly-G tails from Novaseq sequences 2) remove low complexity reads 3) remove phix reads
 
 ### Getting started
 
