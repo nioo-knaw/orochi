@@ -11,7 +11,7 @@ rule bamm_treatment:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
         forward = "scratch/treatment/{treatment}_forward.fastq",
         reverse = "scratch/treatment/{treatment}_reverse.fastq",
-        unpaired = "scratch/treatment/{treatment}_unpaired.fastq",
+#        unpaired = "scratch/treatment/{treatment}_unpaired.fastq",
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
          "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forwardstq.bam",
@@ -31,10 +31,10 @@ rule bamm_samples:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt",
         forward = "scratch/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
-        "scratch/trimmomatic/{sample}_forward_paired.fq.gz",
+        "scratch/filter/{sample}_R1.fasta",
         reverse = "scratch/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
-       "scratch/trimmomatic/{sample}_reverse_paired.fq.gz",
-        unpaired = "scratch/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "scratch/trimmomatic/{sample}_unpaired_combined.fq.gz",
+       "scratch/filter/{sample}_R2.fasta",
+#        unpaired = "scratch/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "scratch/trimmomatic/{sample}_unpaired_combined.fq.gz",
     output:
         "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
         "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 

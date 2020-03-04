@@ -1,8 +1,8 @@
 # Trim adapters and low quality regions
 rule trimmomatic:
     input:
-        r1="scratch/unpack/{sample}_1.fastq.gz",
-        r2="scratch/unpack/{sample}_2.fastq.gz",
+        r1=rules.merge_and_rename.output.forward,
+        r2=rules.merge_and_rename.output.reverse
     output:
         r1=protected("scratch/trimmomatic/{sample}_forward_paired.fq.gz"),
         r1_unpaired=protected("scratch/trimmomatic/{sample}_forward_unpaired.fq.gz"),

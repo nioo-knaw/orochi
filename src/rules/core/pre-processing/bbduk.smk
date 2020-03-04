@@ -11,8 +11,13 @@ rule filter_contaminants:
          adapters="refs/illumina_scriptseq_and_truseq_adapters.fa",
          quality="25"
      log: "scratch/filter/{sample}.log"
-     conda: "../../envs/bbmap.yaml"
+     conda: "../../../envs/bbmap.yaml"
      threads: 16
-     shell:"""bbduk.sh -Xmx8g in={input.forward} in2={input.reverse} out={output.forward} out2={output.reverse} \
-              ref={params.adapters},{params.phix} qtrim="rl" trimq={params.quality} threads={threads} stats={output.stats} 2> {log}"""
-
+     shell:"""bbduk.sh in={input.forward} in2={input.reverse} out={output.forward} out2={output.reverse} \
+     trimpolygright=1 \
+     entropy=0.6 entropywindow=50 entropymask=f \
+     qtrim=rl trimq={params.quality} \
+     minlength=51 \
+     ref=$CONDA_PREFIX/opt/bbmap-38.79-0/resources/phix174_ill.ref.fa.gz,$CONDA_PREFIX/opt/bbmap-38.79-0/resources/nextera.fa.gz ktrim=r \
+     stats={output.stats} \
+     t={threads} 2> {log}"""

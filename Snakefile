@@ -1,7 +1,7 @@
 __author__ = "Mattias de Hollander"
 __copyright__ = "Copyright 2020, Mattias de Hollander"
 __email__ = "m.dehollander@nioo.knaw.nl"
-__license__ = "MIT"
+__license__ = "GNU GPLv3"
 
 from snakemake.utils import R, listfiles
 

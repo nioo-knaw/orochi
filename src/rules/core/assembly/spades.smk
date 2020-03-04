@@ -2,7 +2,7 @@ rule spades:
     input:
         forward = "scratch/treatment/{treatment}_forward.fastq",
         reverse = "scratch/treatment/{treatment}_reverse.fastq",
-        unpaired = "scratch/treatment/{treatment}_unpaired.fastq"
+#        unpaired = "scratch/treatment/{treatment}_unpaired.fastq"
     output:
         temp("scratch/assembly/spades/{treatment}/{kmers}/contigs.fasta")
     params:
@@ -13,7 +13,7 @@ rule spades:
     threads: 32
     conda:
         "envs/spades.yaml"
-    shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} -s {input.unpaired} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
+    shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
 
 rule rename_spades:
     input:
