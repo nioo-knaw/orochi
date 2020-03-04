@@ -10,7 +10,7 @@ if os.path.isfile("config.json"):
 
 
 # Dynamically load all modules/rules
-smks = list(listfiles('src/rules/{section}/{part}.smk'))
+smks = list(listfiles('src/rules/core/{section}/{part}.smk'))
 
 for smk,rule in smks:
     include: smk
