@@ -14,7 +14,7 @@ rule megahit:
     threads: 32
     conda:
         "../../../envs/megahit.yaml"
-    shell:"megahit --continue --force --out-dir {params.dir} --tmp-dir /scratch/tmp -m 0.9 --max-read-len 302 --cpu-only -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} 2> {log}"
+    shell:"megahit --continue --force --out-dir {params.dir} --tmp-dir /scratch/tmp -m 0.9 -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} 2> {log}"
 
 rule rename_megahit:
     input:
