@@ -13,7 +13,7 @@ rule megahit:
     log: "scratch/assembly/megahit/{treatment}/{kmers}/megahit.log"
     threads: 32
     conda:
-        "../../envs/megahit.yaml"
+        "../../../envs/megahit.yaml"
     # Parameter settings
     # meta            '--min-count 2 --k-list 21,41,61,81,99'             (generic metagenomes, default)
     # meta-sensitive  '--min-count 2 --k-list 21,31,41,51,61,71,81,91,99' (more sensitive but slower)

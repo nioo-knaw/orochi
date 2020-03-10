@@ -22,7 +22,7 @@ rule bamm_treatment:
         outdir="scratch/bamm/{assembler}/{treatment}/{kmers}"
     threads: 16
     conda:
-        "../../envs/bamm.yaml"
+        "../../../envs/bamm.yaml"
     shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
 
@@ -44,6 +44,6 @@ rule bamm_samples:
         outdir="scratch/bamm/{assembler}/{treatment}/{kmers}/"
     threads: 16
     conda:
-        "../../envs/bamm.yaml"
+        "../../../envs/bamm.yaml"
     shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
 
