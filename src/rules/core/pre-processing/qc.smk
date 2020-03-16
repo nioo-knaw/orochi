@@ -1,4 +1,4 @@
-rule filter_contaminants:
+rule filter:
      input:
         forward=rules.merge_and_rename.output.forward,
         reverse=rules.merge_and_rename.output.reverse
@@ -18,6 +18,23 @@ rule filter_contaminants:
      entropy=0.6 entropywindow=50 entropymask=f \
      qtrim=rl trimq={params.quality} \
      minlength=51 \
-     ref=$CONDA_PREFIX/opt/bbmap-38.79-0/resources/phix174_ill.ref.fa.gz,$CONDA_PREFIX/opt/bbmap-38.79-0/resources/nextera.fa.gz ktrim=r \
+     ref=$CONDA_PREFIX/opt/bbmap-38.79-0/resources/nextera.fa.gz ktrim=r \
      stats={output.stats} \
      t={threads} 2> {log}"""
+
+rule host_removal:
+    input:
+        forward="scratch/filter/{sample}_R1.fasta",
+        reverse="scratch/filter/{sample}_R2.fasta",
+    output:
+        forward="scratch/host_filtering/{sample}_R1.fasta",
+        reverse="scratch/host_filtering/{sample}_R2.fasta",
+    params:
+        refindex=config["reference_index"],
+    log: "scratch/filter/host_removal_{sample}.log"
+    conda: "../../../envs/bbmap.yaml"
+    threads: 16
+    shell: "bbsplit.sh ref=$CONDA_PREFIX/opt/bbmap-38.79-0/resources/phix174_ill.ref.fa.gz,/data/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic.fna.gz in1={input.forward} in2={input.reverse} basename=%.fasta outu1={output.forward} outu2={output.reverse} t={threads}"
+
+
+

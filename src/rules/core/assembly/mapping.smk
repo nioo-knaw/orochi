@@ -11,7 +11,6 @@ rule bamm_treatment:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
         forward = "scratch/treatment/{treatment}_forward.fastq",
         reverse = "scratch/treatment/{treatment}_reverse.fastq",
-#        unpaired = "scratch/treatment/{treatment}_unpaired.fastq",
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
          "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forwardstq.bam",
@@ -23,7 +22,7 @@ rule bamm_treatment:
     threads: 16
     conda:
         "../../../envs/bamm.yaml"
-    shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
+    shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
 
 
 rule bamm_samples:
@@ -34,7 +33,6 @@ rule bamm_samples:
         "scratch/filter/{sample}_R1.fasta",
         reverse = "scratch/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
        "scratch/filter/{sample}_R2.fasta",
-#        unpaired = "scratch/host_filtering/{sample}_unpaired_filtered.fastq" if config['host_removal'] else "scratch/trimmomatic/{sample}_unpaired_combined.fq.gz",
     output:
         "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
         "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
@@ -45,5 +43,5 @@ rule bamm_samples:
     threads: 16
     conda:
         "../../../envs/bamm.yaml"
-    shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -s {input.unpaired} -o {params.outdir} -t {threads} 2> {log}"
+    shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
 
