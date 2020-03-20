@@ -31,10 +31,11 @@ rule host_removal:
         reverse="scratch/host_filtering/{sample}_R2.fasta",
     params:
         refindex=config["reference_index"],
+        reference=config["reference"]
     log: "scratch/filter/host_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
-    shell: "bbsplit.sh ref=$CONDA_PREFIX/opt/bbmap-38.79-0/resources/phix174_ill.ref.fa.gz,/data/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic.fna.gz in1={input.forward} in2={input.reverse} basename=%.fasta outu1={output.forward} outu2={output.reverse} t={threads}"
+    shell: "bbsplit.sh ref=$CONDA_PREFIX/opt/bbmap-38.79-0/resources/phix174_ill.ref.fa.gz,{params.reference} in1={input.forward} in2={input.reverse} basename=%.fasta outu1={output.forward} outu2={output.reverse} t={threads}"
 
 
 
