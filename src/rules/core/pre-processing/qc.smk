@@ -1,7 +1,7 @@
 rule filter:
      input:
-        forward=rules.merge_and_rename.output.forward,
-        reverse=rules.merge_and_rename.output.reverse
+        forward="scratch/unpack/{sample}_1.fastq",
+        reverse="scratch/unpack/{sample}_1.fastq"
      output:
         forward="scratch/filter/{sample}_R1.fasta",
         reverse="scratch/filter/{sample}_R2.fasta",
