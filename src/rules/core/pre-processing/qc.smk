@@ -3,8 +3,8 @@ rule filter:
         forward="scratch/unpack/{sample}_1.fastq",
         reverse="scratch/unpack/{sample}_2.fastq"
      output:
-        forward="scratch/filter/{sample}_R1.fasta",
-        reverse="scratch/filter/{sample}_R2.fasta",
+        forward="scratch/filter/{sample}_R1.fq",
+        reverse="scratch/filter/{sample}_R2.fq",
         stats="scratch/stats/{sample}_contaminants_stats.txt"
      params:
          phix="refs/phix.fasta",
@@ -24,11 +24,11 @@ rule filter:
 
 rule phix_removal:
     input:
-        forward="scratch/filter/{sample}_R1.fasta",
-        reverse="scratch/filter/{sample}_R2.fasta",
+        forward="scratch/filter/{sample}_R1.fq",
+        reverse="scratch/filter/{sample}_R2.fq",
     output:
-        forward="scratch/filter/{sample}_R1.nophix.fasta",
-        reverse="scratch/filter/{sample}_R2.nophix.fasta",
+        forward="scratch/filter/{sample}_R1.nophix.fq",
+        reverse="scratch/filter/{sample}_R2.nophix.fq",
     log: "scratch/filter/phix_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
@@ -36,8 +36,8 @@ rule phix_removal:
 
 rule map_to_host:
     input:
-        forward="scratch/filter/{sample}_R1.nophix.fasta",
-        reverse="scratch/filter/{sample}_R2.nophix.fasta"
+        forward="scratch/filter/{sample}_R1.nophix.fq",
+        reverse="scratch/filter/{sample}_R2.nophix.fq"
     output:
         "scratch/host_filtering/{sample}.sam"
     params:
@@ -55,7 +55,7 @@ rule get_unmapped:
     conda: "../../../envs/samtools.yaml"
     shell: "samtools view -b -f 4 {input} > {output}"
 
-rule sort:
+rule sort_unmapped:
     input:
         "scratch/host_filtering/{sample}.unmapped.bam"
     output:
@@ -63,7 +63,7 @@ rule sort:
     conda: "../../../envs/samtools.yaml"
     shell: "samtools sort {input} > {output}"
 
-rule bamToFastq:
+rule bamToFastq_unmapped:
     input:
         "scratch/host_filtering/{sample}.unmapped.sorted.bam"
     output:
