@@ -22,20 +22,55 @@ rule filter:
      stats={output.stats} \
      t={threads} 2> {log}"""
 
-rule host_removal:
+rule phix_removal:
     input:
         forward="scratch/filter/{sample}_R1.fasta",
         reverse="scratch/filter/{sample}_R2.fasta",
     output:
-        forward="scratch/host_filtering/{sample}_R1.fasta",
-        reverse="scratch/host_filtering/{sample}_R2.fasta",
-    params:
-        refindex=config["reference_index"],
-        reference=config["reference"]
-    log: "scratch/filter/host_removal_{sample}.log"
+        forward="scratch/filter/{sample}_R1.nophix.fasta",
+        reverse="scratch/filter/{sample}_R2.nophix.fasta",
+    log: "scratch/filter/phix_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
-    shell: "bbsplit.sh ref=$CONDA_PREFIX/opt/bbmap-38.79-0/resources/phix174_ill.ref.fa.gz,{params.reference} in1={input.forward} in2={input.reverse} basename=%.fasta outu1={output.forward} outu2={output.reverse} t={threads}"
+    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.79-0/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.reverse} outu1={output.forward} outu2={output.reverse} t={threads} 2> {log}"
 
+rule map_to_host:
+    input:
+        forward="scratch/filter/{sample}_R1.nophix.fasta",
+        reverse="scratch/filter/{sample}_R2.nophix.fasta"
+    output:
+        "scratch/host_filtering/{sample}.sam"
+    params:
+        refindex=config["reference_index"]
+    conda: "../../../envs/bwa.yaml"
+    log: "scratch/filter/bwa_{sample}.log"
+    threads: 16
+    shell: "bwa mem -t {threads} {params.refindex} {input} -o {output} 2> {log}"
+
+rule get_unmapped:
+    input:
+        "scratch/host_filtering/{sample}.sam"
+    output:
+        "scratch/host_filtering/{sample}.unmapped.bam"
+    conda: "../../../envs/samtools.yaml"
+    shell: "samtools view -b -f 4 {input} > {output}"
+
+rule sort:
+    input:
+        "scratch/host_filtering/{sample}.unmapped.bam"
+    output:
+        "scratch/host_filtering/{sample}.unmapped.sorted.bam"
+    conda: "../../../envs/samtools.yaml"
+    shell: "samtools sort {input} > {output}"
+
+rule bamToFastq:
+    input:
+        "scratch/host_filtering/{sample}.unmapped.sorted.bam"
+    output:
+        forward="scratch/host_filtering/{sample}_R1.fastq",
+        reverse="scratch/host_filtering/{sample}_R2.fastq"
+    log: "scratch/host_filtering/{sample}_bamtofastq.log"
+    conda: "../../../envs/bedtools.yaml"
+    shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.reverse} 2> {log}"
 
 

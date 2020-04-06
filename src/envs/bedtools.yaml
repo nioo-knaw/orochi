@@ -1,4 +1,4 @@
 channels:
   - bioconda
 dependencies:
-  - bwa ==0.7.17
+  - bedtools==2.29.2
