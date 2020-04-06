@@ -61,6 +61,7 @@ rule get_unmapped:
     output:
         "scratch/host_filtering/{sample}.unmapped.bam"
     conda: "../../../envs/samtools.yaml"
+    # TODO: what is a good quality value? With -f 4 also alignments with q=0 are reported. For bwa this should mean mapping to multiple locations. From q=50 onwards a blastn also hits the reference genome.
     shell: "samtools view -b -f 4 {input} > {output}"
 
 rule sort_unmapped:
