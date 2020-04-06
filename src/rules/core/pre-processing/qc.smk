@@ -47,6 +47,14 @@ rule map_to_host:
     threads: 16
     shell: "bwa mem -t {threads} {params.refindex} {input} -o {output} 2> {log}"
 
+rule mapping_stats:
+    input:
+        "scratch/host_filtering/{sample}.sam"
+    output:
+        "scratch/host_filtering/{sample}.flagstat.txt"
+    conda: "../../../envs/samtools.yaml"
+    shell: "samtools flagstat {input} > {output}"
+
 rule get_unmapped:
     input:
         "scratch/host_filtering/{sample}.sam"
@@ -73,4 +81,29 @@ rule bamToFastq_unmapped:
     conda: "../../../envs/bedtools.yaml"
     shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.reverse} 2> {log}"
 
+rule get_mapped:
+    input:
+        "scratch/host_filtering/{sample}.sam"
+    output:
+        "scratch/host_filtering/{sample}.mapped.bam"
+    conda: "../../../envs/samtools.yaml"
+    shell: "samtools view -b -F 4 {input} > {output}"
+
+rule sort_mapped:
+    input:
+        "scratch/host_filtering/{sample}.mapped.bam"
+    output:
+        "scratch/host_filtering/{sample}.mapped.sorted.bam"
+    conda: "../../../envs/samtools.yaml"
+    shell: "samtools sort {input} > {output}"
+
+rule bamToFastq_mapped:
+    input:
+        "scratch/host_filtering/{sample}.mapped.sorted.bam"
+    output:
+        forward="scratch/host_filtering/{sample}_R1.mapped.fastq",
+        reverse="scratch/host_filtering/{sample}_R2.mapped.fastq"
+    log: "scratch/host_filtering/{sample}_bamtofastq.mapped.log"
+    conda: "../../../envs/bedtools.yaml"
+    shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.reverse} 2> {log}"
 
