@@ -29,9 +29,9 @@ rule bamm_samples:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt",
-        forward = "scratch/host_filtering/{sample}_R1_paired_filtered.fastq" if config['host_removal'] else \
+        forward = "scratch/host_filtering/{sample}_R1.fastq" if config['host_removal'] else \
         "scratch/filter/{sample}_R1.fasta",
-        reverse = "scratch/host_filtering/{sample}_R2_paired_filtered.fastq" if config['host_removal'] else \
+        reverse = "scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] else \
        "scratch/filter/{sample}_R2.fasta",
     output:
         "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
