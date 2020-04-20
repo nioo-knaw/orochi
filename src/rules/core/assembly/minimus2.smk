@@ -30,7 +30,6 @@ rule contig_overlap:
     shell:
         "cd-hit-est -i {input} -o {output} -T 90 -M 500000 -c 0.99 -n 10 > {log}"
 
-# TODO: Re-number the contigs
 rule contig_rename:
     input:
         "scratch/assembly/megahit/primary.long.contigs.fa"
