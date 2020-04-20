@@ -1,0 +1,4 @@
+channels:
+  - bioconda
+dependencies:
+  - amos == 3.1.0
