@@ -8,12 +8,17 @@ from snakemake.utils import R, listfiles
 if os.path.isfile("config.json"):
     configfile: "config.json"
 
-
 # Dynamically load all modules/rules
 smks = list(listfiles('src/rules/core/{section}/{part}.smk'))
 
 for smk,rule in smks:
     include: smk
+
+# Load extensions
+for ext, rule in list(listfiles('src/rules/extensions/{section}/{part}.smk')):
+    section, name = rule
+    if section in ["antismash"]:
+        include: ext
 
 # Dynamically add all output files
 output = []
@@ -28,4 +33,3 @@ rule final:
                   assembler=config["assembler"],\
                   kmers=config["assembly-klist"]\
                  )
-
