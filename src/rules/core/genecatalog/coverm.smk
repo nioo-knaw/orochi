@@ -3,7 +3,7 @@ rule coverage:
     input:
         forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]),
         reverse = expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]),
-        assembly = "scratch/assembly/megahit/secondary.contigs.fasta"
+        assembly = "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output:
         "scratch/genecatalog/coverage.tsv"
     conda:
