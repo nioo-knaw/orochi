@@ -1,6 +1,6 @@
 rule antismash:
     input:
-        "scratch/assembly/megahit/secondary.contigs.fasta"
+        "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output:
         "scratch/annotation/antismash/secondary.contigs.gbk"
     params:
