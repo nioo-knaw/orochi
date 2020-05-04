@@ -9,5 +9,6 @@ rule coverage:
     conda:
         "../../../envs/coverm.yaml"
     threads: 16
+    # TODO: Add log file stderr
     shell:
         "coverm contig --mapper bwa-mem --methods mean --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output}"
