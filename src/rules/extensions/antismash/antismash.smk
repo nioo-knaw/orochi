@@ -20,3 +20,15 @@ rule get_bgcs:
         "scratch/annotation/antismash/bgcs.fasta"
     script:
         "../../../scripts/antismash_get_bgcs.py"
+
+rule map_reads:
+    input:
+        bgcs="scratch/annotation/antismash/bgcs.fasta",
+        forward=expand("scratch/host_filtering/{sample}_R1.fastq", project=config["project"], sample=config["data"]),
+        reverse=expand("scratch/host_filtering/{sample}_R2.fastq", project=config["project"], sample=config["data"])
+    output:
+        "scratch/annotation/antismash/bgcs.count.txt"
+    log: "scratch/annotation/antismash/bgcs.mapping.txt"
+    threads: 24
+    shell:
+        "coverm contig --methods count --mapper minimap2-sr --proper-pairs-only -1 {input.forward} -2 {input.reverse} --reference {input.bgcs} --threads {threads} 2> {log} > {output}"
