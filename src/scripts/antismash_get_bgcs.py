@@ -16,5 +16,6 @@ for record in json_dict['records']:
                 #print(record['seq']['data'][start:stop])
                 #print(feat['qualifiers']['product'])
                 #print(record['id'])
-                outfile.write(">%s | %s\n%s\n" % (record['id'], feat['qualifiers']['product'][0], record['seq']['data'][start:stop]))
+                outfile.write(">%s_%s_%s_%s | %s\n%s\n" % (record['id'], feat['qualifiers']['product'][0], start, stop, feat['qualifiers']['product'][0], record['seq']['data'][start:stop]))
+                break
 outfile.close()
