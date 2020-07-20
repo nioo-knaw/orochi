@@ -15,7 +15,7 @@ This repo is a rewrite of the initial Orochi pipeline for shotgun metagenomics a
 1. Logon to the place where you will analysis your data, e.g. server
 2. Create a local copy of the pipeline in a project folder
 ```
-git clone https://gitlab.bioinf.nioo.knaw.nl/pipelines/orochi
+git clone https://gitlab.bioinf.nioo.knaw.nl/pipelines/orochi -b modules
 ``` 
 3. Enter your (NIOO) username and password
 
