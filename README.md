@@ -1,10 +1,16 @@
 ## Orochi
 
-Note, this is a work-in-progress pipeline, so contact bioinformatics-support@nioo.knaw.nl for more information. Currenty work is done to reorganize the pipeline into [modules] (https://gitlab.bioinf.nioo.knaw.nl/pipelines/orochi/tree/modules) and to create a interactive report written in [R Notebooks](https://blog.rstudio.com/2016/10/05/r-notebooks). Contributions are highly welcome.
+**Note: This is the development version of Orochi, use at own risk.**
 
-### Please cite as
-[![DOI](https://zenodo.org/badge/190360037.svg)](https://zenodo.org/badge/latestdoi/190360037)
+## Orochi 1.0 (alpha)
+This repo is a rewrite of the initial Orochi pipeline for shotgun metagenomics and still in development. It does not perform a full featured analysis yet.
 
+### What changed compared to Orochi 0.1?
+  - Rules are now organized into modules. 
+    - There is a set of core modules that do the QC, assembly and annotation.
+    - Additional modules can be added as extension, for example the detection of secondary metabolite biosynthesis gene clusters with antismash
+    - Modules are automatically detected in the main Snakefile
+  - The QC step is now performed with bbduk in stead of trimmomatic to 1) trim poly-G tails from Novaseq sequences 2) remove low complexity reads 3) remove phix reads
 
 ### Getting started
 
@@ -47,6 +53,3 @@ display workflow.png
 9. Run the pipeline. `-j` specifies the number of threads. Conda is the package manager. Optionally do this in a tmux session.
 ```
 snakemake -j 8 --use-conda
-```
-### Example Report
-[![example report](orochi-report-screenshot.png)](http://nioo0025.nioo.int/~mattiash/orochi.report.nb.html "Example report Orochi pipeline - Click to open!")
