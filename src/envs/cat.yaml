@@ -1,0 +1,4 @@
+channels:
+- bioconda
+dependencies:
+- cat==5.1.2
