@@ -1,7 +1,11 @@
 # https://github.com/hardingnj/snakemake_pres/blob/master/deploy_cluster/scripts/draw_tree.py
+# Fix couldn't connect to display "localhost:0.0" error
+# http://python.omics.wiki/plot/matplotlib/tkinter-tclerror
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage
 from scipy.spatial.distance import squareform
 
