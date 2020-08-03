@@ -2,8 +2,11 @@ rule CAT:
     input:
         "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output:
+        "scratch/annotation/CAT/secondary.contigs.predicted_proteins.gff",
+        "scratch/annotation/CAT/secondary.contigs.predicted_proteins.faa",
         "scratch/annotation/CAT/secondary.contigs.ORF2LCA.txt",
         "scratch/annotation/CAT/secondary.contigs.contig2classification.txt",
+
     params:
         db=config['CAT_database'],
         tax=config['CAT_taxonomy'],
