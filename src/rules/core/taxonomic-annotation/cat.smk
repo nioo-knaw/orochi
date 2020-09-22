@@ -24,7 +24,7 @@ rule CAT:
 
 rule CAT_add_names:
     input:
-        "scratch/annotation/CAT/assembly.ORF2LCA.txt",
+        "scratch/annotation/CAT/assembly.contig2classification.txt",
     output:
         "scratch/annotation/CAT/assembly.classification.txt",
     params:
