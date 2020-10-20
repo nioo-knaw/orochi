@@ -14,5 +14,6 @@ rule merge_and_rename:
             shell("pigz -p {threads} -dc {input.forward}  > {output.forward}")
             shell("pigz -p {threads} -dc {input.reverse}  > {output.reverse}")
         else:
-            shell("cp {input} {output}")
+            shell("cp {input.forward} {output.forward}")
+            shell("cp {input.reverse} {output.reverse}")
 
