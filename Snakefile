@@ -15,10 +15,12 @@ for smk,rule in smks:
     include: smk
 
 # Load extensions
+"""
 for ext, rule in list(listfiles('src/rules/extensions/{section}/{part}.smk')):
     section, name = rule
-#    if section in ["antismash"]:
-#        include: ext
+    if section in ["antismash"]:
+        include: ext
+"""
 
 # Dynamically add all output files
 output = []
