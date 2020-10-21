@@ -18,7 +18,7 @@ rule filter:
      entropy=0.6 entropywindow=50 entropymask=f \
      qtrim=rl trimq={params.quality} \
      minlength=51 \
-     ref=$CONDA_PREFIX/opt/bbmap-38.86-0/resources/nextera.fa.gz ktrim=r \
+     ref=$CONDA_PREFIX/opt/bbmap-38.87-0/resources/nextera.fa.gz ktrim=r \
      stats={output.stats} \
      t={threads} 2> {log}"""
 
