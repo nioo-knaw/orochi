@@ -13,4 +13,6 @@ rule merge_and_rename:
         if os.path.splitext(input[0])[1] == ".gz":
             shell("pigz -p {threads} -dc {input.forward}  > {output.forward}")
             shell("pigz -p {threads} -dc {input.reverse}  > {output.reverse}")
-
+        else:
+            shell("cp {input.forward} {output.forward}")
+            shell("cp {input.reverse} {output.reverse}")
