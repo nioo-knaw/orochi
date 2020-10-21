@@ -32,7 +32,7 @@ rule phix_removal:
     log: "scratch/filter/phix_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
-    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.86-0/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.reverse} outu1={output.forward} outu2={output.reverse} t={threads} 2> {log}"
+    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.87-0/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.reverse} outu1={output.forward} outu2={output.reverse} t={threads} 2> {log}"
 
 rule map_to_host:
     input:
