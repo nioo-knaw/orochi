@@ -1,4 +1,3 @@
-"""
 rule treatment_bwa_index:
     input:
          "scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa"
@@ -25,7 +24,7 @@ rule bamm_treatment:
         "../../../envs/bamm.yaml"
     shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
 
-
+"""
 rule bamm_samples:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
