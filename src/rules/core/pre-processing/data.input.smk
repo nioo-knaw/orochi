@@ -6,6 +6,7 @@ rule merge_and_rename:
         forward=protected("scratch/unpack/{sample}_1.fastq"),
         reverse=protected("scratch/unpack/{sample}_2.fastq"),
     threads: 16
+    conda: "../../../envs/pigz.yaml"
     run:
         if os.path.splitext(input[0])[1] == ".bz2":
             shell("pbzip2 -p{threads} -dc {input.forward}  > {output.forward}")
