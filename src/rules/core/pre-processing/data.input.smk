@@ -11,7 +11,6 @@ rule merge_and_rename:
             shell("pbzip2 -p{threads} -dc {input.forward}  > {output.forward}")
             shell("pbzip2 -p{threads} -dc {input.reverse}  > {output.reverse}")
         if os.path.splitext(input[0])[1] == ".gz":
-            conda("../../../envs/pigz.yaml")
             shell("pigz -p {threads} -dc {input.forward}  > {output.forward}")
             shell("pigz -p {threads} -dc {input.reverse}  > {output.reverse}")
         else:
