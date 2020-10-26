@@ -7,6 +7,18 @@ rule merge_and_rename:
         reverse=protected("scratch/unpack/{sample}_2.fastq"),
     conda: "../../../envs/pigz.yaml"
     threads: 16
+    shell:
+	    if [{input.forward} = "*.bz2"]; then
+            "pbzip2 -p{threads} -dc {input.forward}  > {output.forward}"
+            "pbzip2 -p{threads} -dc {input.reverse}  > {output.reverse}"
+	    if [{input.forward} = "*.gz"]; then
+            "pigz -p {threads} -dc {input.forward}  > {output.forward}"
+            "pigz -p {threads} -dc {input.reverse}  > {output.reverse}"
+	    else
+            "cp {input.forward} {output.forward}"
+            "cp {input.reverse} {output.reverse}"
+
+    """
     run:
         if os.path.splitext(input[0])[1] == ".bz2":
             shell("pbzip2 -p{threads} -dc {input.forward}  > {output.forward}")
@@ -17,3 +29,4 @@ rule merge_and_rename:
         else:
             shell("cp {input.forward} {output.forward}")
             shell("cp {input.reverse} {output.reverse}")
+    """
