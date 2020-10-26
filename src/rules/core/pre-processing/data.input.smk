@@ -8,13 +8,13 @@ rule merge_and_rename:
     conda: "../../../envs/pigz.yaml"
     threads: 16
     shell:
-	    if [{input.forward} = "*.bz2"]; then
+        if [{input.forward} = "*.bz2"]; then
             "pbzip2 -p{threads} -dc {input.forward}  > {output.forward}"
             "pbzip2 -p{threads} -dc {input.reverse}  > {output.reverse}"
-	    if [{input.forward} = "*.gz"]; then
+        if [{input.forward} = "*.gz"]; then
             "pigz -p {threads} -dc {input.forward}  > {output.forward}"
             "pigz -p {threads} -dc {input.reverse}  > {output.reverse}"
-	    else
+        else
             "cp {input.forward} {output.forward}"
             "cp {input.reverse} {output.reverse}"
 
