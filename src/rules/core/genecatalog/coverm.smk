@@ -30,4 +30,4 @@ rule coverm_treatment:
     threads: 16
     conda:
         "../../../envs/coverm.yaml"
-    shell: "coverm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}
+    shell: "coverm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
