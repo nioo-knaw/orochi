@@ -38,7 +38,7 @@ rule quast_merge:
 rule samtools_flagstat:
     input:
 #        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.bam"
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_forwardstq.bam"
+        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{treatment}_filteredstq.bam"
     output:
         "scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     conda:
