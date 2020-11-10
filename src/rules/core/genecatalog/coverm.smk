@@ -1,4 +1,3 @@
-
 rule coverage:
     input:
         forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]),
@@ -14,3 +13,23 @@ rule coverage:
     # TODO: Add log file stderr
     shell:
         "coverm contig --mapper bwa-mem --methods mean --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output}"
+
+rule covermake:
+    input:
+        contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
+        index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt",
+        forward = "scratch/host_filtering/{sample}_R1.fastq" if config['host_removal'] else \
+        "scratch/filter/{sample}_R1.fasta",
+        reverse = "scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] else \
+       "scratch/filter/{sample}_R2.fasta",
+    output:
+        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam" if config['host_removal'] else        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam", 
+        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai" if config['host_removal'] else "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam.bai", 
+    log:
+        "scratch/coverm/{sample}_{assembler}_{treatment}_{kmers}.log"
+    params:
+        outdir="scratch/coverm/{assembler}/{treatment}/{kmers}/"
+    threads: 16
+    conda:
+        "../../../envs/coverm.yaml"
+    shell: "coverm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
