@@ -3,7 +3,7 @@ rule create_rdata:
         quast=expand("scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
         flagstat="scratch/stats/flagstat.report.txt"
     output:
-        rdata = "report.RData"
+        rdata = "results/report/report.RData"
     run:
        R("""
        quast <- read.delim("{input.quast}")
@@ -13,12 +13,12 @@ rule create_rdata:
 
 rule report:
     input:
-        rdata = "report.RData"
+        rdata = "results/report/report.RData"
     output:
         "results/report/report.nb.html"
     params:
         prefix="results/report/report",
-    conda: "../../envs/report.yaml"
+    conda: "../../../envs/report.yaml"
     script:
         "report.Rmd"
 
