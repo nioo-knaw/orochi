@@ -1,5 +1,6 @@
 {
     "project" : "1511KMI-0007",
+    "tmpdir" : "./tmp",
     "adapters" : "/data/tools/Trimmomatic/0.36/adapters/NexteraPE-PE.fa",
     "min_qual" : "30",
     "min_length" : "150",
