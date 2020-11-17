@@ -2,12 +2,13 @@ image: continuumio/miniconda3
 
 before_script:
   - conda config --add channels conda-forge
+  - conda install -c conda-forge mamba
   - conda config --add channels defaults
   - conda config --add channels r
   - conda config --add channels bioconda
   - conda clean -a -y
   - conda clean --tarballs -y
-  - conda install snakemake==5.17.0 click==7.0 rpy2
+  - mamba install snakemake==5.17.0 click==7.0 rpy2
 
 stages:
     - rulegraph
