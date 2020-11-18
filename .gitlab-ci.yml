@@ -21,7 +21,7 @@ rulegraph:
     - cp config.sample.json config.json
     - snakemake --rulegraph --use-conda
 
-nohostfiltering
+nohostfiltering:
   stage: nohostfiltering
   script:
     - cp config.sample.no-host-filtering.json config.json
