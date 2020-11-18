@@ -32,7 +32,6 @@ nohostfiltering:
 run:
   stage: run
   script:
-    - snakemake --cleanup-conda
     - cp config.sample.json config.json
     - snakemake -n
     - snakemake  --use-conda -j 8
