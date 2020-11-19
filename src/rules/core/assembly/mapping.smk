@@ -6,6 +6,7 @@ rule treatment_bwa_index:
     log: "scratch/assembly/{assembler}/{treatment}/{kmers}/bwa-index.log"
     shell: "/data/tools/bwa/default/bin/bwa index {input} > {log}"
 
+"""
 rule bamm_treatment:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
@@ -24,7 +25,6 @@ rule bamm_treatment:
         "../../../envs/bamm.yaml"
     shell: "bamm make --keep_unmapped --kept -d {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
 
-"""
 rule bamm_samples:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
