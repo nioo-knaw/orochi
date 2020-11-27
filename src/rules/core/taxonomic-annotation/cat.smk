@@ -17,9 +17,9 @@ rule CAT:
     log: "scratch/annotation/CAT/assembly.log"
     conda:
         "../../../envs/cat.yaml"
-    threads: 16
+    threads: 80
     shell:
-        """CAT contigs -c {input} -o {params.prefix} -d {params.db} -t {params.tax} --nproc {threads} --sensitive --tmpdir {params.tmp} --force --compress --verbose --index_chunks 1 --top 11 --I_know_what_Im_doing > /dev/null"""
+        """CAT contigs -c {input} -o {params.prefix} -d {params.db} -t {params.tax} --nproc {threads} --sensitive --tmpdir {params.tmp} --force --compress --verbose --index_chunks 1 --top 11 --I_know_what_Im_doing"""
 
 
 rule CAT_add_names:
