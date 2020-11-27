@@ -19,7 +19,7 @@ rule CAT:
         "../../../envs/cat.yaml"
     threads: 16
     shell:
-        """CAT contigs -c {input} -o {params.prefix} -d {params.db} -t {params.tax} --nproc {threads} --sensitive --tmpdir {params.tmp} --no_log > {log} 2>&1"""
+        """CAT contigs -c {input} -o {params.prefix} -d {params.db} -t {params.tax} --nproc {threads} --sensitive --tmpdir {params.tmp} --force --compress --verbose --index_chunks 1 --top 11 --I_know_what_Im_doing > /dev/null"""
 
 
 rule CAT_add_names:
