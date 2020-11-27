@@ -12,6 +12,7 @@ before_script:
 
 stages:
     - rulegraph
+    - cat
     - run
     - nohostfiltering
     
@@ -28,6 +29,10 @@ nohostfiltering:
     - cp config.sample.no-host-filtering.json config.json
     - snakemake --rulegraph --use-conda
     - snakemake -n
+cat:
+  stage: cat
+  script:
+    - snakemake --configfile config.sample.json -j 8 --use-conda --until CAT_summarize 
 
 run:
   stage: run
