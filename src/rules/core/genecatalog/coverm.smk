@@ -40,7 +40,7 @@ rule coverm_sample:
     output:
         expand("scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam", sample=config["data"]),
     log:
-        expand("scratch/coverm/{assembler}/{treatment}/{kmers}/{sample}.log, sample=config["data"])"
+        expand("scratch/coverm/{assembler}/{treatment}/{kmers}/{sample}.log", sample=config["data"])
     params:
         outdir="scratch/coverm/{assembler}/{treatment}/{kmers}"
     threads: 16
