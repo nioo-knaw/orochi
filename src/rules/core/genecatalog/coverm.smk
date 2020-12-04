@@ -38,7 +38,7 @@ rule coverm_sample:
         reverse = expand("scratch/treatment/{sample}_reverse.fastq", sample=config["data"]),
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
-         expand("scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam", sample=config["data"]),
+        expand("scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam", sample=config["data"]),
     log:
         expand("scratch/coverm/{assembler}/{treatment}/{kmers}/{sample}.log, sample=config["data"])"
     params:
