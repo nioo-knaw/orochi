@@ -39,7 +39,7 @@ rule samtools_flagstat:
     input:
 #        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.bam"
 #        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{treatment}_forward.fastq.bam"
-         "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam"
+         "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam"
     output:
         "scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     conda:
