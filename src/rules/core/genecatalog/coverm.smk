@@ -34,13 +34,13 @@ rule coverm_treatment:
 rule coverm_sample:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
-        forward = "scratch/treatment/{sample}_forward.fastq",
-        reverse = "scratch/treatment/{sample}_reverse.fastq",
+        forward = expand("scratch/treatment/{sample}_forward.fastq", sample=config["data"]),
+        reverse = expand("scratch/treatment/{sample}_reverse.fastq", sample=config["data"]),
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
-         "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam",
+         expand("scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam", sample=config["data"]),
     log:
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/{sample}.log"
+        expand("scratch/coverm/{assembler}/{treatment}/{kmers}/{sample}.log, sample=config["data"])"
     params:
         outdir="scratch/coverm/{assembler}/{treatment}/{kmers}"
     threads: 16
