@@ -24,7 +24,7 @@ rule coverm_treatment:
         reverse = "scratch/treatment/{treatment}_reverse.fastq",
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
-         "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{treatment}_forward.fastq.bam",
+         "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{treatment}.fastq.bam",
     log:
         "scratch/coverm/{assembler}/{treatment}/{kmers}/{treatment}.log"
     params:
