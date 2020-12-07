@@ -12,9 +12,9 @@ before_script:
 
 stages:
     - rulegraph
-    - cat
     - run
     - nohostfiltering
+    - cat
     
 # DAG
 rulegraph:
