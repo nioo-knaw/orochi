@@ -36,8 +36,8 @@ rule relocate_sample:
         forward = expand("scratch/unpack/{sample}_1.fastq", sample=config["data"]),
         reverse = expand("scratch/unpack/{sample}_2.fastq", sample=config["data"])
     output:
-        forward = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_1.fastq", sample=config["data"]),
-        reverse = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_2.fastq", sample=config["data"])
+        forward = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_1.fastq",
+        reverse = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_2.fastq"
     threads: 16
     run:
         shell("cp {input.forward} {output.forward}")
