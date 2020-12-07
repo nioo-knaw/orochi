@@ -55,8 +55,7 @@ rule coverm_sample:
         reverse = expand("scratch/unpack/{sample}_2.fastq", sample=config["data"]),
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_1.fastq.bam"
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_2.fastq.bam"
+        "scratch/coverm/{assembler}/{treatment}/{kmers}/coveragebysample.txt"
     log:
         "scratch/coverm/{assembler}/{treatment}/{kmers}/{sample}.log"
     params:
@@ -64,4 +63,4 @@ rule coverm_sample:
     threads: 16
     conda:
         "../../../envs/coverm.yaml"
-    shell: "coverm make -r {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
+    shell: "coverm contig --methods count --mapper minimap2-sr --proper-pairs-only -1 {input.forward} -2 {input.reverse} --reference {input.bgcs} --threads {threads} 2> {log} > {output}"
