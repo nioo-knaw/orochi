@@ -31,6 +31,18 @@ rule coverm_treatment:
         "../../../envs/coverm.yaml"
     shell: "coverm make -r {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
 
+rule relocate_sample:
+    input:
+        forward = expand("scratch/unpack/{sample}_1.fastq", sample=config["data"]),
+        reverse = expand("scratch/unpack/{sample}_2.fastq", sample=config["data"])
+    output:
+        forward = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_1.fastq", sample=config["data"]),
+        reverse = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_2.fastq", sample=config["data"])
+    threads: 16
+    run:
+        shell("cp {input.forward} {output.forward}")
+        shell("cp {input.reverse} {output.reverse}")              
+
 rule coverm_sample:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
