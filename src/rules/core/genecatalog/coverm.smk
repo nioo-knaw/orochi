@@ -57,7 +57,7 @@ rule coverm_sample:
     output:
         "scratch/coverm/{assembler}/{treatment}/{kmers}/coveragebysample.txt"
     log:
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/{sample}.log"
+        "scratch/coverm/{assembler}/{treatment}/{kmers}/coverm_sample.log"
     params:
         outdir="scratch/coverm/{assembler}/{treatment}/{kmers}"
     threads: 16
