@@ -55,7 +55,7 @@ rule coverm_sample:
         reverse = expand("scratch/unpack/{sample}_2.fastq", sample=config["data"]),
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam"
+        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}.fastq.bam"
     log:
         "scratch/coverm/{assembler}/{treatment}/{kmers}/{sample}.log"
     params:
