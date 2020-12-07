@@ -41,7 +41,7 @@ rule samtools_flagstat:
 #        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{treatment}_forward.fastq.bam"
          expand("scratch/coverm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.fa.{sample}_forward.fastq.bam", sample=config["data"])
 #        sample=config["data"]
-#        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam"
+#        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}.fastq.bam"
     output:
         "scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     conda:
