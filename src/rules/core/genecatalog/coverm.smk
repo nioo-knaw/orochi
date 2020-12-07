@@ -63,4 +63,4 @@ rule coverm_sample:
     threads: 16
     conda:
         "../../../envs/coverm.yaml"
-    shell: "coverm contig --methods count --mapper minimap2-sr --proper-pairs-only -1 {input.forward} -2 {input.reverse} --reference {input.bgcs} --threads {threads} 2> {log} > {output}"
+    shell: "coverm contig --methods count --mapper minimap2-sr --proper-pairs-only -1 {input.forward} -2 {input.reverse} --reference {input.index} --threads {threads} 2> {log} > {output}"
