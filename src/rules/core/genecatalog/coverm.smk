@@ -14,6 +14,7 @@ rule coverage:
     shell:
         "coverm contig --mapper bwa-mem --methods mean --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output}"
 
+"""
 rule coverm_treatment:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
@@ -30,7 +31,8 @@ rule coverm_treatment:
     conda:
         "../../../envs/coverm.yaml"
     shell: "coverm make -r {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
-
+"""
+"""
 rule relocate_sample:
     input:
         forward = expand("scratch/unpack/{sample}_1.fastq", sample=config["data"]),
@@ -42,6 +44,7 @@ rule relocate_sample:
     run:
         shell("cp {input.forward} {output.forward}")
         shell("cp {input.reverse} {output.reverse}")              
+"""
 
 rule coverm_sample:
     input:
