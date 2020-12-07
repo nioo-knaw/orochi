@@ -46,8 +46,8 @@ rule relocate_sample:
 rule coverm_sample:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
-        forward = expand("scratch/unpack/{sample}_1.fastq", sample=config["data"]),
-        reverse = expand("scratch/unpack/{sample}_2.fastq", sample=config["data"]),
+        forward = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_1.fastq", sample=config["data"]),
+        reverse = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_2.fastq", sample=config["data"]),
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
         expand("scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_forward.fastq.bam", sample=config["data"]),
