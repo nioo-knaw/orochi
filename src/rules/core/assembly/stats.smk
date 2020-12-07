@@ -35,6 +35,7 @@ rule quast_merge:
          shell("cat {input.quast} >> {output}")
 
 
+"""
 rule samtools_flagstat:
     input:
 #        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.bam"
@@ -69,3 +70,4 @@ rule flagstat_merge:
          # Add the result rows
          shell("cat {input} >> {output}")
 
+"""
