@@ -22,6 +22,13 @@ for ext, rule in list(listfiles('src/rules/extensions/{section}/{part}.smk')):
         include: ext
 """
 
+#Load report
+"""
+for rpt, rule in list(listfiles('src/rules/report/{part}.smk)):
+    name = rule
+    include: rpt
+"""
+
 # Dynamically add all output files
 output = []
 for name,rule in rules.__dict__.items():

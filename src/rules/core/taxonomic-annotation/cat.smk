@@ -3,6 +3,7 @@ rule CAT:
         # TODO: Decide what is the input here
         expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
+        temporary("scratch/annotation/CAT/assembly.alignment.diamond.gz"),
         "scratch/annotation/CAT/assembly.predicted_proteins.gff",
         "scratch/annotation/CAT/assembly.predicted_proteins.faa",
         "scratch/annotation/CAT/assembly.ORF2LCA.txt",
