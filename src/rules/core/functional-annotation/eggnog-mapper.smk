@@ -1,8 +1,8 @@
 rule eggnog_mapper_diamond:
     input:
-        "scratch/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz"
+        "scratch/genecatalog/proteins.faa"
     output:
-        "scratch/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz.emapper.seed_orthologs"
+        "scratch/genecatalog/proteins.faa.emapper.seed_orthologs"
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 16
@@ -10,10 +10,10 @@ rule eggnog_mapper_diamond:
 
 rule eggnog_mapper_annotation:
     input:
-        seq="scratch/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz",
-        diamond="scratch/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz.emapper.seed_orthologs"
+        seq="scratch/genecatalog/proteins.faa",
+        diamond="scratch/genecatalog/proteins.faa.emapper.seed_orthologs"
     output:
-        "scratch/genecatalog/{assembler}/{kmers}/allgenecalled.faa.gz.emapper.annotations"
+        "scratch/genecatalog/proteins.faa.emapper.annotations"
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 16
