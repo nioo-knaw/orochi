@@ -1,3 +1,4 @@
+if config['assembler']=='megahit'
 rule megahit:
     input:
         forward = "scratch/treatment/{treatment}_forward.fastq",
