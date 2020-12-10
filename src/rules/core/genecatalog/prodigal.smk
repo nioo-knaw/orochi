@@ -1,7 +1,7 @@
 """
 rule predict_genes:
     input:
-        "scratch/assembly/{assembler}/minimus2/secondary.contigs.fasta"
+        "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output:
         gbk="scratch/genecatalog/coords.gbk",
         proteins="scratch/genecatalog/proteins.faa",
