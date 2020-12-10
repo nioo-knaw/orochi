@@ -37,7 +37,7 @@ rule CAT_add_names:
 
 rule CAT_summarize:
     input:
-        contigs = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
+        contigs = expand("scratch/assembly/{{assembler}}/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
         classification = "scratch/annotation/CAT/assembly.classification.txt"
     output:
         "scratch/annotation/CAT/assembly.classification.summary.txt"
