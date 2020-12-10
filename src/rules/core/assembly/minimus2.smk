@@ -1,16 +1,16 @@
 rule merge_assemblies:
     input:
-        expand("scratch/assembly/{{assembler}}/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        "scratch/assembly/{assembler}/minimus2/primary.contigs.fa"
+        "scratch/assembly/megahit/minimus2/primary.contigs.fa"
     shell:
         "cat {input} > {output}"
 
 rule filter_contigs:
     input:
-        "scratch/assembly/{assembler}/minimus2/primary.contigs.fa"
+        "scratch/assembly/megahit/minimus2/primary.contigs.fa"
     output:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.fa"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
     params:
         length=2000
     conda:
@@ -20,29 +20,29 @@ rule filter_contigs:
 
 rule contig_overlap:
     input:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.fa"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
     output:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.fa"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.fa"
     conda:
         "../../../envs/cd-hit.yaml"
     log:
-       "scratch/assembly/{assembler}/minimus2/cd-hit.log"
+       "scratch/assembly/megahit/minimus2/cd-hit.log"
     shell:
         "cd-hit-est -i {input} -o {output} -T 90 -M 500000 -c 0.99 -n 10 > {log}"
 
 rule contig_rename:
     input:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.fa"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
     output:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.fa"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fa"
     shell:
         """awk '/^>/ {{print ">contig_" ++i; next}}{{print}}' < {input} > {output}"""
 
 rule toAmos:
     input:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.fa"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fa"
     output:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.afg"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg"
     conda:
         "../../../envs/amos.yaml"
     shell:
@@ -50,22 +50,22 @@ rule toAmos:
 
 rule minimus2:
     input:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.afg"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg"
     output:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.fasta",
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.singletons.seq"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fasta",
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.singletons.seq"
     conda:
         "../../../envs/amos.yaml"
     log:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.runAmos.log"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.runAmos.log"
     shell:
         "minimus2 `file={input}; echo ${{file%.*}}` -D OVERLAP=100 MINID=95"
 
 rule minimus2_merge:
     input:
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.fasta",
-        "scratch/assembly/{assembler}/minimus2/primary.long.contigs.99.renamed.singletons.seq"
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fasta",
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.singletons.seq"
     output:  
-        "scratch/assembly/{assembler}/minimus2/secondary.contigs.fasta"
+        "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     shell:
         "cat {input} > {output}"
