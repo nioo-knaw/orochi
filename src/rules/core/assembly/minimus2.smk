@@ -1,6 +1,6 @@
 rule merge_assemblies:
     input:
-        expand("scratch/assembly/{assembler}/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        expand("scratch/assembly/{{assembler}}/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         "scratch/assembly/{assembler}/minimus2/primary.contigs.fa"
     shell:
