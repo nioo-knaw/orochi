@@ -1,4 +1,3 @@
-"""
 rule predict_genes:
     input:
         "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
@@ -11,4 +10,3 @@ rule predict_genes:
     conda: 
         "../../../envs/prodigal.yaml"
     shell: "prodigal -d {output.nucleotide} -a {output.proteins} -i {input} -m -o {output.gbk} -p anon"
-"""
