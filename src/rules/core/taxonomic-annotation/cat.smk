@@ -1,7 +1,7 @@
 rule CAT:
     input:
         # TODO: Decide what is the input here
-        expand("scratch/assembly/{{assembler}}/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         temporary("scratch/annotation/CAT/assembly.alignment.diamond.gz"),
         "scratch/annotation/CAT/assembly.predicted_proteins.gff",
