@@ -1,7 +1,7 @@
 rule CAT:
     input:
         # TODO: Decide what is the input here
-        expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        expand("scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         temporary("scratch/annotation/CAT/assembly.alignment.diamond.gz"),
         "scratch/annotation/CAT/assembly.predicted_proteins.gff",
@@ -37,7 +37,7 @@ rule CAT_add_names:
 
 rule CAT_summarize:
     input:
-        contigs = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
+        contigs = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
         classification = "scratch/annotation/CAT/assembly.classification.txt"
     output:
         "scratch/annotation/CAT/assembly.classification.summary.txt"
