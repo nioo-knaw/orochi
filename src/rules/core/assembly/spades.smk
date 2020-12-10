@@ -1,3 +1,4 @@
+if config['assembler']=='spades'
 rule spades:
     input:
         forward = "scratch/treatment/{treatment}_forward.fastq",
