@@ -1,7 +1,18 @@
+rule CAT_download:
+    input:
+        expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+    output:
+        "CAT_prepare_20201123/2020-11-23.CAT_prepare.fresh.log",
+    shell: """
+    wget tbb.bio.uu.nl/bastiaan/CAT_prepare/CAT_prepare_20201123.tar.gz
+    tar -xvzf CAT_prepare_20201123.tar.gz
+    """
+
 rule CAT:
     input:
         # TODO: Decide what is the input here
-        expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
+        "CAT_prepare_20201123/2020-11-23.CAT_prepare.fresh.log",
     output:
         temporary("scratch/annotation/CAT/assembly.alignment.diamond.gz"),
         "scratch/annotation/CAT/assembly.predicted_proteins.gff",
@@ -9,8 +20,8 @@ rule CAT:
         "scratch/annotation/CAT/assembly.ORF2LCA.txt",
         "scratch/annotation/CAT/assembly.contig2classification.txt",
     params:
-        db=config['CAT_database'],
-        tax=config['CAT_taxonomy'],
+        db="CAT_prepare_20200618/2020-06-18_CAT_database/", #config['CAT_database'],
+        tax="CAT_prepare_20200618/2020-06-18_taxonomy/", #config['CAT_taxonomy'],
         tmp=config['tmpdir'],
         prefix="scratch/annotation/CAT/assembly"
 
