@@ -39,21 +39,32 @@ rule map_reads:
 
 if config['big']=='bigscape':
    rule bigscape:
-        input: "scratch/annotation/antismash/secondary.contigs.gbk"
+        input:
+            gbks="scratch/annotation/antismash/secondary.contigs.gbk"
+        params:
+            inputdir="scratch/annotation/antismash"
+            outdir="scratch/annotation/bigscape"
         output:
+            web="scratch/annotation/bigscape/html_content"
+
+            
         conda:
-        log:
-        threads:
+            "../../../envs/bigscape.yaml"
         shell:
+            "run_bigscape gbks -i {params.inputdir} -o {params.outdir}"
 
 if config['big']=='bigslice':
    rule bigslice:
         input: "scratch/annotation/antismash/secondary.contigs.gbk"
+        params:
+            inputdir="scratch/annotation/antismash"
+            outdir=
         output:
         conda:
         log:
         threads:
         shell:
+           "bigslice -i <{params.inputdir}> <{params.outdir}>"
 
 rule corason:
     input:
