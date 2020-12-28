@@ -65,7 +65,8 @@ if config['big']=='bigslice':
         log:
         threads:
         shell:
-           "bigslice -i <{params.inputdir}> <{params.outdir}>"
+            "download_bigslice_hmmdb"
+            "bigslice -i <{params.inputdir}> <{params.outdir}>"
 
 rule corason:
     input:
