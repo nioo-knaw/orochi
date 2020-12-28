@@ -58,9 +58,10 @@ if config['big']=='bigslice':
         input: "scratch/annotation/antismash/secondary.contigs.gbk"
         params:
             inputdir="scratch/annotation/antismash"
-            outdir=
+            outdir="scratch/annotation/bigslice"
         output:
         conda:
+            "../../../envs/bigslice.yaml"
         log:
         threads:
         shell:
