@@ -43,7 +43,7 @@ if config['big']=='bigscape':
             gbks="scratch/annotation/antismash/secondary.contigs.gbk"
         params:
             inputdir="scratch/annotation/antismash"
-            outdir="scratch/annotation/bigscape"
+            outdir="scratch/annotation/{big}"
         output:
             web="scratch/annotation/bigscape/html_content"
 
@@ -58,7 +58,7 @@ if config['big']=='bigslice':
         input: "scratch/annotation/antismash/secondary.contigs.gbk"
         params:
             inputdir="scratch/annotation/antismash"
-            outdir="scratch/annotation/bigslice"
+            outdir="scratch/annotation/{big}"
         output:
         conda:
             "../../../envs/bigslice.yaml"
