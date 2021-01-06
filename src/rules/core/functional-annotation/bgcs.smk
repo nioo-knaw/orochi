@@ -71,7 +71,8 @@ if config['big']=='bigslice':
 rule corason:
     input:
     output:
-    conda:
+    container:
+        "docker://nselem/corason"
     log:
     threads:
     shell:
