@@ -46,8 +46,8 @@ if config['big']=='bigscape':
             outdir="scratch/annotation/{big}"
         output:
             web="scratch/annotation/bigscape/html_content"
-
-            
+    container:
+        "docker://nselem/big-scape"
         conda:
             "../../../envs/bigscape.yaml"
         shell:
