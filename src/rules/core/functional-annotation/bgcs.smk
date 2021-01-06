@@ -68,6 +68,12 @@ if config['big']=='bigslice':
             "download_bigslice_hmmdb"
             "bigslice -i <{params.inputdir}> <{params.outdir}>"
 
+rule rast:
+# Uses myRAST batch processor to upload bigscape output (clusters) and gets rast IDs and downloads faa and txt files in batch.
+
+rule prepare_corason:
+# Arranges bigscape and rast output into specified input director structure needed for corason.
+
 rule corason:
     input:
     output:
