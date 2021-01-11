@@ -11,7 +11,7 @@ rule antismash:
         "../../../envs/antismash.yaml"
     threads: 16
     shell:
-        "run_antismash --cb-general --cb-knownclusters --cb-subclusters --asf --genefinding-tool prodigal-m --output-dir {params.outdir} --cpus {threads} {input}"
+        "antismash --cb-general --cb-knownclusters --cb-subclusters --asf --genefinding-tool prodigal-m --output-dir {params.outdir} --cpus {threads} {input}"
 
 
 rule get_bgcs:
