@@ -1,4 +1,3 @@
-"""
 rule antismash:
     input:
         # TODO: Decide what is the input here
@@ -43,9 +42,9 @@ if config['big']=='bigscape':
             gbks="scratch/annotation/antismash/secondary.contigs.gbk"
         params:
             inputdir="scratch/annotation/antismash"
-            outdir="scratch/annotation/{big}"
+            outdir="results/annotation/bigscape"
         output:
-            web="scratch/annotation/bigscape/html_content"
+            web="results/annotation/bigscape/html_content"
             # Interactive webpage in particular should go in results folder (Not scratch)
         container:
             "docker://nselem/big-scape"
@@ -53,7 +52,7 @@ if config['big']=='bigscape':
             "../../../envs/bigscape.yaml"
         shell:
             "run_bigscape gbks -i {params.inputdir} -o {params.outdir}"
-
+"""
 if config['big']=='bigslice':
    rule bigslice:
         input: "scratch/annotation/antismash/secondary.contigs.gbk"
