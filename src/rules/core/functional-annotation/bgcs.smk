@@ -42,16 +42,14 @@ if config['big']=='bigscape':
             gbks="scratch/annotation/antismash/secondary.contigs.gbk"
         params:
             inputdir="scratch/annotation/antismash"
-            outdir="results/annotation/bigscape"
         output:
-            web="results/annotation/bigscape/html_content"
-            # Interactive webpage in particular should go in results folder (Not scratch)
+            directory("results/annotation/bigscape")
         container:
             "docker://nselem/big-scape"
         conda:
             "../../../envs/bigscape.yaml"
         shell:
-            "run_bigscape gbks -i {params.inputdir} -o {params.outdir}"
+            "run_bigscape gbks -i {params.inputdir} -o {output}"
 """
 if config['big']=='bigslice':
    rule bigslice:
