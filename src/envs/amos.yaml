@@ -2,4 +2,3 @@ channels:
   - bioconda
 dependencies:
   - amos == 3.1.0
-  - mummer == 4.0.0
