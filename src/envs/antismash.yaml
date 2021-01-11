@@ -2,3 +2,4 @@ channels:
   - bioconda
 dependencies:
   - antismash==5.1.2
+  - biopython==1.77
