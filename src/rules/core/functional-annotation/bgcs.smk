@@ -47,8 +47,8 @@ if config['big']=='bigscape':
         output:
             web="scratch/annotation/bigscape/html_content"
             # Interactive webpage in particular should go in results folder (Not scratch)
-    container:
-        "docker://nselem/big-scape"
+        container:
+            "docker://nselem/big-scape"
         conda:
             "../../../envs/bigscape.yaml"
         shell:
