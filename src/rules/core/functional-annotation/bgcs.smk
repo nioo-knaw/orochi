@@ -28,7 +28,7 @@ rule map_reads:
         forward=expand("scratch/host_filtering/{sample}_R1.fastq", project=config["project"], sample=config["data"]),
         reverse=expand("scratch/host_filtering/{sample}_R2.fastq", project=config["project"], sample=config["data"])
     output:
-        "scratch/annotation/antismash/bgcs.count.txt"
+        "results/annotation/antismash/bgcs.count.txt"
     conda:
         "../../../envs/coverm.yaml"
     log: "scratch/annotation/antismash/bgcs.mapping.txt"
