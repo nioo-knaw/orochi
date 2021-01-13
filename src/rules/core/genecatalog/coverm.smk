@@ -1,4 +1,3 @@
-"""
 rule coverage:
     input:
         forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]),
@@ -14,7 +13,6 @@ rule coverage:
     # TODO: Add log file stderr
     shell:
         "coverm contig --mapper bwa-mem --methods mean --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output}"
-"""
 
 """
 rule coverm_treatment:
@@ -47,7 +45,7 @@ rule relocate_sample:
         shell("cp {input.forward} {output.forward}")
         shell("cp {input.reverse} {output.reverse}")              
 """
-
+"""
 rule coverm_sample:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
@@ -64,3 +62,4 @@ rule coverm_sample:
     conda:
         "../../../envs/coverm.yaml"
     shell: "coverm contig --methods count --mapper minimap2-sr --proper-pairs-only -1 {input.forward} -2 {input.reverse} --reference {input.contigs} --threads {threads} 2> {log} > {output}"
+"""

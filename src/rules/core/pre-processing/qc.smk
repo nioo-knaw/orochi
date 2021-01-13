@@ -34,18 +34,27 @@ rule phix_removal:
     threads: 16
     shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.87-0/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.reverse} outu1={output.forward} outu2={output.reverse} t={threads} 2> {log}"
 
+rule index_host:
+    input:
+        fasta=config["reference"]
+    output:
+        index=config["reference"] + ".bwt"
+    conda: "../../../envs/bwa.yaml"
+    shell: "bwa index {input}"
+
 rule map_to_host:
     input:
         forward="scratch/filter/{sample}_R1.nophix.fq",
-        reverse="scratch/filter/{sample}_R2.nophix.fq"
+        reverse="scratch/filter/{sample}_R2.nophix.fq",
+        index=config["reference"] + ".bwt"
     output:
         "scratch/host_filtering/{sample}.sam"
     params:
-        refindex=config["reference_index"]
+        refindex=config["reference"]
     conda: "../../../envs/bwa.yaml"
     log: "scratch/filter/bwa_{sample}.log"
     threads: 16
-    shell: "bwa mem -t {threads} {params.refindex} {input} -o {output} 2> {log}"
+    shell: "bwa mem -t {threads} {params.refindex} {input.forward} {input.reverse} -o {output} 2> {log}"
 
 rule mapping_stats:
     input:
