@@ -18,7 +18,7 @@ for smk,rule in smks:
 """
 for ext, rule in list(listfiles('src/rules/extensions/{section}/{part}.smk')):
     section, name = rule
-    if section in ["antismash"]:
+    if section in ["antismas"]:
         include: ext
 """
 
