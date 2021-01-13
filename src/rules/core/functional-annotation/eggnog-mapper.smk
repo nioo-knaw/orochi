@@ -13,7 +13,7 @@ rule eggnog_mapper_annotation:
         seq="scratch/genecatalog/proteins.faa",
         diamond="scratch/genecatalog/proteins.faa.emapper.seed_orthologs"
     output:
-        "scratch/genecatalog/proteins.faa.emapper.annotations"
+        "results/functional-annotation/eggnog-mapper/proteins.faa.emapper.annotations"
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 16
