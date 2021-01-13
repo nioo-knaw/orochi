@@ -16,7 +16,7 @@ rule report:
         rdata = "scratch/report/orochi.RData",
         mmgenome=expand("scratch/binning/mmgenome/{assembler}/{treatment}/{kmers}/orochi.RData", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        "scratch/report/scratch.report.nb.html"
+        "results/report/scratch.report.nb.html"
     params:
         prefix="scratch/report/scratch.report",
     conda: "../../envs/report.yaml"
