@@ -1,6 +1,6 @@
 rule create_rdata:
     input:
-        quast="scratch/stats/quast.report.txt",
+        quast="results/stats/quast.report.txt",
         flagstat="scratch/stats/flagstat.report.txt"
     output:
         rdata = "scratch/report/orochi.RData"
