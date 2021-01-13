@@ -6,7 +6,7 @@ rule coverage:
         # TODO: Decide what is the input here
         assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        "scratch/genecatalog/coverage.tsv"
+        "results/stats/coverage.tsv"
     conda:
         "../../../envs/coverm.yaml"
     threads: 16
