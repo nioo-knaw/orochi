@@ -26,7 +26,7 @@ rule quast_merge:
         quast = expand("scratch/stats/{assembler}/{treatment}/{kmers}/quast.report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
         full = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
     output:
-        "scratch/stats/quast.report.txt"
+        "results/stats/quast.report.txt"
     run:
          # Get only the first origin quast output file and get the first column for use as header
          firstfile = input.full[0]
