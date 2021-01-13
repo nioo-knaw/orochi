@@ -39,7 +39,7 @@ rule samtools_flagstat:
     input:
 #        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.bam"
 #        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{treatment}_forward.fastq.bam"
-         expand("scratch/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{treatment}_forwardstq.bam", sample=config["data"])
+         expand("scratch/bamm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.{{treatment}}_forwardstq.bam", sample=config["data"])
 #        sample=config["data"]
 #        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}.fastq.bam"
     output:
