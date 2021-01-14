@@ -6,11 +6,11 @@ rule create_rdata:
     output:
         rdata = "scratch/report/orochi.RData"
     run:
-       R("""
-       quast <- read.delim("{input.quast}")
-       flagstat <- read.delim("{input.flagstat}")
-       save.image(file="{output.rdata}")
-       """)
+        R("""
+        quast <- read.delim("{input.quast}")
+        flagstat <- read.delim("{input.flagstat}")
+        save.image(file="{output.rdata}")
+        """)
 
 rule report:
     input:
