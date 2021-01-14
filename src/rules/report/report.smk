@@ -1,3 +1,4 @@
+"""
 rule create_rdata:
     input:
         quast="scratch/stats/quast.report.txt",
@@ -22,4 +23,4 @@ rule report:
     conda: "../../envs/report.yaml"
     script:
         "report.Rmd"
-
+"""
