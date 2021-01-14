@@ -1,3 +1,4 @@
+"""
 rule mmgenome_coverage:
     input:
          "scratch/bamm/{assembler}/{treatment}/{kmers}/assembly.{sample}_forward_paired.bam"
@@ -137,3 +138,4 @@ rule mmgenome_load_data:
          "../../envs/mmgenome.yaml"
      script:
          "../../mmgenome_load_data.R"
+"""
