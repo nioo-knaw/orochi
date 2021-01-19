@@ -1,8 +1,7 @@
 rule antismash:
     input:
         # TODO: Decide what is the input here
-        # expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
-        "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
+        expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         "scratch/annotation/antismash/secondary.contigs.gbk",
         "scratch/annotation/antismash/secondary.contigs.json"
@@ -14,6 +13,19 @@ rule antismash:
     shell:
         "antismash --cb-general --cb-knownclusters --cb-subclusters --asf --genefinding-tool prodigal-m --output-dir {params.outdir} --cpus {threads} {input}"
 
+rule test_antismash:
+    input:
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
+    output:
+        "scratch/annotation/test_antismash/secondary.contigs.gbk",
+        "scratch/annotation/test_antismash/secondary.contigs.json"
+    params:
+        outdir="scratch/annotation/test_antismash/"
+    conda:
+        "../../../envs/antismash.yaml"
+    threads: 16
+    shell:
+        "antismash --cb-general --cb-knownclusters --cb-subclusters --asf --genefinding-tool prodigal-m --output-dir {params.outdir} --cpus {threads} {input}"
 
 rule get_bgcs:
     input:
