@@ -12,7 +12,7 @@ rule filter_contigs:
     output:
         "scratch/assembly/megahit/minimus2/primary.longer.contigs.fa"
     params:
-        length=100000
+        length=10000
         #temporarily editing from 2000 to test antismash on smaller sample size
     conda:
         "../../../envs/seqtk.yaml"
