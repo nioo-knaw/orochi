@@ -1,7 +1,8 @@
 rule antismash:
     input:
         # TODO: Decide what is the input here
-        expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        # expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
     output:
         "scratch/annotation/antismash/secondary.contigs.gbk",
         "scratch/annotation/antismash/secondary.contigs.json"
