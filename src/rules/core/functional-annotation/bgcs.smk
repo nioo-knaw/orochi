@@ -17,8 +17,8 @@ rule test_antismash:
     input:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
     output:
-        "scratch/annotation/test_antismash/secondary.contigs.gbk",
-        "scratch/annotation/test_antismash/secondary.contigs.json"
+        "scratch/annotation/test_antismash/primary.long.contigs.gbk",
+        "scratch/annotation/test_antismash/primary.long.contigs.json"
     params:
         outdir="scratch/annotation/test_antismash/"
     conda:
@@ -29,7 +29,7 @@ rule test_antismash:
 
 rule get_bgcs:
     input:
-        "scratch/annotation/antismash/secondary.contigs.json"
+        "scratch/annotation/antismash/primary.long.contigs.json"
     output:
         "scratch/annotation/antismash/bgcs.fasta"
     script:
@@ -52,7 +52,7 @@ rule map_reads:
 if config['big']=='bigscape':
    rule bigscape:
         input:
-            gbks="scratch/annotation/antismash/secondary.contigs.gbk"
+            gbks="scratch/annotation/antismash/primary.long.contigs.gbk"
         params:
             inputdir="scratch/annotation/antismash"
         output:
