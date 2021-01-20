@@ -29,7 +29,7 @@ rule test_antismash:
 
 rule get_bgcs:
     input:
-        "scratch/annotation/antismash/primary.long.contigs.json"
+        "scratch/annotation/antismash/secondary.contigs.json"
     output:
         "scratch/annotation/antismash/bgcs.fasta"
     script:
