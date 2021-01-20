@@ -52,7 +52,7 @@ rule map_reads:
 if config['big']=='bigscape':
    rule bigscape:
         input:
-            gbks="scratch/annotation/antismash/primary.long.contigs.gbk"
+            gbks="scratch/annotation/test_antismash/primary.long.contigs.gbk"
         params:
             inputdir="scratch/annotation/antismash"
         output:
