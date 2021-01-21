@@ -54,7 +54,7 @@ if config['big']=='bigscape':
         input:
             gbks="scratch/annotation/test_antismash/primary.long.contigs.gbk"
         params:
-            inputdir="scratch/annotation/antismash"
+            inputdir="scratch/annotation/test_antismash"
         output:
             directory("results/annotation/bigscape")
         container:
