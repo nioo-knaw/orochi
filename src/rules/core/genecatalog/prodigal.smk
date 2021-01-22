@@ -9,4 +9,4 @@ rule predict_genes:
         "prodigal.log"
     conda: 
         "../../../envs/prodigal.yaml"
-    shell: "prodigal -i {input} -o {output.gbk} -d {output.nucleotide} -a {output.proteins} -e 1 -p anon"
+    shell: "prodigal -i {input} -o {output.gbk} -d {output.nucleotide} -a {output.proteins} -p anon"
