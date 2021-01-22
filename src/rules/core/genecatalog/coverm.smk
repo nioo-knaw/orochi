@@ -12,7 +12,7 @@ rule coverage:
     threads: 16
     # TODO: Add log file stderr
     shell:
-        "coverm contig --mapper bwa-mem --methods mean --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output}"
+        "coverm contig --mapper bwa-mem --methods mean --bam-file-cache-directory --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output}"
 
 """
 rule coverm_treatment:
