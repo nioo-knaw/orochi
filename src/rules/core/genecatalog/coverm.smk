@@ -6,14 +6,14 @@ rule coverage:
         # TODO: Decide what is the input here
         assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        "results/stats/coverage.tsv"
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_1.fastq.bam"
+        table="results/stats/coverage.tsv"
+        bam="scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_1.fastq.bam"
     conda:
         "../../../envs/coverm.yaml"
     threads: 16
     # TODO: Add log file stderr
     shell:
-        "coverm contig --mapper bwa-mem --methods mean --bam-file-cache-directory --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output}"
+        "coverm contig --mapper bwa-mem --methods mean --bam-file-cache-directory --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output.table}"
 
 """
 rule coverm_treatment:
