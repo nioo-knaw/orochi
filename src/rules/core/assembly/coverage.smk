@@ -10,9 +10,7 @@ rule coverage:
     conda:
         "../../../envs/coverm.yaml"
     threads: 16
-    log:
-        "results/logs/coverm/coverage.log"
     shell:
-        "coverm contig --mapper bwa-mem --methods mean --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --bam-file-cache-directory {params.bamdir} -t {threads} 2> {log} > {output}"
+        "coverm contig --mapper bwa-mem --methods mean --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --bam-file-cache-directory {params.bamdir} -t {threads} > {output}"
 
 #TO DO: Add stderr log?
