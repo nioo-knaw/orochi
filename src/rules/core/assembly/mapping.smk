@@ -8,8 +8,8 @@ rule treatment_bwa_index:
 
 rule relocate_sample:
     input:
-        forward = expand("scratch/unpack/{sample}_1.fastq", sample=config["data"]),
-        reverse = expand("scratch/unpack/{sample}_2.fastq", sample=config["data"])
+        forward = expand("scratch/unpack/{{sample}}_1.fastq", sample=config["data"]),
+        reverse = expand("scratch/unpack/{{sample}}_2.fastq", sample=config["data"])
     output:
         forward = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R1.fastq",
         reverse = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R2.fastq"
