@@ -23,7 +23,7 @@ rule bam_files:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
         forward = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R1.fastq",
-        reverse = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R2.fastq"
+        reverse = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R2.fastq",
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
         "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam",
