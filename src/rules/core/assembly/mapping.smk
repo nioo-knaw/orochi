@@ -6,7 +6,7 @@ rule treatment_bwa_index:
     log: "scratch/assembly/{assembler}/{treatment}/{kmers}/bwa-index.log"
     shell: "/data/tools/bwa/default/bin/bwa index {input} > {log}"
 
-rule bam_files
+rule bam_files:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
         forward="scratch/host_filtering/{sample}_R1.fastq",
