@@ -6,11 +6,24 @@ rule treatment_bwa_index:
     log: "scratch/assembly/{assembler}/{treatment}/{kmers}/bwa-index.log"
     shell: "/data/tools/bwa/default/bin/bwa index {input} > {log}"
 
+rule relocate_sample:
+    input:
+        forward = expand("scratch/unpack/{sample}_1.fastq", sample=config["data"]),
+        reverse = expand("scratch/unpack/{sample}_2.fastq", sample=config["data"])
+    output:
+        forward = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R1.fastq",
+        reverse = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R2.fastq"
+    threads: 16
+    run:
+        shell("cp {input.forward} {output.forward}")
+        shell("cp {input.reverse} {output.reverse}") 
+
+
 rule bam_files:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa",
-        forward="scratch/host_filtering/{sample}_R1.fastq",
-        reverse="scratch/host_filtering/{sample}_R2.fastq",
+        forward = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R1.fastq",
+        reverse = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R2.fastq"
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
         "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam",
