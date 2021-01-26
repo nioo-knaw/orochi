@@ -13,8 +13,8 @@ rule relocate_sample:
         reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
              else expand("scratch/filter/{sample}_R2.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment]),
     output:
-        forward=lambda wildcards: expand("scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R1.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]),
-        reverse=lambda wildcards: expand("scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R2.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment])
+        forward="scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R1.fastq",
+        reverse="scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R2.fastq"
     threads: 16
     run:
         shell("cp {input.forward} {output.forward}")
