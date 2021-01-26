@@ -8,16 +8,17 @@ rule treatment_bwa_index:
 
 rule relocate_sample:
     input:
-        forward = expand("scratch/unpack/{{sample}}_1.fastq", sample=config["data"]),
-        reverse = expand("scratch/unpack/{{sample}}_2.fastq", sample=config["data"])
+        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
+             else expand("scratch/filter/{sample}_R1.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment]),
+        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
+             else expand("scratch/filter/{sample}_R2.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment]),
     output:
         forward = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R1.fastq",
         reverse = "scratch/assembly/{assembler}/{treatment}/{kmers}/{sample}_R2.fastq"
     threads: 16
     run:
         shell("cp {input.forward} {output.forward}")
-        shell("cp {input.reverse} {output.reverse}") 
-
+        shell("cp {input.reverse} {output.reverse}")
 
 rule bam_files:
     input:
