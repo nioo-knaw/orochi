@@ -13,8 +13,8 @@ rule bam_files:
         reverse="scratch/host_filtering/{sample}_R2.fastq",
         index="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.bwt"
     output:
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam",
-        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.{sample}_R1_paired_filteredstq.bam.bai"
+        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam",
+        "scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam.bai"
     log:
         "scratch/coverm/{sample}_{assembler}_{treatment}_{kmers}.log"
     params:
