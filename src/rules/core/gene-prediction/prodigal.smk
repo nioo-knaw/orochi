@@ -1,6 +1,6 @@
 rule predict_genes:
     input:
-        expand("scratch/assembly/megahit/minimus2/secondary.contigs.fasta" if config["multiple-assemblies"] else "scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa" treatment=config["treatment"], kmers=config["assembly-klist"])
+        expand("scratch/assembly/megahit/minimus2/secondary.contigs.fasta" if config["multiple-assemblies"] else "scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa", treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         gbk="scratch/genecatalog/coords.gbk",
         proteins="scratch/genecatalog/proteins.faa",
