@@ -2,7 +2,8 @@ rule coverage:
     input:
         forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]),
         reverse = expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]),
-        assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        #assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        assembly=scratch/assembly/megahit/minimus2/secondary.contigs.fasta
     output:
         "results/stats/coverage.tsv"
         #"scratch/coverm/coverage.tsv"
