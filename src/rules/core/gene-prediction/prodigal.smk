@@ -1,7 +1,7 @@
 rule predict_genes:
     input:
         #"scratch/assembly/megahit/minimus2/secondary.contigs.fasta" if config["multiple-assemblies"] else 
-        "scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
+        "scratch/assembly/megahit/UNGROUPED/longreads/final.contigs.fa"
     output:
         gbk="scratch/genecatalog/coords.gbk",
         proteins="scratch/genecatalog/proteins.faa",
