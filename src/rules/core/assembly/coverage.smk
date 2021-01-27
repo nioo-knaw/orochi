@@ -4,7 +4,8 @@ rule coverage:
         reverse = expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]),
         assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        "results/stats/coverage.tsv"
+        #"results/stats/coverage.tsv"
+         "scratch/coverm/coverage.tsv"
     params:
         bamdir="scratch/coverm/bamfiles"
     conda:
