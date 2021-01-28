@@ -1,7 +1,7 @@
 rule coverage:
     input:
-        forward = "scratch/treatment/{treatment}_forward.fastq",
-        reverse = "scratch/treatment/{treatment}_reverse.fastq",
+        forward = expand("scratch/treatment/{treatment}_forward.fastq", treatment=config["treatment"]),
+        reverse = expand("scratch/treatment/{treatment}_reverse.fastq", treatment=config["treatment"]),
         #assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
         assembly="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output:
