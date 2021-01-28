@@ -1,9 +1,10 @@
 rule coverage:
     input:
-        forward = expand("scratch/treatment/{treatment}_forward.fastq", treatment=config["treatment"]),
-        reverse = expand("scratch/treatment/{treatment}_reverse.fastq", treatment=config["treatment"]),
-        #assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
-        assembly="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+        forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]),
+        reverse = expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]),
+#        assembly = "scratch/assembly/megahit/all/meta-large/final.contigs.fa"
+        # TODO: Decide what is the input here
+        assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         "results/stats/coverage.tsv"
         #"scratch/coverm/coverage.tsv"
@@ -13,6 +14,6 @@ rule coverage:
         "../../../envs/coverm.yaml"
     threads: 16
     shell:
-        "coverm contig --mapper bwa-mem --methods mean -c {input.forward} {input.reverse} --reference {input.assembly} --bam-file-cache-directory {params.bamdir} -t {threads}"
+        "coverm contig --mapper bwa-mem --methods mean -c {input.forward} {input.reverse} --reference {input.assembly} --bam-file-cache-directory {params.bamdir} -t {threads} > -o {output}"
 
 #TO DO: Add stderr log?
