@@ -24,10 +24,12 @@ rule sort_per_treatment:
     output:
         forward = protected("scratch/sort/{treatment}/{sample}_R1.fastq"),
         reverse = protected("scratch/sort/{treatment}/{sample}_R2.fastq"),
+    params:
+        outdir="scratch/sort/{treatment}"
     run: 
         if config['host_removal']:
-            shell("cp {input.forward} {output.forward}")
-            shell("cp {input.reverse} {output.reverse}")
+            shell("cp {input.forward} {params.outdir}")
+            shell("cp {input.reverse} {params.outdir}")
         else:
-            shell("cp {input.forward} {output.forward}")
-            shell("cp {input.reverse} {output.reverse}")
+            shell("cp {input.forward} {params.outdir}")
+            shell("cp {input.reverse} {params.outdir}")
