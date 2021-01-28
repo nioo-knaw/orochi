@@ -15,6 +15,6 @@ rule coverage:
     threads: 16
     shell:
         #"coverm contig --mapper bwa-mem --methods mean -c {input.forward} {input.reverse} --reference {input.assembly} -t {threads} --bam-file-cache-directory {params.bamdir}"
-        "coverm contig -c {input.forward} {input.reverse} -r {input.assembly} -t {threads} -o {output}"
+        "coverm contig -c {input.forward} {input.reverse} -r {input.assembly} -t {threads}"
 
 #TO DO: Add stderr log?
