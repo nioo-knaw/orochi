@@ -16,10 +16,10 @@ rule antismash:
         #expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
         "scratch/annotation/antismash/primary.long.contigs.fa"
     output:
-        "scratch/annotation/antismash/secondary.contigs.gbk",
-        "scratch/annotation/antismash/secondary.contigs.json"
+        "results/annotation/antismash/primary.long.contigs.gbk",
+        "results/annotation/antismash/primary.long.contigs.json"
     params:
-        outdir="scratch/annotation/antismash/"
+        outdir="results/annotation/antismash/"
     conda:
         "../../../envs/antismash.yaml"
     threads: 16
