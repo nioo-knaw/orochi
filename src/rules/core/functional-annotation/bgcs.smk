@@ -1,7 +1,20 @@
+rule filter_contigs_antismash:
+    input:
+        "scratch/assembly/megahit/minimus2/primary.contigs.fa"
+    output:
+        "scratch/annotation/antismash/primary.long.contigs.fa"
+    params:
+        length=5000
+    conda:
+        "../../../envs/seqtk.yaml"
+    shell: 
+       "seqtk seq -L {params.length} {input}  > {output}"
+
 rule antismash:
     input:
         # TODO: Decide what is the input here
-        expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        #expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+        "scratch/annotation/antismash/primary.long.contigs.fa"
     output:
         "scratch/annotation/antismash/secondary.contigs.gbk",
         "scratch/annotation/antismash/secondary.contigs.json"
