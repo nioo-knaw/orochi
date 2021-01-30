@@ -2,7 +2,7 @@ rule filter_contigs_antismash:
     input:
         "scratch/assembly/megahit/minimus2/primary.contigs.fa"
     output:
-        "scratch/annotation/antismash/primary.long.contigs.fa"
+        "scratch/annotation/antismash/secondary.contigs.fa"
     params:
         length=5000
     conda:
@@ -14,10 +14,10 @@ rule antismash:
     input:
         # TODO: Decide what is the input here
         #expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
-        "scratch/annotation/antismash/primary.long.contigs.fa"
+        "scratch/annotation/antismash/secondary.contigs.fa"
     output:
-        "results/annotation/antismash/primary.long.contigs.gbk",
-        "results/annotation/antismash/primary.long.contigs.json"
+        "results/annotation/antismash/secondary.contigs.gbk",
+        "results/annotation/antismash/secondary.contigs.json"
     params:
         outdir="results/annotation/antismash/"
     conda:
