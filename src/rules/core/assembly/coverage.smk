@@ -18,3 +18,18 @@ rule coverage:
         "coverm contig -c {input.forward} {input.reverse} -r {input.assembly} -t {threads}"
 
 #TO DO: Add stderr log?
+
+rule bamfiles:
+    input:
+        forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]),
+        reverse = expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]),
+        assembly = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+    output:
+        "scratch/coverm/bamfiles/{sample}.assembly.fa.bam"
+    params:
+        outdir="scratch/coverm/bamfiles"
+    conda:
+        "../../../envs/coverm.yaml"
+    threads: 16
+    shell:
+    "coverm contig -c {input.forward} {input.reverse} -r {input.assembly} --bam-file-cache-directory {params.outdir} -t {threads}"
