@@ -1,5 +1,6 @@
 name: bigscape
 channels:
+  - anaconda
   - bioconda
 dependencies:
   - python=3.6
