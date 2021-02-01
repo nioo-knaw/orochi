@@ -72,6 +72,8 @@ if config['big']=='bigscape':
             directory("results/annotation/bigscape")
         container:
             "docker://nselem/big-scape"
+        script:
+            "../../../scripts/bigscape.py"
         conda:
             "../../../envs/bigscape.yaml"
         shell:
