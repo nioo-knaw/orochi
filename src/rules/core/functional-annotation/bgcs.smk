@@ -77,7 +77,8 @@ if config['big']=='bigscape':
         conda:
             "../../../envs/bigscape.yaml"
         shell:
-            "run_bigscape gbks -i {params.inputdir} -o {output}"
+            "python .snakemake/scripts/bigscape.py gbks -i {params.inputdir} -o {output}"
+            #"run_bigscape gbks -i {params.inputdir} -o {output}"
 """
 if config['big']=='bigslice':
    rule bigslice:
