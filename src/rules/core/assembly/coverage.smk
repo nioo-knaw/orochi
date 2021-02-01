@@ -32,4 +32,4 @@ rule bamfiles:
         "../../../envs/coverm.yaml"
     threads: 16
     shell:
-    "coverm contig -c {input.forward} {input.reverse} -r {input.assembly} --bam-file-cache-directory {params.outdir} -t {threads}"
+        "coverm contig -c {input.forward} {input.reverse} -r {input.assembly} --bam-file-cache-directory {params.outdir} -t {threads}"
