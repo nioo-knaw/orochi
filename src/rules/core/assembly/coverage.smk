@@ -8,14 +8,12 @@ rule coverage:
     output:
         "results/stats/coverage.tsv"
         #"scratch/coverm/coverage.tsv"
-    params:
-        bamdir="scratch/coverm/bamfiles"
     conda:
         "../../../envs/coverm.yaml"
     threads: 16
     shell:
         #"coverm contig --mapper bwa-mem --methods mean -c {input.forward} {input.reverse} --reference {input.assembly} -t {threads} --bam-file-cache-directory {params.bamdir}"
-        "coverm contig -c {input.forward} {input.reverse} -r {input.assembly} -t {threads}"
+        "coverm contig --mapper bwa-mem -c {input.forward} {input.reverse} -r {input.assembly} -t {threads} -o {output}"
 
 #TO DO: Add stderr log?
 
