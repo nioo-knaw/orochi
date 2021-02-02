@@ -1,3 +1,10 @@
+rule fetch_emapper_data:
+    input:  "download_eggnog_data.py"
+    output: "data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd"
+    conda:
+        "../../../envs/eggnog-mapper.yaml"
+    shell: "python download_eggnog_data.py"
+
 rule eggnog_mapper_diamond:
     input:
         "scratch/genecatalog/proteins.faa"
