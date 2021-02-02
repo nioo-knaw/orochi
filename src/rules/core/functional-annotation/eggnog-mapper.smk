@@ -1,5 +1,6 @@
 rule fetch_emapper_data:
     output: "data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd"
+    conda: "../../../envs/eggnog-mapper.yaml"
     script: "../../../scripts/download_eggnog_data.py"
 
 rule eggnog_mapper_diamond:
