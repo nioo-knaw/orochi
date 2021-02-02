@@ -1,5 +1,4 @@
 rule fetch_emapper_data:
-    input:  "../../../scripts/download_eggnog_data.py"
     output: "data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd"
     script: "../../../scripts/download_eggnog_data.py"
 
