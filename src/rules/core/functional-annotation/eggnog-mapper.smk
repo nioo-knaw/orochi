@@ -1,9 +1,11 @@
+"""
 rule fetch_emapper_data:
     input:  "download_eggnog_data.py"
     output: "data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd"
     conda:
         "../../../envs/eggnog-mapper.yaml"
     shell: "python download_eggnog_data.py"
+"""
 
 rule eggnog_mapper_diamond:
     input:
@@ -13,7 +15,9 @@ rule eggnog_mapper_diamond:
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 16
-    shell: "emapper.py --dmnd_db /data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd -m diamond --no_annot --no_file_comments --cpu {threads} -i {input} -o {input}" 
+    shell: 
+        "python download_eggnog_data.py",
+        "emapper.py --dmnd_db /data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd -m diamond --no_annot --no_file_comments --cpu {threads} -i {input} -o {input}"
 
 rule eggnog_mapper_annotation:
     input:
