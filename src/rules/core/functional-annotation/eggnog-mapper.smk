@@ -15,7 +15,7 @@ rule eggnog_mapper_annotation:
     output:
         "results/annotation/eggnog-mapper/proteins.faa.emapper.annotations"
     params:
-        datadir="data/db"
+        datadir="data/db/eggnogdb/5.0.0"
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 16
