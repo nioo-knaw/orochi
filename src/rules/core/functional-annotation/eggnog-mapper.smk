@@ -19,4 +19,8 @@ rule eggnog_mapper_annotation:
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 16
-    shell: "emapper.py --annotate_hits_table {input.diamond} --no_file_comments --cpu {threads} --data_dir {params.datadir} -o {input.seq}"
+    shell:
+        """
+        download_eggnog_data.py
+        emapper.py --annotate_hits_table {input.diamond} --no_file_comments --cpu {threads} --data_dir {params.datadir} -o {input.seq}
+        """
