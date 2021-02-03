@@ -21,6 +21,6 @@ rule eggnog_mapper_annotation:
     threads: 16
     shell:
         """
-        download_eggnog_data.py
+        download_eggnog_data.py --data_dir {params.datadir} -y
         emapper.py --annotate_hits_table {input.diamond} --no_file_comments --cpu {threads} --data_dir {params.datadir} -o {input.seq}
         """
