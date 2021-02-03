@@ -14,7 +14,9 @@ rule eggnog_mapper_annotation:
         diamond="scratch/genecatalog/proteins.faa.emapper.seed_orthologs.emapper.seed_orthologs"
     output:
         "results/annotation/eggnog-mapper/proteins.faa.emapper.annotations"
+    params:
+        datadir="scratch/genecatalog"
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 16
-    shell: "emapper.py --annotate_hits_table {input.diamond} --no_file_comments --cpu {threads} --data_dir /scratch -o {input.seq}"
+    shell: "emapper.py --annotate_hits_table {input.diamond} --no_file_comments --cpu {threads} --data_dir {params.datadir} -o {input.seq}"
