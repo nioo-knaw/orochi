@@ -1,7 +1,7 @@
 rule coverage:
     input:
-        forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]),
-        reverse = expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]),
+        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["treatment"][wildcards.treatment]),
+        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["treatment"][wildcards.treatment]),
 #        assembly = "scratch/assembly/megahit/all/meta-large/final.contigs.fa"
         # TODO: Decide what is the input here
         assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
