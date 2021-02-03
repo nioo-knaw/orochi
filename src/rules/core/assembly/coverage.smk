@@ -19,8 +19,8 @@ rule coverage:
 
 rule bamfiles:
     input:
-        forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"][wildcards.treatment]),
-        reverse = expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"][wildcards.treatment]),
+        forward = expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"][wildcards.sample][{treatment}]),
+        reverse = expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"][wildcards.sample][{treatment}]),
         assembly = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa", treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         forward = "scratch/coverm/bamfiles/{treatment}/assembly.fa.{sample}_R1.fastq.bam",
