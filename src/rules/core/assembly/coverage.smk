@@ -1,8 +1,8 @@
 rule bamfiles:
     input:
-        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["treatment"][wildcards.treatment]),
-        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["treatment"][wildcards.treatment]),
-        assembly=lambda wildcards: expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa", treatment=config["treatment"], kmers=config["assembly-klist"])
+        forward = "scratch/host_filtering/{sample}_R1.fastq",
+        reverse = "scratch/host_filtering/{sample}_R2.fastq",
+        assembly = "scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa"
     output:
         forward = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam",
         reverse = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R2.fastq.bam"
