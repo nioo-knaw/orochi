@@ -17,8 +17,8 @@ rule bamfiles:
 
 rule coverage:
     input:
-        forward = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam"),
-        reverse = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R2.fastq.bam"),
+        forward = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam",
+        reverse = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R2.fastq.bam",
         assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         "results/stats/coverage.tsv"
