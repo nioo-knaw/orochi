@@ -2,10 +2,11 @@ rule bamfiles:
     input:
         forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["treatment"][wildcards.treatment]),
         reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["treatment"][wildcards.treatment]),
-        assembly = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa", treatment=config["treatment"], kmers=config["assembly-klist"])
+        #assembly = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa", treatment=config["treatment"], kmers=config["assembly-klist"])
+        assembly = "scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa"
     output:
-        forward = "scratch/coverm/bamfiles/{treatment}/assembly.fa.{sample}_R1.fastq.bam",
-        reverse = "scratch/coverm/bamfiles/{treatment}/assembly.fa.{sample}_R2.fastq.bam"
+        forward = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam",
+        reverse = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R2.fastq.bam"
     params:
         outdir="scratch/coverm/bamfiles/{treatment}"
     conda:
