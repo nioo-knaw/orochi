@@ -6,6 +6,7 @@ rule treatment_bwa_index:
     log: "scratch/assembly/{assembler}/{treatment}/{kmers}/bwa-index.log"
     shell: "/data/tools/bwa/default/bin/bwa index {input} > {log}"
 
+"""
 rule relocate_sample:
     input:
         forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
@@ -38,7 +39,6 @@ rule bam_files:
         "../../../envs/coverm.yaml"
     shell: "coverm make -r {input.contigs} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads} 2> {log}"
 
-"""
 rule bamm_treatment:
     input:
         contigs="scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa", 
