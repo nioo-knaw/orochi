@@ -12,7 +12,7 @@ rule bamfiles:
         "../../../envs/coverm.yaml"
     threads: 16
     shell:
-        "coverm make -p bwa-mem -r {input.assembly} -c {input.forward} {input.reverse} -o {params.outdir} -t {threads}"
+        "coverm make -p bwa-mem -r {input.assembly} -1 {input.forward} -2 {input.reverse} -o {params.outdir} -t {threads}"
 
 rule coverage:
     input:
