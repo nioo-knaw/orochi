@@ -34,10 +34,9 @@ rule quast_merge:
          # Add the result rows
          shell("cat {input.quast} >> {output}")
 
-
 rule samtools_flagstat:
     input:
-         expand("scratch/coverm/{{assembler}}/{{treatment}}/{{kmers}}/assembly.fa.{sample}_R1.fastq.bam", sample=config["data"])
+        expand("scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam", sample=config["data"])
     output:
         "scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     conda:
