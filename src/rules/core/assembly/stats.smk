@@ -36,7 +36,7 @@ rule quast_merge:
 
 rule samtools_flagstat:
     input:
-        expand("scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam", sample=config["data"])
+        expand("scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam", treatment=config["treatment"], kmers=config["assembly-klist"], sample=config["data"])
     output:
         "scratch/stats/{assembler}/{treatment}/{kmers}/flagstat.txt"
     conda:
