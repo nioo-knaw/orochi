@@ -49,7 +49,7 @@ minimap2 -t 8 -N 50 -ax sr catalogue.mmi {input.forward} {input.reverse} | samto
 
 rule vamb:
     input:
-        catalogue="scratch/vamb/catalogue.fna.gz"
+        catalogue="scratch/vamb/catalogue.fna.gz",
         bam="scratch/vamb/bamfiles/{sample}.bam"
     output:
     params:
