@@ -1,29 +1,29 @@
 rule sample_assembly:
-    input:
+    input: 
     output:
-    conda:
+    conda: "../../../spades.yaml"
     shell:
 
 rule concatenate:
     input:
     output:
-    conda:
+    conda: "../../../vamb.yaml"
     shell:
 
 rule read_mapper:
     input:
     output:
-    conda:
+    conda: "../../../minimap2.yaml"
     shell:
 
 rule vamb:
     input:
     output:
-    conda:
+    conda: "../../../vamb.yaml"
     shell:
 
 rule vamb_write_bins:
     input:
     output:
-    conda:
+    conda: "../../../vamb.yaml"
     shell:
