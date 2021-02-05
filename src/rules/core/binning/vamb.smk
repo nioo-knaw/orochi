@@ -11,7 +11,7 @@ rule sample_assembly:
     log:
         "scratch/vamb/assembly/{sample}/spades.log"
     threads: 32
-    conda: "../../../spades.yaml"
+    conda: "../../../envs/spades.yaml"
     shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
 
 rule vamb_filter_contigs:
@@ -29,7 +29,7 @@ rule vamb_filter_contigs:
 rule concatenate:
     input: expand("scratch/vamb/assembly/{sample}/long.contigs.fasta", sample=config["data"])
     output: "scratch/vamb/catalogue.fna.gz"
-    conda: "../../../vamb.yaml"
+    conda: "../../../envs/vamb.yaml"
     shell: "concatenate.py {output} {input}"
 
 rule read_mapper:
@@ -40,7 +40,7 @@ rule read_mapper:
              else expand("scratch/filter/{sample}_R2.fasta", sample=config["data"]),
         catalogue="scratch/vamb/catalogue.fna.gz"
     output: "scratch/vamb/bamfiles/{sample}.bam"
-    conda: "../../../minimap2.yaml"
+    conda: "../../../envs/minimap2.yaml"
     shell:
         """
         minimap2 -d catalogue.mmi {input.catalogue}; # make index
@@ -54,13 +54,13 @@ rule vamb:
     output: "results/binning/vamb/clusters.tsv"
     params:
         outdir="results/binning/vamb"
-    conda: "../../../vamb.yaml"
+    conda: "../../../envs/vamb.yaml"
     shell: "vamb --outdir {params.outdir} --fasta {input.catalogue} --bamfiles {input.bam} -o C --minfasta 200000"
 
 """
 rule vamb_write_bins:
     input:
     output:
-    conda: "../../../vamb.yaml"
+    conda: "../../../envs/vamb.yaml"
     shell:
 """
