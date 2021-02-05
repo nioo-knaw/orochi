@@ -8,19 +8,17 @@ rule CAT:
         "scratch/annotation/CAT/assembly.predicted_proteins.faa",
         "scratch/annotation/CAT/assembly.ORF2LCA.txt",
         "scratch/annotation/CAT/assembly.contig2classification.txt",
-
     params:
         db=config['CAT_database'],
         tax=config['CAT_taxonomy'],
         tmp=config['tmpdir'],
         prefix="scratch/annotation/CAT/assembly"
-
     log: "scratch/annotation/CAT/assembly.log"
     conda:
         "../../../envs/cat.yaml"
-    threads: 16
+    threads: 80
     shell:
-        """CAT contigs -c {input} -o {params.prefix} -d {params.db} -t {params.tax} --nproc {threads} --sensitive --tmpdir {params.tmp} --no_log > {log} 2>&1"""
+        """CAT contigs -c {input} -o {params.prefix} -d {params.db} -t {params.tax} --nproc {threads} --sensitive --force --compress --verbose --index_chunks 1 --top 11 --I_know_what_Im_doing"""
 
 
 rule CAT_add_names:
@@ -40,7 +38,7 @@ rule CAT_summarize:
         contigs = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
         classification = "scratch/annotation/CAT/assembly.classification.txt"
     output:
-        "results/annotation/CAT/assembly.classification.summary.txt"
+        "scratch/annotation/CAT/assembly.classification.summary.txt"
     log: "scratch/annotation/CAT/assembly.summary.log"
     conda:
         "../../../envs/cat.yaml"
