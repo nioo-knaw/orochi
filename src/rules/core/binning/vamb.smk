@@ -27,7 +27,7 @@ rule vamb_filter_contigs:
        "seqtk seq -L {params.length} {input}  > {output}"
 
 rule concatenate:
-    input: expand("scratch/vamb/assembly/{sample}/{kmers}/long.contigs.fasta", sample=config["data"], kmers=config["assembly-klist"][wildcards.kmers])
+    input: lambda wildcards: expand("scratch/vamb/assembly/{sample}/{kmers}/long.contigs.fasta", sample=config["data"], kmers=config["assembly-klist"][wildcards.kmers])
     output: "scratch/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
     shell: "concatenate.py {output} {input}"
