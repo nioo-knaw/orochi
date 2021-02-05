@@ -1,9 +1,9 @@
 rule sample_assembly:
     input:         
-        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
-             else expand("scratch/filter/{sample}_R1.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment]),
-        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
-             else expand("scratch/filter/{sample}_R2.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment]),
+        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]) if config['host_removal'] \
+             else expand("scratch/filter/{sample}_R1.fasta", sample=config["data"]),
+        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]) if config['host_removal'] \
+             else expand("scratch/filter/{sample}_R2.fasta", sample=config["data"]),
     output: temp("scratch/vamb/assembly/{sample}/contigs.fasta")
     params:
             outdir="scratch/vamb/assembly/{sample}",
@@ -34,10 +34,10 @@ rule concatenate:
 
 rule read_mapper:
     input:
-        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
-             else expand("scratch/filter/{sample}_R1.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment]),
-        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
-             else expand("scratch/filter/{sample}_R2.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment]),
+        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", sample=config["data"]) if config['host_removal'] \
+             else expand("scratch/filter/{sample}_R1.fasta", sample=config["data"]),
+        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]) if config['host_removal'] \
+             else expand("scratch/filter/{sample}_R2.fasta", sample=config["data"]),
         catalogue="scratch/vamb/catalogue.fna.gz"
     output: "scratch/vamb/bamfiles/{sample}.bam"
     conda: "../../../minimap2.yaml"
