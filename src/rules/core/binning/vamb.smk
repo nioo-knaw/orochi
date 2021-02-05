@@ -6,8 +6,8 @@ rule sample_assembly:
              else expand("scratch/filter/{sample}_R2.fasta", sample=config["data"]),
     output: temp("scratch/vamb/assembly/{sample}/contigs.fasta")
     params:
-            outdir="scratch/vamb/assembly/{sample}",
-            kmers = lambda wildcards: config["assembly-klist"]
+        outdir="scratch/vamb/assembly/{sample}",
+        kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
     log:
         "scratch/vamb/assembly/{sample}/spades.log"
     threads: 32
