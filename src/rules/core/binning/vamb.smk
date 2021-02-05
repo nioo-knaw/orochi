@@ -27,7 +27,7 @@ rule vamb_filter_contigs:
        "seqtk seq -L {params.length} {input}  > {output}"
 
 rule concatenate:
-    input: "scratch/vamb/assembly/{sample}/long.contigs.fasta"
+    input: expand("scratch/vamb/assembly/{sample}/long.contigs.fasta", sample=config["data"])
     output: "scratch/vamb/catalogue.fna.gz"
     conda: "../../../vamb.yaml"
     shell: "concatenate.py {output} {input}"
