@@ -5,7 +5,7 @@ rule sample_assembly:
         reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
              else expand("scratch/filter/{sample}_R2.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment]),
     output: temp("scratch/vamb/assembly/{sample}/contigs.fasta")
-        params:
+    params:
             outdir="scratch/vamb/assembly/{sample}",
             kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
     log:
