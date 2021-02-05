@@ -4,7 +4,7 @@ rule sample_assembly:
              else expand("scratch/filter/{sample}_R1.fasta", sample=config["data"]),
         reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", sample=config["data"]) if config['host_removal'] \
              else expand("scratch/filter/{sample}_R2.fasta", sample=config["data"]),
-    output: temp("scratch/vamb/assembly/{sample}/contigs.fasta")
+    output: temp("scratch/vamb/assembly/{sample}/{kmers}/contigs.fasta")
     params:
         outdir="scratch/vamb/assembly/{sample}",
         kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
@@ -16,9 +16,9 @@ rule sample_assembly:
 
 rule vamb_filter_contigs:
     input:
-        "scratch/vamb/assembly/{sample}/contigs.fasta"
+        "scratch/vamb/assembly/{sample}/{kmers}/contigs.fasta"
     output:
-        "scratch/vamb/assembly/{sample}/long.contigs.fasta"
+        "scratch/vamb/assembly/{sample}/{kmers}/long.contigs.fasta"
     params:
         length=2000
     conda:
@@ -27,7 +27,7 @@ rule vamb_filter_contigs:
        "seqtk seq -L {params.length} {input}  > {output}"
 
 rule concatenate:
-    input: expand("scratch/vamb/assembly/{sample}/long.contigs.fasta", sample=config["data"])
+    input: expand("scratch/vamb/assembly/{sample}/{kmers}/long.contigs.fasta", sample=config["data"])
     output: "scratch/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
     shell: "concatenate.py {output} {input}"
