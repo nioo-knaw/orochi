@@ -6,10 +6,10 @@ rule sample_assembly:
              else expand("scratch/filter/{sample}_R2.fasta", sample=config["data"]),
     output: temp("scratch/vamb/assembly/{sample}/{kmers}/contigs.fasta")
     params:
-        outdir="scratch/vamb/assembly/{sample}",
+        outdir="scratch/vamb/assembly/{sample}/{kmers}",
         kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
     log:
-        "scratch/vamb/assembly/{sample}/spades.log"
+        "scratch/vamb/assembly/{sample}/{kmers}/spades.log"
     threads: 32
     conda: "../../../envs/spades.yaml"
     shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
