@@ -23,15 +23,15 @@ rule mash_paste:
 
 rule mash_dist:
     input: "scratch/treatment/all.msh"
-    output: "results/mash/table.txt"
+    output: "results/stats/mash/table.txt"
     conda: "../../../envs/mash.yaml"
     shell: "mash dist -t {input} {input} > {output}"
 
 rule draw_tree:
     input:
-        txt="results/mash/table.txt"
+        txt="results/stats/mash/table.txt"
     output:
-        svg="results/mash/tree.svg"
+        svg="results/stats/mash/tree.svg"
     params:
         req="h_vmem=2G",
         samples=config["data"]
