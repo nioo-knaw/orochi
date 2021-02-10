@@ -28,7 +28,7 @@ rule vamb_filter_contigs:
 
 rule concatenate:
     input:
-        lambda wildcards: sample=config["data"], kmers=config["assembly-klist"][wildcards.kmers]
+        lambda wildcards: sample=config["data"], kmers=config["assembly-klist"][wildcards.kmers],
         "scratch/vamb/assembly/{sample}/{kmers}/long.contigs.fasta"
     output: "scratch/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
