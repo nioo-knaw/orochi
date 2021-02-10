@@ -65,9 +65,9 @@ rule map_reads:
 if config['big']=='bigscape':
    rule bigscape:
         input:
-            gbks="scratch/annotation/test_antismash/primary.long.contigs.gbk"
+            gbks="results/annotation/antismash/secondary.contigs.gbk"
         params:
-            inputdir="scratch/annotation/test_antismash"
+            inputdir="results/annotation/antismash"
         output:
             directory("results/annotation/bigscape")
         container:
@@ -75,8 +75,14 @@ if config['big']=='bigscape':
         conda:
             "../../../envs/bigscape.yaml"
         shell:
-            "python .snakemake/scripts/bigscape.py gbks -i {params.inputdir} -o {output}"
-            #"run_bigscape gbks -i {params.inputdir} -o {output}"
+            """
+            git clone https://git.wur.nl/medema-group/BiG-SCAPE.git
+            cd BiG-SCAPE
+            wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz && gunzip Pfam-A.hmm.gz
+            hmmpress Pfam-A.hmm
+            python bigscape.py gbks -i {params.inputdir} -o {output}
+            """
+
 """
 if config['big']=='bigslice':
    rule bigslice:
