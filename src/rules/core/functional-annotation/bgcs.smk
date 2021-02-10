@@ -74,13 +74,14 @@ if config['big']=='bigscape':
             "docker://nselem/big-scape"
         conda:
             "../../../envs/bigscape.yaml"
+        threads: 40
         shell:
             """
             git clone https://git.wur.nl/medema-group/BiG-SCAPE.git
             cd BiG-SCAPE
             wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz && gunzip Pfam-A.hmm.gz
             hmmpress Pfam-A.hmm
-            python bigscape.py gbks -i {params.inputdir} -o {output}
+            python bigscape.py gbks -i {params.inputdir} -o {output} -c {threads}
             """
 
 """
