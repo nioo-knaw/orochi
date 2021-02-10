@@ -11,7 +11,7 @@ rule eggnog_mapper_diamond:
 rule eggnog_mapper_annotation:
     input:
         seq="scratch/genecatalog/proteins.faa",
-        diamond="scratch/genecatalog/proteins.faa.emapper.seed_orthologs.emapper.seed_orthologs"
+        diamond="scratch/genecatalog/proteins.faa.emapper.seed_orthologs"
     output:
         "results/annotation/eggnog-mapper/proteins.faa.emapper.annotations"
     params:
@@ -24,3 +24,4 @@ rule eggnog_mapper_annotation:
         download_eggnog_data.py --data_dir {params.datadir} -y
         emapper.py --annotate_hits_table {input.diamond} --no_file_comments --cpu {threads} --data_dir {params.datadir} -o {input.seq}
         """
+#Having the input and output directory differ here may cause problems because of how emapper names output using input files as prefix.
