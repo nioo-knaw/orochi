@@ -81,7 +81,7 @@ if config['big']=='bigscape':
             cd BiG-SCAPE
             wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz && gunzip Pfam-A.hmm.gz
             hmmpress Pfam-A.hmm
-            python bigscape.py gbks -i {params.inputdir} -o {output} -c {threads}
+            python bigscape.py -i {params.inputdir} -o {output} -c {threads}
             """
 
 """
