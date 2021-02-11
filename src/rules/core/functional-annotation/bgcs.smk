@@ -68,10 +68,9 @@ if config['big']=='bigscape':
             gbks="results/annotation/antismash/secondary.contigs.gbk"
         params:
             inputdir="../results/annotation/antismash"
+            outdir="../results/annotation/bigscape"
         output:
-            directory("../results/annotation/bigscape")
-        container:
-            "docker://nselem/big-scape"
+            "../results/annotation/bigscape/index.html"
         conda:
             "../../../envs/bigscape.yaml"
         threads: 40
