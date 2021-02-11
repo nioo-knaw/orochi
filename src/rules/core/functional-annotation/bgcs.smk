@@ -67,10 +67,10 @@ if config['big']=='bigscape':
         input:
             gbks="results/annotation/antismash/secondary.contigs.gbk"
         params:
-            inputdir="../results/annotation/antismash",
-            outdir="../results/annotation/bigscape"
+            inputdir="results/annotation/antismash",
+            outdir="results/annotation/bigscape"
         output:
-            "../results/annotation/bigscape/index.html"
+            "results/annotation/bigscape/index.html"
         conda:
             "../../../envs/bigscape.yaml"
         threads: 40
@@ -80,7 +80,7 @@ if config['big']=='bigscape':
             cd BiG-SCAPE
             wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz && gunzip Pfam-A.hmm.gz
             hmmpress Pfam-A.hmm
-            python bigscape.py -i {params.inputdir} -o {params.outdir} -c {threads}
+            python bigscape.py -i ../{params.inputdir} -o ../{params.outdir} -c {threads}
             """
 
 
