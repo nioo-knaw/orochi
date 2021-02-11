@@ -67,9 +67,9 @@ if config['big']=='bigscape':
         input:
             gbks="results/annotation/antismash/secondary.contigs.gbk"
         params:
-            inputdir="results/annotation/antismash"
+            inputdir="../results/annotation/antismash"
         output:
-            directory("BiG-SCAPE/annotationresults")
+            directory("../results/annotation/bigscape")
         container:
             "docker://nselem/big-scape"
         conda:
