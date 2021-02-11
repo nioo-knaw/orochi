@@ -69,7 +69,7 @@ if config['big']=='bigscape':
         params:
             inputdir="results/annotation/antismash"
         output:
-            directory("results/annotation/bigscape")
+            directory("BiG-SCAPE/results")
         container:
             "docker://nselem/big-scape"
         conda:
@@ -83,6 +83,7 @@ if config['big']=='bigscape':
             hmmpress Pfam-A.hmm
             python bigscape.py -i {params.inputdir} -o {output} -c {threads}
             """
+
 
 """
 if config['big']=='bigslice':
