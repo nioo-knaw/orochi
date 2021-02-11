@@ -67,7 +67,7 @@ if config['big']=='bigscape':
         input:
             gbks="results/annotation/antismash/secondary.contigs.gbk"
         params:
-            inputdir="../results/annotation/antismash"
+            inputdir="../results/annotation/antismash",
             outdir="../results/annotation/bigscape"
         output:
             "../results/annotation/bigscape/index.html"
