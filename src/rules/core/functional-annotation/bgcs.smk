@@ -69,7 +69,7 @@ if config['big']=='bigscape':
         params:
             inputdir="results/annotation/antismash"
         output:
-            directory("BiG-SCAPE/results")
+            directory("BiG-SCAPE/annotationresults")
         container:
             "docker://nselem/big-scape"
         conda:
