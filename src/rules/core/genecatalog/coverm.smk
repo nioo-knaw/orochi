@@ -6,7 +6,7 @@ rule coverage:
         # TODO: Decide what is the input here
         assembly=expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        table="results/stats/coverage.tsv"
+        table="results/stats/coverage.tsv",
         bam="scratch/coverm/{assembler}/{treatment}/{kmers}/assembly.fa.{sample}_1.fastq.bam"
     conda:
         "../../../envs/coverm.yaml"
