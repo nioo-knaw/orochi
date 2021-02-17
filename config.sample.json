@@ -1,10 +1,11 @@
 {
     "project" : "1511KMI-0007",
-    "tmpdir" : "./tmp",
+    "tmpdir" : "/tmp",
     "adapters" : "/data/tools/Trimmomatic/0.36/adapters/NexteraPE-PE.fa",
     "min_qual" : "30",
     "min_length" : "150",
-    "host_removal" : False,
+    "host_removal" : True,
+    "reference" : "data/test-data/reference/beta-vulgaris-subset.fasta",
     "reference_index": "/data/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic",
     "CAT_database" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_CAT_database/",
     "CAT_taxonomy" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_taxonomy/",
@@ -14,28 +15,12 @@
        "meta-large" : "27,37,47,57,67,77,87,97,107,117,127",
      },
     "treatment" : {
-        "A" : ["MPR1-1n-CUR", "MPR1-4n-EST"],
-        "B" : ["MPR3-3n-CUR"],
+        "B55" : ["B55"]
     },
 
     "data" : {
-  "MPR1-1n-CUR": { "forward":"MPR1-1n-CUR_1.fastq.gz", "reverse":"MPR1-1n-CUR_2.fastq.gz"},
-  "MPR1-1n-EST": { "forward":"MPR1-1n-EST_1.fastq.gz", "reverse":"MPR1-1n-EST_2.fastq.gz"},
-  "MPR1-2n-CUR": { "forward":"MPR1-2n-CUR_1.fastq.gz", "reverse":"MPR1-2n-CUR_2.fastq.gz"},
-  "MPR1-3n-CUR": { "forward":"MPR1-3n-CUR_1.fastq.gz", "reverse":"MPR1-3n-CUR_2.fastq.gz"},
-  "MPR1-3n-EST": { "forward":"MPR1-3n-EST_1.fastq.gz", "reverse":"MPR1-3n-EST_2.fastq.gz"},
-  "MPR1-4n-EST": { "forward":"MPR1-4n-EST_1.fastq.gz", "reverse":"MPR1-4n-EST_2.fastq.gz"},
-  "MPR2-1n-EST": { "forward":"MPR2-1n-EST_1.fastq.gz", "reverse":"MPR2-1n-EST_2.fastq.gz"},
-  "MPR2-2n-CUR": { "forward":"MPR2-2n-CUR_1.fastq.gz", "reverse":"MPR2-2n-CUR_2.fastq.gz"},
-  "MPR2-3n-CUR": { "forward":"MPR2-3n-CUR_1.fastq.gz", "reverse":"MPR2-3n-CUR_2.fastq.gz"},
-  "MPR2-4n-CUR": { "forward":"MPR2-4n-CUR_1.fastq.gz", "reverse":"MPR2-4n-CUR_2.fastq.gz"},
-  "MPR2-4n-EST": { "forward":"MPR2-4n-EST_1.fastq.gz", "reverse":"MPR2-4n-EST_2.fastq.gz"},
-  "MPR2-6n-EST": { "forward":"MPR2-6n-EST_1.fastq.gz", "reverse":"MPR2-6n-EST_2.fastq.gz"},
-  "MPR3-1n-EST": { "forward":"MPR3-1n-EST_1.fastq.gz", "reverse":"MPR3-1n-EST_2.fastq.gz"},
-  "MPR3-2n-CUR": { "forward":"MPR3-2n-CUR_1.fastq.gz", "reverse":"MPR3-2n-CUR_2.fastq.gz"},
-  "MPR3-3n-CUR": { "forward":"MPR3-3n-CUR_1.fastq.gz", "reverse":"MPR3-3n-CUR_2.fastq.gz"},
-  "MPR3-3n-EST": { "forward":"MPR3-3n-EST_1.fastq.gz", "reverse":"MPR3-3n-EST_2.fastq.gz"},
-  "MPR3-4n-CUR": { "forward":"MPR3-4n-CUR_1.fastq.gz", "reverse":"MPR3-4n-CUR_2.fastq.gz"},
-  "MPR3-4n-EST": { "forward":"MPR3-4n-EST_1.fastq.gz", "reverse":"MPR3-4n-EST_2.fastq.gz"}
-}
+        "B55": { "forward":"data/B55_1.fq.gz", "reverse":"data/B55_2.fq.gz"},
+        "B57": { "forward":"data/B57_1.fq.gz", "reverse":"data/B57_2.fq.gz"},
+        "B83": { "forward":"data/B83_1.fq.gz", "reverse":"data/B83_2.fq.gz"}
+    }
 }
