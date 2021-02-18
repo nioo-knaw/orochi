@@ -1,5 +1,13 @@
+rule vamb_filter:
+    input: "scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
+    output: "scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa"
+    params:
+        length=2000
+    conda: "../../../envs/seqtk.yaml"
+    shell: "seqtk seq -L {params.length} {input}  > {output}"
+
 rule concatenate:
-    input: expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
+    input: expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output: "scratch/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
     shell: "concatenate.py {output} {input}"
@@ -8,7 +16,7 @@ rule concatenate:
 rule vamb:
     input:
         catalogue="scratch/vamb/catalogue.fna.gz",
-        bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
+        bam=expand("scratch/coverm/bamfiles/primary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
     output: "results/binning/vamb/clusters.tsv"
     params:
         outdir="results/binning/vamb"
