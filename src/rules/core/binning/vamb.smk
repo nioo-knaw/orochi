@@ -1,8 +1,9 @@
 rule concatenate:
-    input: "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+    input: expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output: "scratch/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
     shell: "concatenate.py {output} {input}"
+    #Just cat with extras to make it more suitable to VAMB
 
 rule vamb:
     input:
