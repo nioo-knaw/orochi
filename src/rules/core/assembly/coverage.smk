@@ -4,8 +4,8 @@ rule bamfiles:
         reverse = "scratch/host_filtering/{sample}_R2.fastq",
         assembly = "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output:
-        forward = "scratch/coverm/bamfiles/assembly.fa.{sample}_R1.fastq.bam",
-        reverse = "scratch/coverm/bamfiles/assembly.fa.{sample}_R2.fastq.bam"
+        forward = "scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam",
+        reverse = "scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R2.fastq.bam"
     params:
         outdir="scratch/coverm/bamfiles/"
     conda:
