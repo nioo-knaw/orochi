@@ -19,7 +19,7 @@ rule concatenate:
 rule vamb:
     input:
         catalogue="scratch/vamb/catalogue.fna.gz",
-        bam=lambda wildcards: expand("scratch/coverm/bamfiles/megahit/{{treatment}}/{{kmers}}/assembly.fa.{sample}_R1.fastq.bam", sample=config["data"], treatment=config["treatment"], kmers=config["kmers"])
+        bam=lambda wildcards: "scratch/coverm/bamfiles/megahit/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam", sample=config["data"], treatment=config["treatment"], kmers=config["kmers"]
     output: "results/binning/vamb/clusters.tsv"
     params:
         outdir="results/binning/vamb"
