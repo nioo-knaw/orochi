@@ -21,6 +21,6 @@ rule coverage:
         "../../../envs/coverm.yaml"
     threads: 16
     shell:
-        "coverm contig -b {input.forward} -t {threads} -o {output}"
+        "coverm contig -b {input} -t {threads} -o {output}"
 
 #TO DO: Add stderr log?
