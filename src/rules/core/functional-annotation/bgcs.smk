@@ -26,20 +26,6 @@ rule antismash:
     shell:
         "antismash --cb-general --cb-knownclusters --cb-subclusters --asf --genefinding-tool prodigal-m --output-dir {params.outdir} --cpus {threads} {input}"
 
-rule test_antismash:
-    input:
-        "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
-    output:
-        "scratch/annotation/test_antismash/primary.long.contigs.gbk",
-        "scratch/annotation/test_antismash/primary.long.contigs.json"
-    params:
-        outdir="scratch/annotation/test_antismash/"
-    conda:
-        "../../../envs/antismash.yaml"
-    threads: 16
-    shell:
-        "antismash --cb-general --cb-knownclusters --cb-subclusters --asf --genefinding-tool prodigal-m --output-dir {params.outdir} --cpus {threads} {input}"
-
 rule get_bgcs:
     input:
         "results/annotation/antismash/secondary.contigs.json"
