@@ -1,15 +1,3 @@
-rule vamb_filter_contigs:
-    input:
-        "scratch/vamb/assembly/{sample}/{kmers}/contigs.fasta"
-    output:
-        "scratch/vamb/assembly/{sample}/{kmers}/long.contigs.fasta"
-    params:
-        length=2000
-    conda:
-        "../../../envs/seqtk.yaml"
-    shell: 
-       "seqtk seq -L {params.length} {input}  > {output}"
-
 rule concatenate:
     input: "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output: "scratch/vamb/catalogue.fna.gz"
