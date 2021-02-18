@@ -2,12 +2,12 @@ rule bamfiles:
     input:
         forward = "scratch/host_filtering/{sample}_R1.fastq",
         reverse = "scratch/host_filtering/{sample}_R2.fastq",
-        assembly = "scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa"
+        assembly = "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output:
-        forward = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam",
-        reverse = "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R2.fastq.bam"
+        forward = "scratch/coverm/bamfiles/assembly.fa.{sample}_R1.fastq.bam",
+        reverse = "scratch/coverm/bamfiles/assembly.fa.{sample}_R2.fastq.bam"
     params:
-        outdir="scratch/coverm/bamfiles/{treatment}/{kmers}"
+        outdir="scratch/coverm/bamfiles/"
     conda:
         "../../../envs/coverm.yaml"
     threads: 16
