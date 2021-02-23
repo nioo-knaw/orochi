@@ -1,6 +1,5 @@
 rule bamfiles:
     input:
-        zip,
         forward = "scratch/host_filtering/{sample}_R1.fastq",
         reverse = "scratch/host_filtering/{sample}_R2.fastq",
         assembly = "scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa"
