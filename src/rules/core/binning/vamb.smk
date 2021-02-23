@@ -13,6 +13,7 @@ rule concatenate:
     shell: "concatenate.py {output} {input}"
     #Just cat with extras to make it more suitable to VAMB
 
+"""
 rule vamb:
     input:
         catalogue="scratch/vamb/catalogue.fna.gz",
@@ -22,7 +23,7 @@ rule vamb:
         outdir="results/binning/vamb"
     conda: "../../../envs/vamb.yaml"
     shell: "vamb --outdir {params.outdir} --fasta {input.catalogue} --bamfiles {input.bam} -o C --minfasta 200000"
-
+"""
 """
 rule vamb_write_bins:
     input:
