@@ -17,10 +17,10 @@ rule merge_per_treatment:
 
 rule sort_per_treatment:
     input:
-        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment], zip) if config['host_removal'] \
-             else expand("scratch/filter/{sample}_R1.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment], zip),
-        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", project=config["project"], sample=config["treatment"][wildcards.treatment], zip) if config['host_removal'] \
-             else expand("scratch/filter/{sample}_R2.fasta", project=config["project"], sample=config["treatment"][wildcards.treatment], zip),
+        forward=lambda wildcards: expand("scratch/host_filtering/{sample}_R1.fastq", zip, project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
+             else expand("scratch/filter/{sample}_R1.fasta", zip, project=config["project"], sample=config["treatment"][wildcards.treatment]),
+        reverse=lambda wildcards: expand("scratch/host_filtering/{sample}_R2.fastq", zip, project=config["project"], sample=config["treatment"][wildcards.treatment]) if config['host_removal'] \
+             else expand("scratch/filter/{sample}_R2.fasta", zip, project=config["project"], sample=config["treatment"][wildcards.treatment]),
     output:
         forward =protected("scratch/sorted/{treatment}/{sample}_R1.fastq"),
         reverse =protected("scratch/sorted/{treatment}/{sample}_R2.fastq")
