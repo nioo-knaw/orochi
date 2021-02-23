@@ -2,7 +2,8 @@ rule bamfiles:
     input:
         forward = "scratch/host_filtering/{sample}_R1.fastq",
         reverse = "scratch/host_filtering/{sample}_R2.fastq",
-        assembly = "scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa"
+        assembly = "scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",
+        zip
     output:
         "scratch/coverm/bamfiles/{treatment}/{kmers}/assembly.fa.{sample}_R1.fastq.bam"
     params:
