@@ -34,6 +34,7 @@ rule quast_merge:
          # Add the result rows
          shell("cat {input.quast} >> {output}")
 
+"""
 rule samtools_flagstat:
     input:
         expand("scratch/coverm/bamfiles/{{treatment}}/{{kmers}}/assembly.fa.{sample}_R1.fastq.bam", sample=config["data"])
@@ -66,3 +67,4 @@ rule flagstat_merge:
          shell("echo 'Assembly\ttotal_reads\tsecondary\tsupplementary\tduplicates\tmapped\tpaired\tread1\tread2\tproperly_paired\twith_itself_and_mate_mapped\tsingeltons\twith_mate_mapped_different_chr\twith_mate_mapped_different_chr_q5' > {output}")
          # Add the result rows
          shell("cat {input} >> {output}")
+"""
