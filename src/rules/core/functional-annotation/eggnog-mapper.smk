@@ -10,10 +10,12 @@ rule emapper_diamond:
         "results/annotation/emapper/proteins.faa"
     output:
         "results/annotation/emapper/proteins.faa.emapper.seed_orthologs"
+    params:
+        db=config["emapper_diamond"]
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 16
-    shell: "emapper.py --dmnd_db /data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd -m diamond --no_annot --no_file_comments --cpu {threads} -i {input} -o {input}"
+    shell: "emapper.py --dmnd_db {params.db} -m diamond --no_annot --no_file_comments --cpu {threads} -i {input} -o {input}"
 
 rule emapper_annotation:
     input:
