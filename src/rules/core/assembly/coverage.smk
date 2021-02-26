@@ -1,3 +1,4 @@
+#Note - Add short reads and concatenate steps
 rule bamfiles:
     input:
         forward="scratch/host_filtering/{sample}_R1.fastq" if config['host_removal'] \
