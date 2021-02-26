@@ -7,10 +7,10 @@ rule create_rdata:
         rdata = "results/report/report.RData"
     run:
        R("""
-       quast <- read.delim("{input.quast}")
-       flagstat <- read.delim("{input.flagstat}")
-       save.image(file="{output.rdata}")
-       """)
+         quast <- read.delim("{input.quast}")
+         flagstat <- read.delim("{input.flagstat}")
+         save.image(file="{output.rdata}")
+         """)
 
 rule report:
     input:
