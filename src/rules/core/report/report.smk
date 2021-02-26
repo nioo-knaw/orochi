@@ -1,3 +1,4 @@
+"""
 rule create_rdata:
     input:
         quast=expand("scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
@@ -21,3 +22,4 @@ rule report:
     conda: "../../../envs/report.yaml"
     script:
         "report.Rmd"
+"""
