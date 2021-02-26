@@ -6,6 +6,8 @@
     "min_length" : "150",
     "host_removal" : False,
     "reference_index": "/data/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic",
+    "emapper_database" : "/data/db/eggnogdb/5.0.0/",
+    "emapper_diamond" : "/data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd/",
     "CAT_database" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_CAT_database/",
     "CAT_taxonomy" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_taxonomy/",
     "assembler" : "megahit",
