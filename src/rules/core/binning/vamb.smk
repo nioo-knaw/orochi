@@ -32,9 +32,9 @@ rule vamb_write_bins:
         outdir="results/vamb/bins"
     run:
         with open('{input.clusters}', 'w') as file:
-        vamb.cluster.write_clusters(file, filtered_bins)
+            vamb.cluster.write_clusters(file, filtered_bins)
         keptcontigs = set.union(*filtered_bins.values())
         with open('{input.contigs}', 'rb') as file:
-        fastadict = vamb.vambtools.loadfasta(file, keep=keptcontigs)
+            fastadict = vamb.vambtools.loadfasta(file, keep=keptcontigs)
         bindir = '{params.outdir}'
         vamb.vambtools.write_bins(bindir, filtered_bins, fastadict, maxbins=500)
