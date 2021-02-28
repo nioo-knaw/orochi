@@ -38,7 +38,7 @@ rule CAT_summarize:
         contigs = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
         classification = "results/annotation/CAT/assembly.classification.txt"
     output:
-        "results/annotation/CAT/assembly.classification.summary.txt"
+        protected("results/annotation/CAT/assembly.classification.summary.txt")
     log: "results/annotation/CAT/assembly.summary.log"
     conda:
         "../../../envs/cat.yaml"
