@@ -20,7 +20,7 @@ rule coverage:
     input:
         expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
     output:
-        "results/stats/coverage/coverage.tsv"
+        protected("results/stats/coverage/coverage.tsv")
     conda:
         "../../../envs/coverm.yaml"
     threads: 16
