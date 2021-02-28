@@ -25,6 +25,7 @@ rule mmgenome_metabat:
         shell("for file in `ls {params.dir}/*.fa` ; do noext=${{file%.fa}}; bin=$(basename ${{noext}}); awk -v bin=$bin '/^>/ {{split(substr($0,2),a,\":\"); print a[1] \"\\t\" bin;}}' $file;  done >> {output}")
         shell("sed --in-place -e s/[.]//g {output}")
 
+"""
 rule checkm_lineage_metabat:
     input:
         bin="results/binning/metabat/bin.1.fa"
@@ -35,4 +36,4 @@ rule checkm_lineage_metabat:
         outdir="results/binning/metabat/checkm/"
     threads: 16
     shell: "set +u; source ~/.virtualenvs/groopm/bin/activate; source /data/tools/CheckM/0.9.7/env.sh; source /data/tools/pplacer/1.1/env.sh; set -u; python /data/tools/CheckM/0.9.7/bin/checkm lineage_wf -x fa -t {threads} -f {output.log} {params.indir} {params.outdir}"
-
+"""
