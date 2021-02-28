@@ -10,7 +10,12 @@ rule concatenate:
     input: expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output: "results/binning/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
-    shell: "concatenate.py {output} {input}"
+    shell:
+        
+    """
+    mkdir results/binning/vamb
+    concatenate.py {output} {input}
+    """
     #Just cat with extras to make it more suitable to VAMB
 
 rule vamb:
