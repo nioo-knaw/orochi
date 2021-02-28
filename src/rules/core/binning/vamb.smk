@@ -22,10 +22,19 @@ rule vamb:
         outdir="results/binning/vamb"
     conda: "../../../envs/vamb.yaml"
     shell: "vamb --outdir {params.outdir} --fasta {input.catalogue} --bamfiles {input.bam} -o C --minfasta 200000"
-"""
+
 rule vamb_write_bins:
     input:
+        clusters="results/binning/vamb/clusters.tsv",
+        contigs=expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-    conda: "../../../envs/vamb.yaml"
-    shell:
-"""
+    params:
+        outdir="results/vamb/bins"
+    run:
+        with open('{input.clusters}', 'w') as file:
+        vamb.cluster.write_clusters(file, filtered_bins)
+        keptcontigs = set.union(*filtered_bins.values())
+        with open('{input.contigs}', 'rb') as file:
+        fastadict = vamb.vambtools.loadfasta(file, keep=keptcontigs)
+        bindir = '{params.outdir}'
+        vamb.vambtools.write_bins(bindir, filtered_bins, fastadict, maxbins=500)
