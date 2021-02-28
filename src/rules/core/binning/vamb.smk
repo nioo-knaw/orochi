@@ -17,6 +17,7 @@ rule concatenate:
         """
     #Just cat with extras to make it more suitable to VAMB
 
+"""
 rule vamb:
     input:
         catalogue="results/binning/vamb/catalogue.fna.gz",
@@ -42,3 +43,4 @@ rule vamb_write_bins:
             fastadict = vamb.vambtools.loadfasta(file, keep=keptcontigs)
         bindir = '{params.outdir}'
         vamb.vambtools.write_bins(bindir, filtered_bins, fastadict, maxbins=500)
+"""
