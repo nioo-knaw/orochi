@@ -17,7 +17,7 @@ rule vamb:
     input:
         catalogue="results/vamb/catalogue.fna.gz",
         bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
-    output: "results/binning/vamb/clusters.tsv"
+    output: protected("results/binning/vamb/clusters.tsv")
     params:
         outdir="results/binning/vamb"
     conda: "../../../envs/vamb.yaml"
