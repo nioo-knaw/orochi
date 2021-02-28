@@ -27,7 +27,7 @@ rule vamb_write_bins:
     input:
         clusters="results/binning/vamb/clusters.tsv",
         contigs=expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
-    output: dynamic("results/vamb/bins/{BIN}.fasta")
+    output: dynamic("results/vamb/bins/bin.fasta")
     params:
         outdir="results/vamb/bins"
     run:
