@@ -1,4 +1,11 @@
 #Note - Add short reads and concatenate steps
+
+rule savesmalls:
+    input: "scratch/assembly/megahit/minimus2/primary.contigs.fa"
+    output: "scratch/assembly/megahit/minimus2/savedsmalls.fa"
+    run:
+        awk -v max="2000" 'BEGIN {RS = ">" ; ORS = ""} length($2) <= max {print ">"$0}' {input} > {output}
+
 rule bamfiles:
     input:
         forward="scratch/host_filtering/{sample}_R1.fastq" if config['host_removal'] \
