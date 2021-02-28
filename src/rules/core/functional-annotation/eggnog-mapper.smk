@@ -14,7 +14,7 @@ rule emapper_diamond:
         db=config["emapper_diamond"]
     conda:
         "../../../envs/eggnog-mapper.yaml"
-    threads: 16
+    threads: 0
     shell: "emapper.py --dmnd_db {params.db} -m diamond --no_annot --no_file_comments --cpu {threads} -i {input} -o {input}"
 
 rule emapper_annotation:
@@ -27,7 +27,7 @@ rule emapper_annotation:
         db=config['emapper_database']
     conda:
         "../../../envs/eggnog-mapper.yaml"
-    threads: 16
+    threads: 0
     shell:
         """
         emapper.py --annotate_hits_table {input.diamond} --no_file_comments --cpu {threads} --data_dir {params.db} -o {input.seq}
