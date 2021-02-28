@@ -8,16 +8,16 @@ rule vamb_filter:
 
 rule concatenate:
     input: expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
-    output: "results/vamb/catalogue.fna.gz"
+    output: "results/binning/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
     shell: "concatenate.py {output} {input}"
     #Just cat with extras to make it more suitable to VAMB
 
 rule vamb:
     input:
-        catalogue="results/vamb/catalogue.fna.gz",
+        catalogue="results/binning/vamb/catalogue.fna.gz",
         bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
-    output: protected("results/binning/vamb/clusters.tsv")
+    output: "results/binning/vamb/clusters.tsv"
     params:
         outdir="results/binning/vamb"
     conda: "../../../envs/vamb.yaml"
