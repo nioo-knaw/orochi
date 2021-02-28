@@ -3,8 +3,8 @@ rule metabat:
         contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
         bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"]) 
     output:
-        depth="results/binning/metabat/metabat/depth.txt",
-        bin="results/binning/metabat/metabat/bin.1.fa"
+        depth="results/binning/metabat/depth.txt",
+        bin="results/binning/metabat/bin.1.fa"
     params:
         prefix="results/binning/metabat/bin"
     log: "results/binning/metabat/metabat.log"
