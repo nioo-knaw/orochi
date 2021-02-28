@@ -4,7 +4,7 @@ rule savesmalls:
     input: "scratch/assembly/megahit/minimus2/primary.contigs.fa"
     output: "scratch/assembly/megahit/minimus2/savedsmalls.fa"
     shell: 
-        "awk -v max="2000" 'BEGIN {RS = ">" ; ORS = ""} length($2) <= max {print ">"$0}' scratch/assembly/megahit/minimus2/primary.contigs.fa > scratch/assembly/megahit/minimus2/savedsmalls.fa"
+        "awk -v max="2000" 'BEGIN {{RS = ">" ; ORS = ""}} length($2) <= max {print ">"$0}' {input} > {output}"
 
 rule bamfiles:
     input:
