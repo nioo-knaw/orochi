@@ -21,15 +21,15 @@ rule vamb:
     input:
         catalogue="results/binning/vamb/catalogue.fna.gz",
         bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
-    output: "results/binning/vamb/clusters.tsv"
+    output: "results/binning/vamb/clusters/clusters.tsv"
     params:
-        outdir="results/binning/vamb"
+        outdir="results/binning/vamb/clusters"
     conda: "../../../envs/vamb.yaml"
     shell: "vamb --outdir {params.outdir} --fasta {input.catalogue} --bamfiles {input.bam} -o C --minfasta 200000"
 
 rule vamb_write_bins:
     input:
-        clusters="results/binning/vamb/clusters.tsv",
+        clusters="results/binning/vamb/clusters/clusters.tsv",
         contigs=expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output: dynamic("results/vamb/bins/bin.fasta")
     params:
