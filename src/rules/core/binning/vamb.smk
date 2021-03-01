@@ -29,7 +29,9 @@ rule vamb:
         "vamb/mask.npz",
         "vamb/tnf.npz"
     conda: "../../../envs/vamb.yaml"
-    shell: "vamb --outdir vamb --fasta {input.catalogue} --bamfiles scratch/coverm/bamfiles/readsorted/*.bam -o C --minfasta 200000"
+    shell: 
+        "rm -rf vamb;"
+        "vamb --outdir vamb --fasta {input.catalogue} --bamfiles scratch/coverm/bamfiles/readsorted/*.bam -o C --minfasta 200000"
 
 rule vamb_write_bins:
     input:
