@@ -12,10 +12,7 @@ rule concatenate:
     output: "results/binning/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
     shell:     
-        """
-        mkdir results/binning/vamb
-        concatenate.py {output} {input}
-        """
+        "concatenate.py {output} {input}"
     #Just cat with extras to make it more suitable to VAMB
 """
 
