@@ -22,7 +22,7 @@ rule vamb:
         #bam="scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam"
     output: "results/binning/vamb/clusters.tsv"
     params:
-        outdir="results/binning/vamb/"
+        outdir="results/binning/vamb"
     conda: "../../../envs/vamb.yaml"
     shell: "vamb --outdir {params.outdir} --fasta {input.catalogue} --bamfiles scratch/coverm/bamfiles/*.bam -o C --minfasta 200000"
 
