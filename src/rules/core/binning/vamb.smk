@@ -21,13 +21,13 @@ rule vamb:
         catalogue="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
         bam=expand("scratch/coverm/bamfiles/readsorted/{sample}.bam", sample=config["data"])
     output: 
-        "vamb/clusters.tsv",
-        "vamb/latent.npz",
-        "vamb/lengths.npz",
-        "vamb/log.txt",
-        "vamb/model.pt",
-        "vamb/mask.npz",
-        "vamb/tnf.npz"
+        "results/binning/vamb/clusters.tsv",
+        "results/binning/vamb/latent.npz",
+        "results/binning/vamb/lengths.npz",
+        "results/binning/vamb/log.txt",
+        "results/binning/vamb/model.pt",
+        "results/binning/vamb/mask.npz",
+        "results/binning/vamb/tnf.npz"
     conda: "../../../envs/vamb.yaml"
     shell: 
         "rm -rf results/binning/vamb;"
