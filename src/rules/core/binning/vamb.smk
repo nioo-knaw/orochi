@@ -19,10 +19,10 @@ rule concatenate:
 rule vamb:
     input:
         catalogue="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
-        bam="scratch/coverm/bamfiles/readsorted/*.bam"
+        bam=expand("scratch/coverm/bamfiles/readsorted/{sample}.bam", sample=config["data"])
     output: "results/binning/vamb/clusters.tsv"
     conda: "../../../envs/vamb.yaml"
-    shell: "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles {input.bam} -o C --minfasta 200000"
+    shell: "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles "scratch/coverm/bamfiles/readsorted/*.bam" -o C --minfasta 200000"
 
 rule vamb_write_bins:
     input:
