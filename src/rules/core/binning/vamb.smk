@@ -1,3 +1,4 @@
+"""
 rule vamb_filter:
     input: "scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
     output: "scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa"
@@ -16,11 +17,12 @@ rule concatenate:
         concatenate.py {output} {input}
         """
     #Just cat with extras to make it more suitable to VAMB
+"""
 
 rule vamb:
     input:
-        catalogue="results/binning/vamb/catalogue.fna.gz"
-        #bam="scratch/coverm/bamfiles/secondary.contigs.fasta.*_R1.fastq.bam"
+        catalogue="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+        #bam="scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam"
     output: "results/binning/vamb/clusters.tsv"
     params:
         outdir="results/binning/vamb/"
