@@ -17,22 +17,21 @@ rule concatenate:
         """
     #Just cat with extras to make it more suitable to VAMB
 
-"""
 rule vamb:
     input:
         catalogue="results/binning/vamb/catalogue.fna.gz",
         bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
-    output: "results/binning/vamb/clusters/clusters.tsv"
+    output: "results/binning/vamb/clusters.tsv"
     params:
-        outdir="results/binning/vamb/clusters"
+        outdir="results/binning/vamb/"
     conda: "../../../envs/vamb.yaml"
     shell: "vamb --outdir {params.outdir} --fasta {input.catalogue} --bamfiles {input.bam} -o C --minfasta 200000"
 
 rule vamb_write_bins:
     input:
-        clusters="results/binning/vamb/clusters/clusters.tsv",
+        clusters="results/binning/vamb/clusters.tsv",
         contigs=expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
-    output: dynamic("results/vamb/bins/bin.fasta")
+    output: "results/vamb/bins/bin1.fasta"
     params:
         outdir="results/vamb/bins"
     run:
@@ -43,4 +42,3 @@ rule vamb_write_bins:
             fastadict = vamb.vambtools.loadfasta(file, keep=keptcontigs)
         bindir = '{params.outdir}'
         vamb.vambtools.write_bins(bindir, filtered_bins, fastadict, maxbins=500)
-"""
