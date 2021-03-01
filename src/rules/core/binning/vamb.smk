@@ -20,7 +20,7 @@ rule concatenate:
 rule vamb:
     input:
         catalogue="results/binning/vamb/catalogue.fna.gz",
-        bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
+        bam="scratch/coverm/bamfiles/secondary.contigs.fasta.*_R1.fastq.bam"
     output: "results/binning/vamb/clusters.tsv"
     params:
         outdir="results/binning/vamb/"
