@@ -22,7 +22,7 @@ rule vamb:
         bam=expand("scratch/coverm/bamfiles/readsorted/{sample}.bam", sample=config["data"])
     output: "results/binning/vamb/clusters.tsv"
     conda: "../../../envs/vamb.yaml"
-    shell: "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles "scratch/coverm/bamfiles/readsorted/*.bam" -o C --minfasta 200000"
+    shell: "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles scratch/coverm/bamfiles/readsorted/*.bam -o C --minfasta 200000"
 
 rule vamb_write_bins:
     input:
