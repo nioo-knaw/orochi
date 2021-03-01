@@ -25,6 +25,16 @@ rule bamfiles:
     shell:
         "coverm make -p bwa-mem -r {input.assembly} -1 {input.forward} -2 {input.reverse} -o {params.outdir} -t {threads}"
 
+rule sort_readname:
+    input:
+        "scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam"
+    output:
+        "scratch/coverm/bamfiles/readsorted/{sample}.bam"
+    conda:
+        "../../../envs/samtools.yaml"
+    shell:
+        "samtools sort -n {input} -o {output}"
+
 rule coverage:
     input:
         expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
