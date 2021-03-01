@@ -30,16 +30,16 @@ rule vamb:
         "vamb/tnf.npz"
     conda: "../../../envs/vamb.yaml"
     shell: 
-        "rm -rf vamb;"
-        "vamb --outdir vamb --fasta {input.catalogue} --bamfiles scratch/coverm/bamfiles/readsorted/*.bam -o C --minfasta 200000"
+        "rm -rf results/binning/vamb;"
+        "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles scratch/coverm/bamfiles/readsorted/*.bam -o C --minfasta 200000"
 
 rule vamb_write_bins:
     input:
-        clusters="vamb/clusters.tsv",
+        clusters="results/binning/vamb/clusters.tsv",
         contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
-    output: "vamb/bins/bin1.fasta"
+    output: "results/binning/vamb/bins/bin1.fasta"
     params:
-        outdir="vamb"
+        outdir="results/binning/vamb"
     run:
         with open('{input.clusters}', 'w') as file:
             vamb.cluster.write_clusters(file, filtered_bins)
