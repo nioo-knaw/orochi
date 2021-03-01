@@ -20,17 +20,24 @@ rule vamb:
     input:
         catalogue="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
         bam=expand("scratch/coverm/bamfiles/readsorted/{sample}.bam", sample=config["data"])
-    output: "results/binning/vamb/clusters.tsv"
+    output: 
+        "vamb/clusters.tsv",
+        "vamb/latent.npz",
+        "vamb/lengths.npz",
+        "vamb/log.txt",
+        "vamb/model.pt",
+        "vamb/mask.npz",
+        "vamb/tnf.npz"
     conda: "../../../envs/vamb.yaml"
-    shell: "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles scratch/coverm/bamfiles/readsorted/*.bam -o C --minfasta 200000"
+    shell: "vamb --outdir vamb --fasta {input.catalogue} --bamfiles scratch/coverm/bamfiles/readsorted/*.bam -o C --minfasta 200000"
 
 rule vamb_write_bins:
     input:
-        clusters="results/binning/vamb/clusters.tsv",
-        contigs=expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
-    output: "results/vamb/bins/bin1.fasta"
+        clusters="vamb/clusters.tsv",
+        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+    output: "vamb/bins/bin1.fasta"
     params:
-        outdir="results/vamb/bins"
+        outdir="vamb"
     run:
         with open('{input.clusters}', 'w') as file:
             vamb.cluster.write_clusters(file, filtered_bins)
