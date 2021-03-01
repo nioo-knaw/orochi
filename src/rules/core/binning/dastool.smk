@@ -7,7 +7,7 @@ rule das:
     params:
         outprefix="results/binning/DAS_tool/DAS"
     conda:
-        "../../../dastool.yaml"
+        "../../../envs/dastool.yaml"
     shell:
         """
         DAS_tool -i {input.vamb},
