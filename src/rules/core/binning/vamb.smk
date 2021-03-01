@@ -18,7 +18,7 @@ rule concatenate:
 
 rule vamb:
     input:
-        catalogue="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+        catalogue="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
         bam="scratch/coverm/bamfiles/readsorted/{sample}.bam"
     output: "results/binning/vamb/clusters.tsv"
     conda: "../../../envs/vamb.yaml"
