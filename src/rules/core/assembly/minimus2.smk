@@ -12,7 +12,7 @@ rule save_smalls:
     output:
         "scratch/assembly/megahit/minimus2/primary.short.contigs.fa"
     shell:
-        "awk -v RS='>[[^\n]]+\n' 'length() <= 2000 {{printf "%s", prt $0}} {{prt = RT}}' {input} > {output}"
+        "awk -v RS='>[[^\n]]+\n' 'length(()) <= 2000 {{printf "%s", prt $0}} {{prt = RT}}' {input} > {output}"
 
 rule filter_contigs:
     input:
