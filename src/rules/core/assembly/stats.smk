@@ -9,7 +9,7 @@ rule quast:
         "scratch/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
     conda:
         "../../../envs/quast.yaml"
-    threads: 16
+    threads: 80
     shell: "metaquast.py -o {params.outdir} --min-contig 0 --max-ref-number 0 -t {threads} {input} 2>&1 > {log}"
 
 rule quast_format:
