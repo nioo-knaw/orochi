@@ -5,7 +5,7 @@ rule groopm:
     output: "results/binning/groopm/bin1.fasta"
     params:
         outdir="results/binning/groopm/"
-    conda: "../../../envs/groomp.yaml"
+    conda: "../../../envs/groopm.yaml"
     threads: 40
     shell:
         """
