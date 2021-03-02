@@ -11,6 +11,7 @@
     "CAT_database" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_CAT_database/",
     "CAT_taxonomy" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_taxonomy/",
     "assembler" : "megahit",
+    "binner" : ["concoct", "dastool", "groopm", "metabat", "vamb"],
     "big" : "bigscape",
     "kmers" : "33,55,77,99,127",
     "assembly-klist" : {
