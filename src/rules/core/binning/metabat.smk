@@ -1,7 +1,7 @@
 rule metabat:
     input: 
-        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
-        bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"]) 
+        contigs="scratch/assembly/megahit/minimus2/all.merged.contigs.fasta",
+        bam=expand("scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"]) 
     output:
         depth="results/binning/metabat/depth.txt",
         bin="results/binning/metabat/bin.1.fa"
