@@ -23,7 +23,7 @@ rule concoct:
 
 rule concoct_write_bins:
     input:
-        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fa",
+        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
         clusters="results/binning/concoct/clustering_merged.csv"
     output: "results/binning/concoct/fasta_bins/bin1.fasta"
     params:
