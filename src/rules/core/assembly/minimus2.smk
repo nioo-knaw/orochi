@@ -6,6 +6,11 @@ rule merge_assemblies:
     shell:
         "cat {input} > {output}"
 
+rule save_smalls:
+    input: "scratch/assembly/megahit/minimus2/primary.contigs.fa",
+    output: "scratch/assembly/megahit/minimus2/primary.short.contigs.fa"
+    shell: "awk -v RS='>[^\n]+\n' 'length() <= 2000 {printf "%s", prt $0} {prt = RT}' {input} >{output}"
+
 rule filter_contigs:
     input:
         "scratch/assembly/megahit/minimus2/primary.contigs.fa"
@@ -69,3 +74,10 @@ rule minimus2_merge:
         "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     shell:
         "cat {input} > {output}"
+
+rule readd_smalls:
+    input:
+        short="scratch/assembly/megahit/minimus2/primary.short.contigs.fasta"
+        merged="scratch/aseembly/megahit/minimus2/secondary.contigs.fasta"
+    output: "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
+    shell: "cat {input.short} {input.merged} > {output}
