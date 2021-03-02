@@ -11,7 +11,7 @@ if config['assembler']=='spades':
             kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
         log:
             "scratch/assembly/spades/{treatment}/{kmers}/spades.log"
-        threads: 32
+        threads: 80
         conda:
             "../../../envs/spades.yaml"
         shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
