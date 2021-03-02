@@ -24,7 +24,7 @@ rule vamb_map:
         reverse="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
              else "scratch/filter/{sample}_R2.fasta"
     output: "scratch/binning/vamb/{sample}.bam"
-    conda: "../../../envs/minimap.yaml"
+    conda: "../../../envs/minimap2.yaml"
     shell:
         """
         minimap2 -d catalogue.mmi {input.catalogue}; # make index
