@@ -1,6 +1,6 @@
 rule groopm:
     input:
-        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
         bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
     output: "results/binning/groopm/bin1.fasta"
     params:
