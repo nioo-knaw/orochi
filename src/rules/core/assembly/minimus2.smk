@@ -9,7 +9,7 @@ rule merge_assemblies:
 rule save_smalls:
     input: "scratch/assembly/megahit/minimus2/primary.contigs.fa",
     output: "scratch/assembly/megahit/minimus2/primary.short.contigs.fa"
-    shell: "awk -v RS='>[^\n]+\n' 'length() <= 2000 {printf "%s", prt $0} {prt = RT}' {input} >{output}"
+    shell: "awk -v RS='>[^\n]+\n' 'length() <= 2000 {{printf "%s", prt $0}} {{prt = RT}}' {input} >{output}"
 
 rule filter_contigs:
     input:
