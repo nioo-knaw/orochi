@@ -27,7 +27,7 @@ rule concoct_write_bins:
         clusters="results/binning/concoct/clustering_merged.csv"
     output: "results/binning/concoct/fasta_bins/bin1.fasta"
     params:
-        outdir: "results/binning/concoct/fasta_bins"
+        outdir="results/binning/concoct/fasta_bins"
     conda: "../../../envs/concoct.yaml"
     shell:
         """
