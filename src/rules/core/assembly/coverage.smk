@@ -4,9 +4,9 @@ rule bamfiles:
              else "scratch/filter/{sample}_R1.fasta",
         reverse="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
              else "scratch/filter/{sample}_R2.fasta",
-        assembly = "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+        assembly = "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
     output:
-        "scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam"
+        "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
     params:
         outdir="scratch/coverm/bamfiles"
     conda:
@@ -17,7 +17,7 @@ rule bamfiles:
 
 rule sort_readname:
     input:
-        "scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam"
+        "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
     output:
         "scratch/coverm/bamfiles/readsorted/{sample}.bam"
     conda:
@@ -27,7 +27,7 @@ rule sort_readname:
 
 rule coverage:
     input:
-        expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
+        expand("scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
     output:
         protected("results/stats/coverage/coverage.tsv")
     conda:
