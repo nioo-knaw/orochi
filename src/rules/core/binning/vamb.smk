@@ -6,19 +6,19 @@ rule vamb_filter:
         length=2000
     conda: "../../../envs/seqtk.yaml"
     shell: "seqtk seq -L {params.length} {input}  > {output}"
+"""
 
 rule concatenate:
-    input: expand("scratch/vamb/contigs/{treatment}/{kmers}/long.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
-    output: "results/binning/vamb/catalogue.fna.gz"
+    input: "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+    output: "scratch/binning/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
     shell:     
         "concatenate.py {output} {input}"
     #Just cat with extras to make it more suitable to VAMB
-"""
 
 rule vamb:
     input:
-        catalogue="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
+        catalogue="scratch/binning/vamb/catalogue.fna.gz"
         bam=expand("scratch/coverm/bamfiles/readsorted/{sample}.bam", sample=config["data"])
     output: 
         "results/binning/vamb/clusters.tsv",
