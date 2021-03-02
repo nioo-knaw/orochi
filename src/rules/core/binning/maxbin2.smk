@@ -1,6 +1,6 @@
 rule maxbin:
     input:
-        contigs = "scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
+        contigs = "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta",
         coverage = "results/stats/coverage/coverage.tsv"
     output:
         directory("results/binning/maxbin/intermediate_files"),
