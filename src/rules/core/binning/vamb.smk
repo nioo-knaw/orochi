@@ -9,7 +9,7 @@ rule vamb_filter:
 """
 
 rule concatenate:
-    input: "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+    input: expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa", treatment=config["treatment"], kmers=config["assembly.klist"])
     output: "scratch/binning/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
     shell:     
