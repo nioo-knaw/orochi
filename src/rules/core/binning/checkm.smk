@@ -4,7 +4,7 @@ rule checkm_lineage:
         "results/binning/{binner}/checkm/completeness.tsv",
         "results/binning/{binner}/checkm/concatenated.fasta"
     params:
-        indir="results/binning/{binner}"
+        indir="results/binning/{binner}",
         outdir="results/binning/{binner}/checkm"
     threads: 40
     conda: "../../../envs/checkm.yaml"
