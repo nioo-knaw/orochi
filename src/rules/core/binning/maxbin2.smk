@@ -10,7 +10,7 @@ rule maxbin:
     conda:
         "../../../envs/maxbin2.yaml"
     threads:
-        config["threads"]
+        40
     shell:
         """
         mkdir {output[0]} 2> {log}
