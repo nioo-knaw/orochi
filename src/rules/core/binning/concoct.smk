@@ -13,8 +13,8 @@ rule concoct_coverage:
 """
 rule concoct:
     input:
-        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fa",
-        coverage="results/stats/coverage.tsv"
+        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
+        coverage="results/stats/coverage/coverage.tsv"
     output: "results/binning/concoct/clustering_merged.csv"
     params:
         outdir="results/binning/concoct/"
