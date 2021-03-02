@@ -6,11 +6,12 @@ rule groopm:
     params:
         outdir="results/binning/groopm/"
     conda: "../../../envs/groomp.yaml"
+    threads: 40
     shell:
         """
-        groopm parse db.gm {input.contigs} scratch/coverm/bamfiles/*.bam
-        groopm core db.gm
-        groopm refine db.gm
-        groopm recruit db.gm
-        groopm extract db.gm {input.contigs} -o {params.outdir}
+        groopm parse db.gm {input.contigs} scratch/coverm/bamfiles/*.bam -t {threads}
+        groopm core db.gm -t {threads}
+        groopm refine db.gm -t {threads}
+        groopm recruit db.gm -t {threads}
+        groopm extract db.gm {input.contigs} -o {params.outdir} -t {threads}
         """
