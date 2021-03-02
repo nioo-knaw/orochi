@@ -4,7 +4,7 @@ rule groopm:
         bam=expand("scratch/coverm/bamfiles/secondary.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
     output: "results/binning/groopm/bin1.fasta"
     params:
-        db="results/binning/groopm/db.gm"
+        db="results/binning/groopm/db.gm",
         outdir="results/binning/groopm/"
     conda: "../../../envs/groopm.yaml"
     threads: 40
