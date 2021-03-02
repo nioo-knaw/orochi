@@ -21,7 +21,7 @@ rule bamfiles:
         outdir="scratch/coverm/bamfiles"
     conda:
         "../../../envs/coverm.yaml"
-    threads: 16
+    threads: 80
     shell:
         "coverm make -p bwa-mem -r {input.assembly} -1 {input.forward} -2 {input.reverse} -o {params.outdir} -t {threads}"
 
@@ -42,7 +42,7 @@ rule coverage:
         protected("results/stats/coverage/coverage.tsv")
     conda:
         "../../../envs/coverm.yaml"
-    threads: 16
+    threads: 80
     shell:
         "coverm contig -b {input} -t {threads} -o {output}"
 
@@ -60,7 +60,7 @@ rule coverage_old:
         table=protected("results/stats/coverage.tsv")
     conda:
         "../../../envs/coverm.yaml"
-    threads: 16
+    threads: 80
     # TODO: Add log file stderr
     shell:
         "coverm contig --mapper bwa-mem --methods mean --reference {input.assembly} -1 {input.forward} -2 {input.reverse} --threads {threads} > {output.table}"
