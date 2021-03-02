@@ -3,7 +3,9 @@ rule das:
         vamb="results/binning/vamb/clusters.tsv",
         metabat="results/binning/mmgenome/metabat.bins.txt",
         contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
-    output: "results/binning/DAS_tool/DASTool_summary.txt"
+    output: 
+        "results/binning/DAS_tool/DASTool_summary.txt",
+        "results/binning/DAS_tool/bin1.fasta"
     params:
         outprefix="results/binning/DAS_tool/DAS"
     conda:
