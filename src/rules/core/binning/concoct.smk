@@ -17,7 +17,7 @@ rule concoct:
         coverage="results/stats/coverage.tsv"
     output: "results/binning/concoct/clustering_merged.csv"
     params:
-        outdir: "results/binning/concoct/"
+        outdir="results/binning/concoct/"
     conda: "../../../envs/concoct.yaml"
     shell: "concoct --composition_file {input.contigs} --coverage_file {input.coverage} -b {params.outdir}"
 
