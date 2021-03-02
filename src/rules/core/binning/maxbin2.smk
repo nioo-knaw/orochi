@@ -7,8 +7,6 @@ rule maxbin:
         "results/binning/maxbin/bin1.fasta
     params:
         output_prefix = "results/binning/maxbin"
-    log:
-        "{sample}/logs/binning/maxbin.log"
     conda:
         "../../../envs/maxbin2.yaml"
     threads:
@@ -19,5 +17,5 @@ rule maxbin:
         run_MaxBin.pl -contig {input.contigs} \
             -abund {input.coverage} \
             -out {params.output_prefix} \
-            -thread {threads} \ >> {log}
+            -thread {threads}
         """
