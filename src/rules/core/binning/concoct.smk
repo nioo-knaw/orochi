@@ -20,3 +20,16 @@ rule concoct:
         outdir: "results/binning/concoct/"
     conda: "../../../envs/concoct.yaml"
     shell: "concoct --composition_file {input.contigs} --coverage_file {input.coverage} -b {params.outdir}"
+
+rule concoct_write_bins:
+    input:
+        contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fa",
+        clusters="results/binning/concoct/clustering_merged.csv"
+    output: "results/binning/concoct/fasta_bins/bin1.fasta"
+    params:
+        outdir: "results/binning/concoct/fasta_bins"
+    conda: "../../../envs/concoct.yaml"
+    shell:
+        """
+        extract_fasta_bins.py {input.contigs} {input.clusters} --output_path {params.outdir}
+        """
