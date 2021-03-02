@@ -82,7 +82,7 @@ rule minimus2_merge:
 
 rule readd_smalls:
     input:
-        short="scratch/assembly/megahit/minimus2/primary.short.contigs.fasta"
+        short="scratch/assembly/megahit/minimus2/primary.short.contigs.fasta",
         merged="scratch/aseembly/megahit/minimus2/secondary.contigs.fasta"
     output: "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
     shell: "cat {input.short} {input.merged} > {output}
