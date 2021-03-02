@@ -1,7 +1,10 @@
 rule das:
     input:
-        vamb="results/binning/vamb/clusters.tsv",
+        #concoct="",
+        #groopm="",
+        #maxbin="",
         metabat="results/binning/mmgenome/metabat.bins.txt",
+        vamb="results/binning/vamb/clusters.tsv",
         contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output: 
         "results/binning/DAS_tool/DASTool_summary.txt",
@@ -14,7 +17,7 @@ rule das:
         """
         DAS_tool -i {input.vamb},
                     {input.metabat}
-                 -l vamb,metabat
+                 -l metabat,vamb
                  -c {input.contigs}
                  -o {params.outprefix}
                  --write_bins 1
