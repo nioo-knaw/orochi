@@ -18,7 +18,7 @@ rule concatenate:
 
 rule vamb:
     input:
-        catalogue="scratch/binning/vamb/catalogue.fna.gz"
+        catalogue="scratch/binning/vamb/catalogue.fna.gz",
         bam=expand("scratch/coverm/bamfiles/readsorted/{sample}.bam", sample=config["data"])
     output: 
         "results/binning/vamb/clusters.tsv",
