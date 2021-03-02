@@ -25,9 +25,9 @@ rule concoct_write_bins:
     input:
         contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta",
         clusters="results/binning/concoct/clustering_merged.csv"
-    output: "results/binning/concoct/fasta_bins/bin1.fasta"
+    output: "results/binning/concoct/bin1.fasta"
     params:
-        outdir="results/binning/concoct/fasta_bins"
+        outdir="results/binning/concoct/"
     conda: "../../../envs/concoct.yaml"
     shell:
         """
