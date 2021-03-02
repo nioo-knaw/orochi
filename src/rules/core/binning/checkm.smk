@@ -1,6 +1,6 @@
 rule checkm_lineage:
     input:
-        directory("results/binning/{binner}")
+        "results/binning/{binner}/*.fasta"
     output:
         "results/binning/{binner}/checkm/completeness.tsv",
         "results/binning/{binner}/checkm/concatenated.fasta"
