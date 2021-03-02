@@ -12,7 +12,7 @@ if config['assembler']=='megahit':
             dir="scratch/assembly/megahit/{treatment}/{kmers}/",
             kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
         log: "scratch/assembly/megahit/{treatment}/{kmers}/megahit.log"
-        threads: 32
+        threads: 80
         conda:
             "../../../envs/megahit.yaml"
         shell:"megahit --continue --force --out-dir {params.dir} --tmp-dir /tmp -m 0.9 -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} 2> {log}"
