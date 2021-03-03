@@ -43,31 +43,30 @@ rule map_reads:
         "results/annotation/antismash/bgcs.count.txt"
     conda:
         "../../../envs/coverm.yaml"
-    log: "scratch/annotation/antismash/bgcs.mapping.txt"
+    log: "logs/annotation/antismash/bgcs.mapping.txt"
     threads: 24
     shell:
         "coverm contig --methods count --mapper minimap2-sr --proper-pairs-only -1 {input.forward} -2 {input.rev} --reference {input.bgcs} --threads {threads} 2> {log} > {output}"
 
-if config['big']=='bigscape':
-   rule bigscape:
-        input:
-            gbks="results/annotation/antismash/secondary.contigs.gbk"
-        params:
-            inputdir="results/annotation/antismash",
-            outdir="results/annotation/bigscape"
-        output:
-            "results/annotation/bigscape/index.html"
-        conda:
-            "../../../envs/bigscape.yaml"
-        threads: 40
-        shell:
-            """
-            git clone https://git.wur.nl/medema-group/BiG-SCAPE.git
-            cd BiG-SCAPE
-            wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz && gunzip Pfam-A.hmm.gz
-            hmmpress Pfam-A.hmm
-            python bigscape.py -i ../{params.inputdir} -o ../{params.outdir} -c {threads} --mode glocal --mibig --include_singletons --cores 36 --mix
-            """
+rule bigscape:
+    input:
+        gbks="results/annotation/antismash/secondary.contigs.gbk"
+    params:
+        inputdir="results/annotation/antismash",
+        outdir="results/annotation/bigscape"
+    output:
+        "results/annotation/bigscape/index.html"
+    conda:
+        "../../../envs/bigscape.yaml"
+    threads: 40
+    shell:
+        """
+        git clone https://git.wur.nl/medema-group/BiG-SCAPE.git
+        cd BiG-SCAPE
+        wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz && gunzip Pfam-A.hmm.gz
+        hmmpress Pfam-A.hmm
+        python bigscape.py -i ../{params.inputdir} -o ../{params.outdir} -c {threads} --mode glocal --mibig --include_singletons --cores 36 --mix
+        """
 
 
 """
