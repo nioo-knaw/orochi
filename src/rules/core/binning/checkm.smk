@@ -1,7 +1,7 @@
 """
 rule checkm_lineage:
     input:
-        "results/binning/{binner}/*.fasta"
+        "results/binning/{binner}/bins/"
     output:
         "results/binning/{binner}/checkm/completeness.tsv",
         "results/binning/{binner}/checkm/concatenated.fasta"
