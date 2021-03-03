@@ -9,34 +9,38 @@ rule bamfiles:
         "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
     params:
         outdir="scratch/coverm/bamfiles"
+    log:
+        "logs/bamfiles.log"
     conda:
         "../../../envs/coverm.yaml"
     threads: 80
     shell:
-        "coverm make -p bwa-mem -r {input.assembly} -1 {input.forward} -2 {input.rev} -o {params.outdir} -t {threads}"
+        "coverm make -p bwa-mem -r {input.assembly} -1 {input.forward} -2 {input.rev} -o {params.outdir} -t {threads} 2> {log}"
 
 rule sort_readname:
     input:
         "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
     output:
         "scratch/coverm/bamfiles/readsorted/{sample}.bam"
+    log:
+        "logs/sort_readname.log"
     conda:
         "../../../envs/samtools.yaml"
     shell:
-        "samtools sort -n {input} -o {output}"
+        "samtools sort -n {input} -o {output} 2> {log}"
 
 rule coverage:
     input:
         expand("scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
     output:
         protected("results/stats/coverage/coverage.tsv")
+    log:
+        "logs/coverage.log"
     conda:
         "../../../envs/coverm.yaml"
     threads: 80
     shell:
-        "coverm contig -b {input} -t {threads} -o {output}"
-
-#TO DO: Add stderr log?
+        "coverm contig -b {input} -t {threads} -o {output} 2> {log}"
 
 """
 rule coverage_old:
