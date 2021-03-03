@@ -10,7 +10,7 @@ if config['assembler']=='spades':
             outdir="scratch/assembly/spades/{treatment}/{kmers}/",
             kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
         log:
-            "scratch/assembly/spades/{treatment}/{kmers}/spades.log"
+            "logs/assembly/spades/{treatment}/{kmers}/spades.log"
         threads: 80
         conda:
             "../../../envs/spades.yaml"
@@ -22,7 +22,9 @@ if config['assembler']=='spades':
         output:
             gzip=protected("scratch/assembly/spades/{treatment}/{kmers}/assembly.fa.gz"),
             fasta=temp("scratch/assembly/spades/{treatment}/{kmers}/assembly.fa")
+        log:
+            "logs/assembly/spades/{treatment}/{kmers}/rename_spades.log"
         run:
-            shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
+            shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}" 2> {log})
             shell("gzip -c {output.fasta} > {output.gzip}")
 
