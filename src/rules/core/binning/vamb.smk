@@ -49,6 +49,7 @@ rule vamb:
         "rm -rf results/binning/vamb;"
         "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles scratch/binning/vamb/*.bam -o C --minfasta 200000"
 
+"""
 rule vamb_write_bins:
     input:
         clusters="results/binning/vamb/clusters.tsv",
@@ -66,3 +67,4 @@ rule vamb_write_bins:
             fastadict = vamb.vambtools.loadfasta(file, keep=keptcontigs)
         bindir = '{params.outdir}'
         vamb.vambtools.write_bins(bindir, filtered_bins, fastadict, maxbins=500)
+"""
