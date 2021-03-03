@@ -17,8 +17,8 @@ rule das:
         "../../../envs/dastool.yaml"
     shell:
         """
-        DAS_tool -i {input.vamb},
-                    {input.metabat}
+        DAS_Tool -i {input.metabat},
+                    {input.vamb}
                  -l metabat,vamb
                  -c {input.contigs}
                  -o {params.outprefix}
