@@ -36,7 +36,7 @@ rule quast_merge:
          firstfile = input.full[0]
          shell("cat {firstfile} | sed 's/   */:/g' | cut -d : -f 1 | tr '\n' '\t' | head -n 1 > {output} && printf '\n' >> {output}")
          # Add the result rows
-         shell("cat {input.quast} >> {output}" 2> {log})
+         shell("cat {input.quast} >> {output} 2> {log}")
 
 rule samtools_flagstat:
     input:
