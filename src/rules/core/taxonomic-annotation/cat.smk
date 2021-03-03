@@ -13,7 +13,7 @@ rule CAT:
         tax=config['CAT_taxonomy'],
         tmp=config['tmpdir'],
         prefix="results/annotation/CAT/assembly"
-    log: "results/annotation/CAT/assembly.log"
+    log: "logs/annotation/CAT/assembly.log"
     conda:
         "../../../envs/cat.yaml"
     threads: 80
@@ -28,7 +28,7 @@ rule CAT_add_names:
         "results/annotation/CAT/assembly.classification.txt",
     params:
         tax=config['CAT_taxonomy'],
-    log: "results/annotation/CAT/assembly.names.log"
+    log: "logs/annotation/CAT/assembly.names.log"
     conda:
         "../../../envs/cat.yaml"
     shell: "CAT add_names -i {input} -o {output} -t {params.tax} --only_official > {log} 2>&1"
@@ -39,7 +39,7 @@ rule CAT_summarize:
         classification = "results/annotation/CAT/assembly.classification.txt"
     output:
         protected("results/annotation/CAT/assembly.classification.summary.txt")
-    log: "results/annotation/CAT/assembly.summary.log"
+    log: "logs/annotation/CAT/assembly.summary.log"
     conda:
         "../../../envs/cat.yaml"
     shell: "CAT summarise -c {input.contigs} -i {input.classification} -o {output} > {log} 2>&1"
