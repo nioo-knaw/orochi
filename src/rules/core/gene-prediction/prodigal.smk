@@ -7,7 +7,7 @@ rule predict_genes:
         proteins="scratch/prodigal/proteins.faa",
         nucleotide="scratch/prodigal/orfs.fna",
     log:
-        "prodigal.log"
+        "logs/prodigal.log"
     conda: 
         "../../../envs/prodigal.yaml"
     shell: "prodigal -i {input} -o {output.gbk} -d {output.nucleotide} -a {output.proteins} -p meta"
