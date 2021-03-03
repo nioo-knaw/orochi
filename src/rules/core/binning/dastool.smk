@@ -3,7 +3,7 @@ rule das:
         #concoct="",
         #groopm="",
         #maxbin="",
-        metabat="results/binning/mmgenome/metabat.bins.txt",
+        metabat="results/binning/metabat/metabat.bins.txt",
         vamb="results/binning/vamb/clusters.tsv",
         contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output: 
