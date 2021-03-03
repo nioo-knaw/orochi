@@ -56,6 +56,8 @@ rule vamb_write_bins:
     output: "results/binning/vamb/bins/bin1.fasta"
     params:
         outdir="results/binning/vamb"
+    conda:
+        "../../../envs/vamb.yaml"
     run:
         with open('{input.clusters}', 'w') as file:
             vamb.cluster.write_clusters(file, filtered_bins)
