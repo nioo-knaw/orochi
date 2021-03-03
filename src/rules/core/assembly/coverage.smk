@@ -23,7 +23,7 @@ rule sort_readname:
     output:
         "scratch/coverm/bamfiles/readsorted/{sample}.bam"
     log:
-        "logs/sort_readname.log"
+        "logs/bamfiles/{sample}.sort_readname.log"
     conda:
         "../../../envs/samtools.yaml"
     shell:
