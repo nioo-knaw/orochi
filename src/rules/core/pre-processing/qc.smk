@@ -1,10 +1,10 @@
 rule filter:
      input:
         forward="scratch/unpack/{sample}_1.fastq",
-        reverse="scratch/unpack/{sample}_2.fastq"
+        rev="scratch/unpack/{sample}_2.fastq"
      output:
         forward="scratch/filter/{sample}_R1.fq",
-        reverse="scratch/filter/{sample}_R2.fq",
+        rev="scratch/filter/{sample}_R2.fq",
         stats="scratch/stats/{sample}_contaminants_stats.txt"
      params:
          phix="refs/phix.fasta",
@@ -13,7 +13,7 @@ rule filter:
      log: "scratch/filter/{sample}.log"
      conda: "../../../envs/bbmap.yaml"
      threads: 16
-     shell:"""bbduk.sh in={input.forward} in2={input.reverse} out={output.forward} out2={output.reverse} \
+     shell:"""bbduk.sh in={input.forward} in2={input.rev} out={output.forward} out2={output.rev} \
      trimpolygright=1 \
      entropy=0.6 entropywindow=50 entropymask=f \
      qtrim=rl trimq={params.quality} \
@@ -25,14 +25,14 @@ rule filter:
 rule phix_removal:
     input:
         forward="scratch/filter/{sample}_R1.fq",
-        reverse="scratch/filter/{sample}_R2.fq",
+        rev="scratch/filter/{sample}_R2.fq",
     output:
         forward="scratch/filter/{sample}_R1.nophix.fq",
-        reverse="scratch/filter/{sample}_R2.nophix.fq",
+        rev="scratch/filter/{sample}_R2.nophix.fq",
     log: "scratch/filter/phix_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
-    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.90-0/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.reverse} outu1={output.forward} outu2={output.reverse} t={threads} 2> {log}"
+    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.90-0/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.rev} outu1={output.forward} outu2={output.rev} t={threads} 2> {log}"
 
 rule index_host:
     input:
@@ -45,7 +45,7 @@ rule index_host:
 rule map_to_host:
     input:
         forward="scratch/filter/{sample}_R1.nophix.fq",
-        reverse="scratch/filter/{sample}_R2.nophix.fq",
+        rev="scratch/filter/{sample}_R2.nophix.fq",
         index=config["reference"] + ".bwt"
     output:
         "scratch/host_filtering/{sample}.sam"
@@ -86,10 +86,10 @@ rule bamToFastq_unmapped:
         "scratch/host_filtering/{sample}.unmapped.sorted.bam"
     output:
         forward="scratch/host_filtering/{sample}_R1.fastq",
-        reverse="scratch/host_filtering/{sample}_R2.fastq"
+        rev="scratch/host_filtering/{sample}_R2.fastq"
     log: "scratch/host_filtering/{sample}_bamtofastq.log"
     conda: "../../../envs/bedtools.yaml"
-    shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.reverse} 2> {log}"
+    shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.rev} 2> {log}"
 
 rule get_mapped:
     input:
@@ -112,8 +112,8 @@ rule bamToFastq_mapped:
         "scratch/host_filtering/{sample}.mapped.sorted.bam"
     output:
         forward="scratch/host_filtering/{sample}_R1.mapped.fastq",
-        reverse="scratch/host_filtering/{sample}_R2.mapped.fastq"
+        rev="scratch/host_filtering/{sample}_R2.mapped.fastq"
     log: "scratch/host_filtering/{sample}_bamtofastq.mapped.log"
     conda: "../../../envs/bedtools.yaml"
-    shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.reverse} 2> {log}"
+    shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.rev} 2> {log}"
 
