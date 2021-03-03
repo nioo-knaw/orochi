@@ -2,7 +2,7 @@ rule mash_sketch:
     input:
         forward="scratch/host_filtering/{sample}_R1.fastq" if config['host_removal'] \
             else "scratch/filter/{sample}_R1.fasta",
-        reverse="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
+        rev="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
             else "scratch/filter/{sample}_R2.fasta",
     output:
         "scratch/treatment/mash/{sample}.msh"
