@@ -11,7 +11,7 @@ if config['assembler']=='megahit':
         params:
             dir="scratch/assembly/megahit/{treatment}/{kmers}/",
             kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
-        log: "scratch/assembly/megahit/{treatment}/{kmers}/megahit.log"
+        log: "logs/assembly/megahit/{treatment}/{kmers}/megahit.log"
         threads: 80
         conda:
             "../../../envs/megahit.yaml"
@@ -23,7 +23,9 @@ if config['assembler']=='megahit':
         output:
             gzip="scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
             fasta=temp("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa")
+        log:
+            "logs/assembly/megahit/{treatment}/{kmers}/rename_megahit.log"
         run:
-            shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
+            shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta} 2> {log}")
             shell("gzip -c {output.fasta} > {output.gzip}")
 
