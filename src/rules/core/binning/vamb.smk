@@ -21,14 +21,14 @@ rule vamb_map:
         catalogue="scratch/binning/vamb/catalogue.fna.gz",
         forward="scratch/host_filtering/{sample}_R1.fastq" if config['host_removal'] \
              else "scratch/filter/{sample}_R1.fasta",
-        reverse="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
+        rev="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
              else "scratch/filter/{sample}_R2.fasta"
     output: "scratch/binning/vamb/{sample}.bam"
     conda: "../../../envs/minimap2.yaml"
     shell:
         """
         minimap2 -d catalogue.mmi {input.catalogue}; # make index
-        minimap2 -t 8 -N 50 -ax sr catalogue.mmi {input.forward} {input.reverse} | samtools view -F 3584 -b --threads 8 > {output}
+        minimap2 -t 8 -N 50 -ax sr catalogue.mmi {input.forward} {input.rev} | samtools view -F 3584 -b --threads 8 > {output}
         """
     #Because vamb is fussy
     
