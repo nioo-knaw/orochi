@@ -4,9 +4,9 @@ rule metabat:
         bam=expand("scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"]) 
     output:
         depth="results/binning/metabat/depth.txt",
-        bin="results/binning/metabat/bin.1.fa"
+        bin="results/binning/metabat/bins/bin.1.fa"
     params:
-        prefix="results/binning/metabat/bin"
+        prefix="results/binning/metabat/bins/bin"
     log: "logs/binning/metabat/metabat.log"
     threads: 16
     run: 
@@ -15,11 +15,11 @@ rule metabat:
 
 rule mmgenome_metabat:
     input:
-        bin="results/binning/metabat/bin.1.fa"
+        bin="results/binning/metabat/bins/bin.1.fa"
     output:
-        "results/binning/mmgenome/metabat.bins.txt"
+        "results/binning/metabat/metabat.bins.txt"
     params:
-        dir="results/binning/metabat/"
+        dir="results/binning/metabat/bins"
     run:
         shell("echo -e 'scaffold\tbin' > {output}")
         shell("for file in `ls {params.dir}/*.fa` ; do noext=${{file%.fa}}; bin=$(basename ${{noext}}); awk -v bin=$bin '/^>/ {{split(substr($0,2),a,\":\"); print a[1] \"\\t\" bin;}}' $file;  done >> {output}")
