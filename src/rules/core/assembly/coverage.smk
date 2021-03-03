@@ -13,7 +13,7 @@ rule bamfiles:
         "logs/bamfiles/{sample}.bamfiles.log"
     conda:
         "../../../envs/coverm.yaml"
-    threads: 80
+    threads: 40
     shell:
         "coverm make -p bwa-mem -r {input.assembly} -1 {input.forward} -2 {input.rev} -o {params.outdir} -t {threads} 2> {log}"
 
@@ -38,7 +38,7 @@ rule coverage:
         "logs/coverage.log"
     conda:
         "../../../envs/coverm.yaml"
-    threads: 80
+    threads: 40
     shell:
         "coverm contig -b {input} -t {threads} -o {output} 2> {log}"
 
