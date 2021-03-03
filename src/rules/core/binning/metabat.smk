@@ -7,7 +7,7 @@ rule metabat:
         bin="results/binning/metabat/bin.1.fa"
     params:
         prefix="results/binning/metabat/bin"
-    log: "results/binning/metabat/metabat.log"
+    log: "logs/binning/metabat/metabat.log"
     threads: 16
     run: 
         shell("/data/tools/metabat/dev/bin/jgi_summarize_bam_contig_depths --outputDepth {output.depth} {input.bam}")
