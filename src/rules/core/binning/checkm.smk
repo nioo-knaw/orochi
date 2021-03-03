@@ -1,12 +1,12 @@
-rule checkm_lineage:
+rule checkm_lineage_metabat:
     input:
-        "results/binning/{binner}/bins/"
+        "results/binning/metabat/bins/bin.1.fa"
     output:
-        "results/binning/{binner}/checkm/completeness.tsv",
-        "results/binning/{binner}/checkm/concatenated.fasta"
+        "results/binning/metabat/checkm/completeness.tsv",
+        "results/binning/metabat/checkm/concatenated.fasta"
     params:
-        indir="results/binning/{binner}",
-        outdir="results/binning/{binner}/checkm"
+        indir="results/binning/metabat",
+        outdir="results/binning/metabat/checkm"
     threads: 40
     conda: "../../../envs/checkm.yaml"
     shell: "checkm lineage_wf -t {threads} -x fa {params.indir} {params.outdir}"
