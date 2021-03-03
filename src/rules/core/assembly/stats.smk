@@ -6,7 +6,7 @@ rule quast:
     params:
         outdir="scratch/assembly/{assembler}/{treatment}/{kmers}/quast"
     log:
-        "scratch/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
+        "logs/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
     conda:
         "../../../envs/quast.yaml"
     threads: 80
@@ -17,9 +17,11 @@ rule quast_format:
         "scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt"
     output:
         "scratch/stats/{assembler}/{treatment}/{kmers}/quast.report.txt"
+    log:
+        "logs/stats/{assembler}/{treatment}/{kmers}/quast_format.log"
     params:
        run="{assembler}-{treatment}-{kmers}"
-    shell: "printf '{params.run}\t' > {output} && cat {input} | sed 's/   */:/g' | cut -d : -f 2 | tr '\n' '\t' | cut -f 2- >> {output}"
+    shell: "printf '{params.run}\t' > {output} && cat {input} | sed 's/   */:/g' | cut -d : -f 2 | tr '\n' '\t' | cut -f 2- >> {output} 2> {log}"
 
 rule quast_merge:
     input:
@@ -27,12 +29,14 @@ rule quast_merge:
         full = expand("scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt", assembler=config["assembler"], treatment=config["treatment"], kmers=config["assembly-klist"]),
     output:
         protected("results/stats/quast.report.txt")
+    log:
+        "logs/stats/quast_merge.log"
     run:
          # Get only the first origin quast output file and get the first column for use as header
          firstfile = input.full[0]
          shell("cat {firstfile} | sed 's/   */:/g' | cut -d : -f 1 | tr '\n' '\t' | head -n 1 > {output} && printf '\n' >> {output}")
          # Add the result rows
-         shell("cat {input.quast} >> {output}")
+         shell("cat {input.quast} >> {output}" 2> {log})
 
 """
 rule samtools_flagstat:
