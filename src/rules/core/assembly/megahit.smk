@@ -2,7 +2,7 @@ if config['assembler']=='megahit':
     rule megahit:
         input:
             forward = "scratch/treatment/{treatment}_forward.fastq",
-            reverse = "scratch/treatment/{treatment}_reverse.fastq",
+            rev = "scratch/treatment/{treatment}_rev.fastq",
     #        unpaired = "scratch/treatment/{treatment}_unpaired.fastq"
         output:
             contigs="scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
@@ -15,7 +15,7 @@ if config['assembler']=='megahit':
         threads: 80
         conda:
             "../../../envs/megahit.yaml"
-        shell:"megahit --continue --force --out-dir {params.dir} --tmp-dir /tmp -m 0.9 -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.reverse} 2> {log}"
+        shell:"megahit --continue --force --out-dir {params.dir} --tmp-dir /tmp -m 0.9 -t {threads} --k-list {params.kmers} -1 {input.forward} -2 {input.rev} 2> {log}"
 
     rule rename_megahit:
         input:
