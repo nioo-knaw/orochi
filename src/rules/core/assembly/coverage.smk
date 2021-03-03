@@ -10,7 +10,7 @@ rule bamfiles:
     params:
         outdir="scratch/coverm/bamfiles"
     log:
-        "logs/bamfiles.log"
+        "logs/bamfiles/{sample}.bamfiles.log"
     conda:
         "../../../envs/coverm.yaml"
     threads: 80
