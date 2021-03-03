@@ -23,8 +23,8 @@
     },
 
     "data" : {
-        "B55": { "forward":"data/B55_1.fq.gz", "reverse":"data/B55_2.fq.gz"},
-        "B57": { "forward":"data/B57_1.fq.gz", "reverse":"data/B57_2.fq.gz"},
-        "B83": { "forward":"data/B83_1.fq.gz", "reverse":"data/B83_2.fq.gz"}
+        "B55": { "forward":"data/B55_1.fq.gz", "rev":"data/B55_2.fq.gz"},
+        "B57": { "forward":"data/B57_1.fq.gz", "rev":"data/B57_2.fq.gz"},
+        "B83": { "forward":"data/B83_1.fq.gz", "rev":"data/B83_2.fq.gz"}
     }
 }
