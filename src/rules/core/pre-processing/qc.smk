@@ -10,7 +10,7 @@ rule filter:
          phix="refs/phix.fasta",
          adapters="refs/illumina_scriptseq_and_truseq_adapters.fa",
          quality="25"
-     log: "scratch/filter/{sample}.log"
+     log: "logs/filter/{sample}.log"
      conda: "../../../envs/bbmap.yaml"
      threads: 16
      shell:"""bbduk.sh in={input.forward} in2={input.rev} out={output.forward} out2={output.rev} \
@@ -29,7 +29,7 @@ rule phix_removal:
     output:
         forward="scratch/filter/{sample}_R1.nophix.fq",
         rev="scratch/filter/{sample}_R2.nophix.fq",
-    log: "scratch/filter/phix_removal_{sample}.log"
+    log: "logs/filter/phix_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
     shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.90-0/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.rev} outu1={output.forward} outu2={output.rev} t={threads} 2> {log}"
@@ -52,7 +52,7 @@ rule map_to_host:
     params:
         refindex=config["reference"]
     conda: "../../../envs/bwa.yaml"
-    log: "scratch/filter/bwa_{sample}.log"
+    log: "logs/filter/bwa_{sample}.log"
     threads: 16
     shell: "bwa mem -t {threads} {params.refindex} {input} -o {output} 2> {log}"
 
@@ -87,7 +87,7 @@ rule bamToFastq_unmapped:
     output:
         forward="scratch/host_filtering/{sample}_R1.fastq",
         rev="scratch/host_filtering/{sample}_R2.fastq"
-    log: "scratch/host_filtering/{sample}_bamtofastq.log"
+    log: "logs/host_filtering/{sample}_bamtofastq.log"
     conda: "../../../envs/bedtools.yaml"
     shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.rev} 2> {log}"
 
@@ -113,7 +113,7 @@ rule bamToFastq_mapped:
     output:
         forward="scratch/host_filtering/{sample}_R1.mapped.fastq",
         rev="scratch/host_filtering/{sample}_R2.mapped.fastq"
-    log: "scratch/host_filtering/{sample}_bamtofastq.mapped.log"
+    log: "logs/host_filtering/{sample}_bamtofastq.mapped.log"
     conda: "../../../envs/bedtools.yaml"
     shell: "bamToFastq -i {input}  -fq {output.forward} -fq2 {output.rev} 2> {log}"
 
