@@ -25,6 +25,6 @@ if config['assembler']=='spades':
         log:
             "logs/assembly/spades/{treatment}/{kmers}/rename_spades.log"
         run:
-            shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}" 2> {log})
+            shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta} 2> {log}")
             shell("gzip -c {output.fasta} > {output.gzip}")
 
