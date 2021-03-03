@@ -1,3 +1,4 @@
+"""
 rule maxbin:
     input:
         contigs = "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta",
@@ -19,3 +20,4 @@ rule maxbin:
             -out {params.output_prefix} \
             -thread {threads}
         """
+"""
