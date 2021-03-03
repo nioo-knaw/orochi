@@ -11,6 +11,8 @@ rule das:
         "results/binning/DAS_tool/bin1.fasta"
     params:
         outprefix="results/binning/DAS_tool/DAS"
+    log:
+        "logs/binning/DAS_tool.log"
     conda:
         "../../../envs/dastool.yaml"
     shell:
@@ -21,4 +23,5 @@ rule das:
                  -c {input.contigs}
                  -o {params.outprefix}
                  --write_bins 1
+                 2> {log}
         """
