@@ -1,4 +1,3 @@
-"""
 rule checkm_lineage:
     input:
         "results/binning/{binner}/bins/"
@@ -11,4 +10,3 @@ rule checkm_lineage:
     threads: 40
     conda: "../../../envs/checkm.yaml"
     shell: "checkm lineage_wf -t {threads} -x fa {params.indir} {params.outdir}"
-"""
