@@ -2,7 +2,7 @@ if config['assembler']=='spades':
     rule spades:
         input:
             forward = "scratch/treatment/{treatment}_forward.fastq",
-            reverse = "scratch/treatment/{treatment}_reverse.fastq",
+            rev = "scratch/treatment/{treatment}_rev.fastq",
     #        unpaired = "scratch/treatment/{treatment}_unpaired.fastq"
         output:
             temp("scratch/assembly/spades/{treatment}/{kmers}/contigs.fasta")
@@ -14,7 +14,7 @@ if config['assembler']=='spades':
         threads: 80
         conda:
             "../../../envs/spades.yaml"
-        shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.reverse} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
+        shell: "metaspades.py -m 1200 -1 {input.forward} -2 {input.rev} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/ 2>&1 > /dev/null"
 
     rule rename_spades:
         input:
