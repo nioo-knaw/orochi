@@ -9,7 +9,7 @@ rule mash_sketch:
     params:
        prefix="scratch/treatment/mash/{sample}"
     conda: "../../../envs/mash.yaml"
-    shell: "mash sketch -k 27 -s 10000 -o {params.prefix} -r {input.forward} {input.reverse}"
+    shell: "mash sketch -k 27 -s 10000 -o {params.prefix} -r {input.forward} {input.rev}"
 
 rule mash_paste:
     input:
