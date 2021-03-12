@@ -54,7 +54,7 @@ rule map_to_host:
     conda: "../../../envs/bwa.yaml"
     log: "logs/filter/bwa_{sample}.log"
     threads: 16
-    shell: "bwa mem -t {threads} {params.refindex} {input} -o {output} 2> {log}"
+    shell: "bwa mem -t {threads} {params.refindex} {input.forward} {input.rev} -o {output} 2> {log}"
 
 rule mapping_stats:
     input:
