@@ -39,4 +39,5 @@ run:
   script:
     - cp config.sample.json config.json
     - snakemake -n
-    - snakemake  --use-conda -j 8
+    - snakemake --use-conda --conda-create-envs-only --conda-frontend mamba -j 8
+    - snakemake --use-conda --conda-frontend mamba -j 8
