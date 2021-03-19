@@ -3,17 +3,10 @@ rule CAT:
         expand("scratch/assembly/{assembler}/minimus2/secondary.contigs.fasta", assembler=config["assembler"])
     output:
         temporary("scratch/annotation/CAT/assembly.alignment.diamond.gz"),
-<<<<<<< HEAD
-        "scratch/annotation/CAT/assembly.predicted_proteins.gff",
-        "scratch/annotation/CAT/assembly.predicted_proteins.faa",
-        "scratch/annotation/CAT/assembly.ORF2LCA.txt",
-        "scratch/annotation/CAT/assembly.contig2classification.txt",
-=======
         "results/annotation/CAT/assembly.predicted_proteins.gff",
         "results/annotation/CAT/assembly.predicted_proteins.faa",
         "results/annotation/CAT/assembly.ORF2LCA.txt",
         "results/annotation/CAT/assembly.contig2classification.txt",
->>>>>>> new-modules
     params:
         db=config['CAT_database'],
         tax=config['CAT_taxonomy'],
