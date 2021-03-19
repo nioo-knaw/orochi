@@ -11,8 +11,8 @@ before_script:
   - mamba install snakemake click==7.0 rpy2
 
 stages:
-    - linting
     - rulegraph
+    - linting
     - run
     - nohostfiltering
     - cat
