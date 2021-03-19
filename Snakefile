@@ -38,6 +38,7 @@ rule final:
                   sample=config["data"],\
                   treatment=config["treatment"],\
                   assembler=config["assembler"],\
+                  binner=config["binner"],\
                   kmers=config["assembly-klist"]\
                  )
 

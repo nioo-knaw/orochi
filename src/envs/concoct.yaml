@@ -2,5 +2,5 @@ channels:
   - bioconda
   - conda-forge
 dependencies:
-  - coverm == 0.4.0
+  - concoct==1.1.0
   - numpy==1.19.4

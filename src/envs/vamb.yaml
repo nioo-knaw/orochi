@@ -1,4 +1,4 @@
 channels:
   - bioconda
 dependencies:
-  - antismash==5.1.2
+  - vamb==3.0.2

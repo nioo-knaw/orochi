@@ -6,9 +6,19 @@
     "min_length" : "150",
     "host_removal" : False,
     "reference_index": "/data/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic",
+<<<<<<< HEAD
     "CAT_database" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_CAT_database/",
     "CAT_taxonomy" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_taxonomy/",
     "assembler" : "megahit",
+=======
+    "emapper_database" : "/data/db/eggnogdb/5.0.0/",
+    "emapper_diamond" : "/data/db/eggnogdb/5.0.0/eggnog_proteins.dmnd/",
+    "CAT_database" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_CAT_database/",
+    "CAT_taxonomy" : "/data/db/CAT/CAT_prepare_20200618/2020-06-18_taxonomy/",
+    "assembler" : "megahit",
+    "binner" : ["concoct", "DAS_tool", "groopm", "metabat", "vamb"],
+    "big" : "bigscape",
+>>>>>>> new-modules
     "kmers" : "33,55,77,99,127",
     "assembly-klist" : {
        "meta-large" : "27,37,47,57,67,77,87,97,107,117,127",
@@ -18,8 +28,14 @@
     },
 
     "data" : {
+<<<<<<< HEAD
         "B55": { "forward":"data/B55_1.fq.gz", "reverse":"data/B55_2.fq.gz"},
         "B57": { "forward":"data/B57_1.fq.gz", "reverse":"data/B57_2.fq.gz"},
         "B83": { "forward":"data/B83_1.fq.gz", "reverse":"data/B83_2.fq.gz"}
+=======
+        "B55": { "forward":"data/B55_1.fq.gz", "rev":"data/B55_2.fq.gz"},
+        "B57": { "forward":"data/B57_1.fq.gz", "rev":"data/B57_2.fq.gz"},
+        "B83": { "forward":"data/B83_1.fq.gz", "rev":"data/B83_2.fq.gz"}
+>>>>>>> new-modules
     }
 }
