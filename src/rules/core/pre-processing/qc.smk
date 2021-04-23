@@ -18,7 +18,7 @@ rule filter:
      entropy=0.6 entropywindow=50 entropymask=f \
      qtrim=rl trimq={params.quality} \
      minlength=51 \
-     ref=$CONDA_PREFIX/opt/bbmap-38.90-0/resources/nextera.fa.gz ktrim=r \
+     ref=$CONDA_PREFIX/opt/bbmap-38.90-1/resources/nextera.fa.gz ktrim=r \
      stats={output.stats} \
      t={threads} 2> {log}"""
 
@@ -32,7 +32,7 @@ rule phix_removal:
     log: "logs/filter/phix_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
-    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.90-0/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.rev} outu1={output.forward} outu2={output.rev} t={threads} 2> {log}"
+    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.90-1/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.rev} outu1={output.forward} outu2={output.rev} t={threads} 2> {log}"
 
 rule index_host:
     input:
