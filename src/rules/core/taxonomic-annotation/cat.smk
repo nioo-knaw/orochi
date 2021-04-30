@@ -2,7 +2,7 @@ rule CAT:
     input:
         expand("scratch/assembly/{assembler}/minimus2/secondary.contigs.fasta", assembler=config["assembler"])
     output:
-        temporary("scratch/annotation/CAT/assembly.alignment.diamond.gz"),
+        temporary("results/annotation/CAT/assembly.alignment.diamond.gz"),
         "results/annotation/CAT/assembly.predicted_proteins.gff",
         "results/annotation/CAT/assembly.predicted_proteins.faa",
         "results/annotation/CAT/assembly.ORF2LCA.txt",
