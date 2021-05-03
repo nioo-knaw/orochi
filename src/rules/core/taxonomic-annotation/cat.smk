@@ -1,6 +1,7 @@
 rule CAT:
     input:
         expand("scratch/assembly/{assembler}/minimus2/secondary.contigs.fasta", assembler=config["assembler"])
+        #expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
         temporary("results/annotation/CAT/assembly.alignment.diamond.gz"),
         "results/annotation/CAT/assembly.predicted_proteins.gff",
@@ -34,7 +35,8 @@ rule CAT_add_names:
 
 rule CAT_summarize:
     input:
-        contigs = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
+        #contigs = expand("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa",treatment=config["treatment"], kmers=config["assembly-klist"]),
+        contigs = expand("scratch/assembly/{assembler}/minimus2/secondary.contigs.fasta", assembler=config["assembler"])
         classification = "results/annotation/CAT/assembly.classification.txt"
     output:
         protected("results/annotation/CAT/assembly.classification.summary.txt")
