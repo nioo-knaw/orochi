@@ -9,6 +9,7 @@ rule filter:
      params:
          phix="refs/phix.fasta",
          adapters="refs/illumina_scriptseq_and_truseq_adapters.fa",
+         ref = "src/refs/nextera.fa.gz",
          quality="25"
      log: "logs/filter/{sample}.log"
      conda: "../../../envs/bbmap.yaml"
@@ -18,7 +19,7 @@ rule filter:
      entropy=0.6 entropywindow=50 entropymask=f \
      qtrim=rl trimq={params.quality} \
      minlength=51 \
-     ref=$CONDA_PREFIX/opt/bbmap-38.90-1/resources/nextera.fa.gz ktrim=r \
+     ref={params.ref} ktrim=r \
      stats={output.stats} \
      t={threads} 2> {log}"""
 
@@ -29,10 +30,12 @@ rule phix_removal:
     output:
         forward="scratch/filter/{sample}_R1.nophix.fq",
         rev="scratch/filter/{sample}_R2.nophix.fq",
+    params:
+        ref = "src/refs/phix174_ill.ref.fa.gz",
     log: "logs/filter/phix_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
-    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.90-1/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.rev} outu1={output.forward} outu2={output.rev} t={threads} 2> {log}"
+    shell: "bbmap.sh ref={params.ref} in1={input.forward} in2={input.rev} outu1={output.forward} outu2={output.rev} t={threads} 2> {log}"
 
 rule index_host:
     input:
