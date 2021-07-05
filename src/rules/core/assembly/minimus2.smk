@@ -26,7 +26,7 @@ rule filter_contigs:
     output:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
     params:
-        length=2000
+        length=config["filter_contigs_length"]
     log:
         "logs/assembly/megahit/minimus2/filter_contigs.log"
     conda:
