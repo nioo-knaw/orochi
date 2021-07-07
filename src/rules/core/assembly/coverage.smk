@@ -27,7 +27,7 @@ rule index_bam:
     conda:
         "../../../envs/samtools.yaml"
     shell:
-        "samtools index {input} -o {output} 2> {log}"
+        "samtools index {input} {output} 2> {log}"
 
 rule sort_readname:
     input:
