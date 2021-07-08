@@ -12,6 +12,7 @@
     "CAT_database" : "/data/shared/db/CAT/CAT_prepare_20200618/2020-06-18_CAT_database/",
     "CAT_taxonomy" : "/data/shared/db/CAT/CAT_prepare_20200618/2020-06-18_taxonomy/",
     "filter_contigs_length" : "444",
+    "filter_contigs_antismash" : "300",
     "assembler" : "megahit",
     "binner" : ["metabat", "vamb"],
     "big" : "bigscape",
