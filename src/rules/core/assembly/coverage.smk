@@ -52,7 +52,7 @@ rule coverage:
         "../../../envs/coverm.yaml"
     threads: 40
     shell:
-        "coverm contig -b {input} -t {threads} -o {output} 2> {log}"
+        "coverm contig -b {input} -t {threads} > {output} 2> {log}"
 
 """
 rule coverage_old:
