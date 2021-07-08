@@ -4,7 +4,7 @@ rule filter_contigs_antismash:
     output:
         "scratch/annotation/antismash/secondary.contigs.fa"
     params:
-        length=5000
+        length=config["filter_contigs_antismash"]
     conda:
         "../../../envs/seqtk.yaml"
     shell: 
