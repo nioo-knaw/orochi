@@ -30,7 +30,7 @@ rule vamb_map:
     shell:
         """
         minimap2 -d catalogue.mmi {input.catalogue}; # make index
-        minimap2 -t 8 -N 50 -ax sr catalogue.mmi {input.forward} {input.rev} | samtools view -F 3584 -b --threads 8 > {output} 2> {log}
+        minimap2 -t 8 -N 50 -ax sr catalogue.mmi {input.forward} {input.rev} | samtools view -F 3584 -b --threads 8 > {output}
         """
     #Because vamb is fussy
     
