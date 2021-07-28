@@ -26,7 +26,7 @@ rule vamb_map:
              else "scratch/filter/{sample}_R2.fasta"
     output: "scratch/binning/vamb/{sample}.bam"
     conda: "../../../envs/minimap2.yaml"
-    log: "logs/vamb/vamb_map.log"
+    log: "logs/vamb/vamb_map_{sample}.log"
     shell:
         """
         minimap2 -d catalogue.mmi {input.catalogue}; # make index
