@@ -8,9 +8,5 @@ rule merge_per_treatment:
         forward = protected("scratch/treatment/{treatment}_forward.fastq"),
         rev = protected("scratch/treatment/{treatment}_rev.fastq"),
     run: 
-        if config['host_removal']:
-            shell("cat {input.forward}  > {output.forward}")
-            shell("cat {input.rev}  > {output.rev}")
-        else:
-            shell("cat {input.forward}  > {output.forward}")
-            shell("cat {input.rev}  > {output.rev}")
+        shell("cat {input.forward}  > {output.forward}")
+        shell("cat {input.rev}  > {output.rev}")
