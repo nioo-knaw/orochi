@@ -8,8 +8,9 @@ rule mash_sketch:
         "scratch/treatment/mash/{sample}.msh"
     params:
        prefix="scratch/treatment/mash/{sample}"
+    log: "logs/mash/mash_sketch_{sample}.log"
     conda: "../../../envs/mash.yaml"
-    shell: "mash sketch -k 27 -s 10000 -o {params.prefix} -r {input.forward} {input.rev}"
+    shell: "mash sketch -k 27 -s 10000 -o {params.prefix} -r {input.forward} {input.rev} 2> {log}"
 
 rule mash_paste:
     input:
@@ -18,14 +19,16 @@ rule mash_paste:
         "scratch/treatment/all.msh"
     params:
        prefix="scratch/treatment/all"
+    log: "logs/mash/mash_paste_{sample}.log"
     conda: "../../../envs/mash.yaml"
-    shell: "mash paste {params.prefix} {input}"
+    shell: "mash paste {params.prefix} {input} 2> {log}"
 
 rule mash_dist:
     input: "scratch/treatment/all.msh"
     output: "results/stats/mash/table.txt"
+    log: "logs/mash/mash_dist.log"
     conda: "../../../envs/mash.yaml"
-    shell: "mash dist -t {input} {input} > {output}"
+    shell: "mash dist -t {input} {input} > {output} 2> {log}"
 
 rule draw_tree:
     input:
