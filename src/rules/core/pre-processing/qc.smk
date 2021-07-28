@@ -65,7 +65,8 @@ rule mapping_stats:
     output:
         "scratch/host_filtering/{sample}.flagstat.txt"
     conda: "../../../envs/samtools.yaml"
-    shell: "samtools flagstat {input} > {output}"
+    log: "logs/filter/mapping_stats_{sample}.log"
+    shell: "samtools flagstat {input} > {output} 2> {log}"
 
 rule get_unmapped:
     input:
@@ -73,14 +74,16 @@ rule get_unmapped:
     output:
         "scratch/host_filtering/{sample}.unmapped.bam"
     conda: "../../../envs/samtools.yaml"
+    log : "logs/filter/get_unmapped_{sample}.log"
     # TODO: what is a good quality value? With -f 4 also alignments with q=0 are reported. For bwa this should mean mapping to multiple locations. From q=50 onwards a blastn also hits the reference genome.
-    shell: "samtools view -b -f 4 {input} > {output}"
+    shell: "samtools view -b -f 4 {input} > {output} 2> {log}"
 
 rule sort_unmapped:
     input:
         "scratch/host_filtering/{sample}.unmapped.bam"
     output:
         "scratch/host_filtering/{sample}.unmapped.sorted.bam"
+    log: "logs/filter/sort_unmapped_{sample}.log"
     conda: "../../../envs/samtools.yaml"
     shell: "samtools sort {input} > {output}"
 
@@ -100,7 +103,8 @@ rule get_mapped:
     output:
         "scratch/host_filtering/{sample}.mapped.bam"
     conda: "../../../envs/samtools.yaml"
-    shell: "samtools view -b -F 4 {input} > {output}"
+    log: "logs/filter/get_mapped_{sample}.log"
+    shell: "samtools view -b -F 4 {input} > {output} 2> {log}"
 
 rule sort_mapped:
     input:
@@ -108,6 +112,7 @@ rule sort_mapped:
     output:
         "scratch/host_filtering/{sample}.mapped.sorted.bam"
     conda: "../../../envs/samtools.yaml"
+    log: "logs/filter/sort_mapped_{sample}.log"
     shell: "samtools sort {input} > {output}"
 
 rule bamToFastq_mapped:
