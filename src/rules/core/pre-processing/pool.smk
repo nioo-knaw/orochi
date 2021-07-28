@@ -7,6 +7,9 @@ rule merge_per_treatment:
     output:
         forward = protected("scratch/treatment/{treatment}_forward.fastq"),
         rev = protected("scratch/treatment/{treatment}_rev.fastq"),
+    log: 
+        forward = "logs/pool/merge_per_treatment_{sample}_F.log",
+        rev = "logs/pool/merge_per_treatment_{sample}_R.log"
     run: 
-        shell("cat {input.forward}  > {output.forward}")
-        shell("cat {input.rev}  > {output.rev}")
+        shell("cat {input.forward}  > {output.forward} 2> {log.forward}")
+        shell("cat {input.rev}  > {output.rev} 2> {log.rev}")
