@@ -19,7 +19,7 @@ rule mash_paste:
         "scratch/treatment/all.msh"
     params:
        prefix="scratch/treatment/all"
-    log: "logs/mash/mash_paste_{sample}.log"
+    log: "logs/mash/mash_paste.log"
     conda: "../../../envs/mash.yaml"
     shell: "mash paste {params.prefix} {input}"
 
