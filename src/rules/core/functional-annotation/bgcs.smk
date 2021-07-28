@@ -33,6 +33,7 @@ rule get_bgcs:
         "results/annotation/antismash/secondary.contigs.json"
     output:
         "scratch/annotation/antismash/bgcs.fasta"
+    log: "logs/bgcs/get_bgcs.log"
     script:
         "../../../scripts/antismash_get_bgcs.py"
 
