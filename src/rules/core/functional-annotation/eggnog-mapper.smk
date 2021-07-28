@@ -3,7 +3,8 @@ rule move_proteins:
     output: "results/annotation/emapper/proteins.faa"
     params:
         outdir="results/annotation/emapper"
-    shell: "cp {input} {params.outdir}"
+    log: "logs/eggnog-mapper/move_proteins.log"
+    shell: "cp {input} {params.outdir} 2> {log}"
 
 rule emapper_diamond:
     input:
@@ -12,6 +13,7 @@ rule emapper_diamond:
         "results/annotation/emapper/proteins.faa.emapper.seed_orthologs"
     params:
         db=config["emapper_diamond"]
+    log: "logs/eggnog-mapper/emapper_diamond.log"
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 0
@@ -25,6 +27,7 @@ rule emapper_annotation:
         "results/annotation/emapper/proteins.faa.emapper.annotations"
     params:
         db=config['emapper_database']
+    log: "logs/eggnog-mapper/emapper_annotation.log"
     conda:
         "../../../envs/eggnog-mapper.yaml"
     threads: 0
