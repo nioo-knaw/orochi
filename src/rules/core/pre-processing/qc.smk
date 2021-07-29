@@ -42,6 +42,7 @@ rule index_host:
         fasta=config["reference"]
     output:
         index=config["reference"] + ".bwt"
+    log: "logs/filter/index_host.log"
     conda: "../../../envs/bwa.yaml"
     shell: "bwa index {input}"
 
