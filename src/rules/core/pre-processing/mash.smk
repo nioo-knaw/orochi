@@ -18,7 +18,7 @@ rule mash_paste:
     output:
         "scratch/treatment/all.msh"
     params:
-       prefix="scratch/treatment/all"
+       prefix=lambda wildcards, output: output[0][:-4]
     log: "logs/mash/mash_paste.log"
     conda: "../../../envs/mash.yaml"
     shell: "mash paste {params.prefix} {input} 2> {log}"
