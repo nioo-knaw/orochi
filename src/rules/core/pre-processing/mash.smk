@@ -7,7 +7,7 @@ rule mash_sketch:
     output:
         "scratch/treatment/mash/{sample}.msh"
     params:
-       prefix= lambda wildcards, output [0] [:-4] 
+       prefix=lambda wildcards, output: output[0][:-4]
     log: "logs/mash/mash_sketch_{sample}.log"
     conda: "../../../envs/mash.yaml"
     shell: "mash sketch -k 27 -s 10000 -o {params.prefix} -r {input.forward} {input.rev} 2> {log}"
