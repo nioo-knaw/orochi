@@ -38,6 +38,7 @@ rule draw_tree:
     params:
         req="h_vmem=2G",
         samples=config["data"]
+    log: "logs/mash/draw_tree.log"
     conda:
         "../../../envs/tree.yaml"
     script:

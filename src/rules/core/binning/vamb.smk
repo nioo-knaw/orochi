@@ -12,8 +12,9 @@ rule concatenate:
     input: expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa", treatment=config["treatment"], kmers=config["assembly-klist"])
     output: "scratch/binning/vamb/catalogue.fna.gz"
     conda: "../../../envs/vamb.yaml"
+    log: "logs/vamb/concatenate.log"
     shell:     
-        "concatenate.py {output} {input}"
+        "concatenate.py {output} {input} 2> {log}"
     #Just cat with extras to make it more suitable to VAMB
 
 rule vamb_map:
@@ -25,6 +26,7 @@ rule vamb_map:
              else "scratch/filter/{sample}_R2.fasta"
     output: "scratch/binning/vamb/{sample}.bam"
     conda: "../../../envs/minimap2.yaml"
+    log: "logs/vamb/vamb_map_{sample}.log"
     shell:
         """
         minimap2 -d catalogue.mmi {input.catalogue}; # make index
@@ -45,9 +47,10 @@ rule vamb:
         "results/binning/vamb/mask.npz",
         "results/binning/vamb/tnf.npz"
     conda: "../../../envs/vamb.yaml"
+    log: "logs/vamb/vamb.log"
     shell: 
         "rm -rf results/binning/vamb;"
-        "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles scratch/binning/vamb/*.bam -o C --minfasta 200000"
+        "vamb --outdir results/binning/vamb --fasta {input.catalogue} --bamfiles scratch/binning/vamb/*.bam -o C --minfasta 200000 2> {log}"
 
 """
 rule vamb_write_bins:

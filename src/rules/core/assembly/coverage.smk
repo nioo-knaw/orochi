@@ -16,6 +16,18 @@ rule bamfiles:
     threads: 40
     shell:
         "coverm make -p bwa-mem -r {input.assembly} -1 {input.forward} -2 {input.rev} -o {params.outdir} -t {threads} 2> {log}"
+        
+rule index_bam:
+    input:
+        "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
+    output:
+        "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam.bai"
+    log:
+        "logs/bamfiles/{sample}.index_bam.log"
+    conda:
+        "../../../envs/samtools.yaml"
+    shell:
+        "samtools index {input} {output} 2> {log}"
 
 rule sort_readname:
     input:
@@ -40,7 +52,7 @@ rule coverage:
         "../../../envs/coverm.yaml"
     threads: 40
     shell:
-        "coverm contig -b {input} -t {threads} -o {output} 2> {log}"
+        "coverm contig -b {input} -t {threads} > {output} 2> {log}"
 
 """
 rule coverage_old:

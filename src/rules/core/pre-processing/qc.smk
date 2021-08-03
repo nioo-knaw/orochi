@@ -9,6 +9,7 @@ rule filter:
      params:
          phix="refs/phix.fasta",
          adapters="refs/illumina_scriptseq_and_truseq_adapters.fa",
+         ref = "src/refs/nextera.fa.gz",
          quality="25"
      log: "logs/filter/{sample}.log"
      conda: "../../../envs/bbmap.yaml"
@@ -18,7 +19,7 @@ rule filter:
      entropy=0.6 entropywindow=50 entropymask=f \
      qtrim=rl trimq={params.quality} \
      minlength=51 \
-     ref=$CONDA_PREFIX/opt/bbmap-38.90-1/resources/nextera.fa.gz ktrim=r \
+     ref={params.ref} ktrim=r \
      stats={output.stats} \
      t={threads} 2> {log}"""
 
@@ -29,16 +30,19 @@ rule phix_removal:
     output:
         forward="scratch/filter/{sample}_R1.nophix.fq",
         rev="scratch/filter/{sample}_R2.nophix.fq",
+    params:
+        ref = "src/refs/phix174_ill.ref.fa.gz",
     log: "logs/filter/phix_removal_{sample}.log"
     conda: "../../../envs/bbmap.yaml"
     threads: 16
-    shell: "bbmap.sh ref=$CONDA_PREFIX/opt/bbmap-38.90-1/resources/phix174_ill.ref.fa.gz in1={input.forward} in2={input.rev} outu1={output.forward} outu2={output.rev} t={threads} 2> {log}"
+    shell: "bbmap.sh ref={params.ref} in1={input.forward} in2={input.rev} outu1={output.forward} outu2={output.rev} t={threads} 2> {log}"
 
 rule index_host:
     input:
         fasta=config["reference"]
     output:
         index=config["reference"] + ".bwt"
+    log: "logs/filter/index_host.log"
     conda: "../../../envs/bwa.yaml"
     shell: "bwa index {input}"
 
@@ -62,7 +66,8 @@ rule mapping_stats:
     output:
         "scratch/host_filtering/{sample}.flagstat.txt"
     conda: "../../../envs/samtools.yaml"
-    shell: "samtools flagstat {input} > {output}"
+    log: "logs/filter/mapping_stats_{sample}.log"
+    shell: "samtools flagstat {input} > {output} 2> {log}"
 
 rule get_unmapped:
     input:
@@ -70,14 +75,16 @@ rule get_unmapped:
     output:
         "scratch/host_filtering/{sample}.unmapped.bam"
     conda: "../../../envs/samtools.yaml"
+    log : "logs/filter/get_unmapped_{sample}.log"
     # TODO: what is a good quality value? With -f 4 also alignments with q=0 are reported. For bwa this should mean mapping to multiple locations. From q=50 onwards a blastn also hits the reference genome.
-    shell: "samtools view -b -f 4 {input} > {output}"
+    shell: "samtools view -b -f 4 {input} > {output} 2> {log}"
 
 rule sort_unmapped:
     input:
         "scratch/host_filtering/{sample}.unmapped.bam"
     output:
         "scratch/host_filtering/{sample}.unmapped.sorted.bam"
+    log: "logs/filter/sort_unmapped_{sample}.log"
     conda: "../../../envs/samtools.yaml"
     shell: "samtools sort {input} > {output}"
 
@@ -97,7 +104,8 @@ rule get_mapped:
     output:
         "scratch/host_filtering/{sample}.mapped.bam"
     conda: "../../../envs/samtools.yaml"
-    shell: "samtools view -b -F 4 {input} > {output}"
+    log: "logs/filter/get_mapped_{sample}.log"
+    shell: "samtools view -b -F 4 {input} > {output} 2> {log}"
 
 rule sort_mapped:
     input:
@@ -105,6 +113,7 @@ rule sort_mapped:
     output:
         "scratch/host_filtering/{sample}.mapped.sorted.bam"
     conda: "../../../envs/samtools.yaml"
+    log: "logs/filter/sort_mapped_{sample}.log"
     shell: "samtools sort {input} > {output}"
 
 rule bamToFastq_mapped:

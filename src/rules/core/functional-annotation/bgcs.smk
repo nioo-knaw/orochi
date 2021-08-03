@@ -4,11 +4,12 @@ rule filter_contigs_antismash:
     output:
         "scratch/annotation/antismash/secondary.contigs.fa"
     params:
-        length=5000
+        length=config["filter_contigs_antismash"]
     conda:
         "../../../envs/seqtk.yaml"
+    log: "logs/bgcs/filter_contigs_antismash.log"
     shell: 
-       "seqtk seq -L {params.length} {input}  > {output}"
+       "seqtk seq -L {params.length} {input}  > {output} 2> {log}"
 
 rule antismash:
     input:
@@ -22,6 +23,7 @@ rule antismash:
         outdir="results/annotation/antismash/"
     conda:
         "../../../envs/antismash.yaml"
+    log: "logs/bgcs/antismash.log"
     threads: 16
     shell:
         "antismash --cb-general --cb-knownclusters --cb-subclusters --asf --genefinding-tool prodigal-m --output-dir {params.outdir} --cpus {threads} {input}"
@@ -31,6 +33,7 @@ rule get_bgcs:
         "results/annotation/antismash/secondary.contigs.json"
     output:
         "scratch/annotation/antismash/bgcs.fasta"
+    log: "logs/bgcs/get_bgcs.log"
     script:
         "../../../scripts/antismash_get_bgcs.py"
 
@@ -58,6 +61,7 @@ rule bigscape:
         "results/annotation/bigscape/index.html"
     conda:
         "../../../envs/bigscape.yaml"
+    log: "logs/bgcs/bigscape.log"
     threads: 40
     shell:
         """

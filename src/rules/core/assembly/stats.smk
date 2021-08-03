@@ -40,13 +40,13 @@ rule quast_merge:
 
 rule samtools_flagstat:
     input:
-        expand("scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"])
+        "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
     output:
-        "results/stats/flagstat/flagstat.txt"
+        "results/stats/flagstat/{sample}.txt"
     conda:
         "../../../envs/samtools.yaml"
     log:
-        "logs/stats/flagstat.log"
+        "logs/stats/flagstat_{sample}.log"
     shell:
         "samtools flagstat {input} > {output} 2> {log}"
 
