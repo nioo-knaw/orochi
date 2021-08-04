@@ -2,7 +2,7 @@ rule move_proteins:
     input: "scratch/prodigal/proteins.faa"
     output: "results/annotation/emapper/proteins.faa"
     params:
-        outdir="results/annotation/emapper"
+        outdir=lambda wildcards, output: output[0][:-13]
     log: "logs/eggnog-mapper/move_proteins.log"
     shell: "cp {input} {params.outdir} 2> {log}"
 
