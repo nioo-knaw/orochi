@@ -8,7 +8,7 @@ rule bamfiles:
     output:
         "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
     params:
-        outdir="scratch/coverm/bamfiles"
+        outdir=lambda wildcards, output: output[0][:23]
     log:
         "logs/bamfiles/{sample}.bamfiles.log"
     conda:
