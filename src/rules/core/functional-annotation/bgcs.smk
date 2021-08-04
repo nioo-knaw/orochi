@@ -34,6 +34,8 @@ rule get_bgcs:
     output:
         "scratch/annotation/antismash/bgcs.fasta"
     log: "logs/bgcs/get_bgcs.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     script:
         "../../../scripts/antismash_get_bgcs.py"
 
