@@ -5,6 +5,8 @@ rule merge_assemblies:
         "scratch/assembly/megahit/minimus2/primary.contigs.fa"
     log:
         "logs/assembly/megahit/minimus2/merge_assemblies.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell:
         "cat {input} > {output} 2> {log}"
 
@@ -15,6 +17,8 @@ rule save_smalls:
         "scratch/assembly/megahit/minimus2/primary.short.contigs.fa"
     log:
         "logs/assembly/megahit/minimus2/save_smalls.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell:
         """
         awk -v RS='>[^\\n]+\\n' 'length() <= 2000 {{printf "%s", prt $0}} {{prt = RT}}' {input} > {output} 2> {log}
@@ -43,6 +47,8 @@ rule contig_overlap:
         "../../../envs/cd-hit.yaml"
     log:
        "logs/assembly/megahit/minimus2/cd-hit.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell:
         "cd-hit-est -i {input} -o {output} -T 90 -M 500000 -c 0.99 -n 10 > {log}"
 
@@ -53,6 +59,8 @@ rule contig_rename:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fa"
     log:
         "logs/assembly/megahit/minimus2/contig_rename.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell:
         """awk '/^>/ {{print ">contig_" ++i; next}}{{print}}' < {input} > {output} 2> {log}"""
 
@@ -89,6 +97,8 @@ rule minimus2_merge:
         "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     log:
         "logs/assembly/megahit/minimus2/minimus2_merge.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell:
         "cat {input} > {output} 2> {log}"
 
@@ -99,4 +109,6 @@ rule readd_smalls:
     output: "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
     log:
         "logs/aseembly/megahit/minimus2/readd_smalls.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell: "cat {input.short} {input.merged} > {output} 2> {log}"
