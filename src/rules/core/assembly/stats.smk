@@ -4,7 +4,7 @@ rule quast:
     output:
         quast="scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt",
     params:
-        outdir="scratch/assembly/{assembler}/{treatment}/{kmers}/quast"
+        outdir=lambda wildcards, output: output[0][:-11]
     log:
         "logs/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
     conda:
