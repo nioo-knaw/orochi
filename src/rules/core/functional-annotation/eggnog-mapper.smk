@@ -4,6 +4,8 @@ rule move_proteins:
     params:
         outdir=lambda wildcards, output: output[0][:-13]
     log: "logs/eggnog-mapper/move_proteins.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell: "cp {input} {params.outdir} 2> {log}"
 
 rule emapper_diamond:
