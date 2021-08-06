@@ -108,7 +108,7 @@ rule readd_smalls:
         merged="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output: "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
     log:
-        "logs/aseembly/megahit/minimus2/readd_smalls.log"
+        "logs/assembly/megahit/minimus2/readd_smalls.log"
     conda:
         "../../../envs/orochi-base.yaml"
     shell: "cat {input.short} {input.merged} > {output} 2> {log}"
