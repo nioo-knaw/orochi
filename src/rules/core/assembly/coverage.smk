@@ -1,9 +1,9 @@
 rule bamfiles:
     input:
         forward="scratch/host_filtering/{sample}_R1.fastq" if config['host_removal'] \
-             else "scratch/filter/{sample}_R1.fasta",
+             else "scratch/filter/{sample}_R1.fq",
         rev="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
-             else "scratch/filter/{sample}_R2.fasta",
+             else "scratch/filter/{sample}_R2.fq",
         assembly = "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
     output:
         "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
