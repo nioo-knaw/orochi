@@ -62,7 +62,8 @@ rule contig_rename:
     conda:
         "../../../envs/orochi-base.yaml"
     shell:
-        """awk '/^>/ {{print ">contig_" ++i; next}}{{print}}' < {input} > {output} 2> {log}"""
+        #"""awk '/^>/ {{print ">contig_" ++i; next}}{{print}}' < {input} > {output} 2> {log}"""
+        "seqtk seq -C {input} | seqtk rename - contig_ > {output} 2> {log}"
 
 rule toAmos:
     input:
