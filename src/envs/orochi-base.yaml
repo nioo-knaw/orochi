@@ -2,3 +2,4 @@ channels:
   - bioconda
 dependencies:
   - python==3.8
+  - seqtk==1.3
