@@ -5,8 +5,9 @@ rule checkm_lineage_metabat:
         "results/binning/metabat/checkm/completeness.tsv",
         "results/binning/metabat/checkm/concatenated.fasta"
     params:
-        indir="results/binning/metabat",
-        outdir="results/binning/metabat/checkm"
+        indir=lambda wildcards, input: input[0] [:-14],
+        #outdir="results/binning/metabat/checkm"
+        outdir=lambda wildcards, output: output[0][:-17]
     log:
         "logs/binning/checkm_lineage_metabat.log"
     threads: 40
