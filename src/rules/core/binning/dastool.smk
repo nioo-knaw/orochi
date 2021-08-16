@@ -10,7 +10,8 @@ rule das:
         "results/binning/DAS_tool/DASTool_summary.txt",
         "results/binning/DAS_tool/bin1.fasta"
     params:
-        outprefix="results/binning/DAS_tool/DAS"
+        #outprefix="results/binning/DAS_tool/DAS"
+        outprefix=lambda wildcards, output: output[0][:-16]
     log:
         "logs/binning/DAS_tool.log"
     conda:
