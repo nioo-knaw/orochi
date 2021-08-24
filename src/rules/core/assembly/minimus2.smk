@@ -76,9 +76,28 @@ rule toAmos:
     shell:
         "toAmos -s {input} -o {output} 2> {log}"
 
-rule minimus2:
+rule minimus_setup:
     input:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg"
+    output:
+        ".minimus_replaced.txt"
+    conda:
+        "../../../envs/orochi-base.yml"
+    log:
+        "logs/assembly/megahit/minimus2/minimus_replaced.log"
+    shell:
+        """
+        cd .snakemake/conda 
+        find . > pathfiles.txt
+        grep '\minimus2$' pathfiles.txt > minimus2_location.txt
+        python ../../src/scripts/minimus2_replacement.py 
+        touch ../../.minimus_replaced.txt
+        """
+
+rule minimus2:
+    input:
+        file="scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg",
+        rule=rules.minimus_setup.output
     output:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fasta",
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.singletons.seq"
@@ -87,7 +106,7 @@ rule minimus2:
     log:
         "logs/assembly/megahit/minimus2/primary.long.contigs.99.renamed.runAmos.log"
     shell:
-        "minimus2 `file={input}; echo ${{file%.*}}` -D OVERLAP=100 MINID=95"
+        "minimus2 `file={input.file}; echo ${{file%.*}}` -D OVERLAP=100 MINID=95"
 
 rule minimus2_merge:
     input:
