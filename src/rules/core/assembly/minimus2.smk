@@ -82,7 +82,7 @@ rule minimus_setup:
     output:
         ".minimus_replaced.txt"
     conda:
-        "../../../envs/orochi-base.yml"
+        "../../../envs/orochi-base.yaml"
     log:
         "logs/assembly/megahit/minimus2/minimus_replaced.log"
     shell:
