@@ -20,7 +20,7 @@ rule antismash:
         "results/annotation/antismash/secondary.contigs.gbk",
         "results/annotation/antismash/secondary.contigs.json"
     params:
-        outdir=lambda wildcards, output: output[0][:-21]
+        outdir=lambda wildcards, output: os.path.dirname(output[0])
     conda:
         "../../../envs/antismash.yaml"
     log: "logs/bgcs/antismash.log"
@@ -57,8 +57,8 @@ rule bigscape:
     input:
         gbks="results/annotation/antismash/secondary.contigs.gbk"
     params:
-        inputdir=lambda wildcards, input: input[0] [:-22],
-        outdir=lambda wildcards, output: output[0][:-11]
+        inputdir=lambda wildcards, input: os.path.dirname(str(input)),
+        outdir=lambda wildcards, output: os.path.dirname(str(output))
     output:
         "results/annotation/bigscape/index.html"
     conda:
