@@ -6,7 +6,7 @@ rule metabat:
         depth="results/binning/metabat/depth.txt",
         bin="results/binning/metabat/bins/bin.1.fa"
     params:
-        prefix="results/binning/metabat/bins/bin"
+        prefix=lambda wildcards, output: os.path.join(os.path.dirname(output[1]), "bin")
     log: "logs/binning/metabat/metabat.log"
     conda:
         "../../../envs/metabat.yaml"
@@ -23,7 +23,7 @@ rule mmgenome_metabat:
     output:
         "results/binning/metabat/metabat.bins.txt"
     params:
-        dir="results/binning/metabat/bins"
+        dir=lambda wildcards, input: os.path.dirname(str(input))
     log: "logs/metabat/mmgenome_metabat.log"
     run:
         shell("echo -e 'scaffold\tbin' > {output}")
