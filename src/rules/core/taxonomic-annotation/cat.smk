@@ -12,7 +12,7 @@ rule CAT:
         db=config['CAT_database'],
         tax=config['CAT_taxonomy'],
         tmp=config['tmpdir'],
-        prefix=lambda wildcards, output: output[0][:31]
+        prefix=lambda wildcards, output: os.path.join(os.path.dirname(output[0]), "assembly")
     log: "logs/annotation/CAT/assembly.log"
     conda:
         "../../../envs/cat.yaml"
