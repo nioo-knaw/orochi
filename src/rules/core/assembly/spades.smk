@@ -7,7 +7,7 @@ if config['assembler']=='spades':
         output:
             temp("scratch/assembly/spades/{treatment}/{kmers}/contigs.fasta")
         params:
-            outdir="scratch/assembly/spades/{treatment}/{kmers}/",
+            outdir= os.path.dirname(str(output)),
             kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
         log:
             "logs/assembly/spades/{treatment}/{kmers}/spades.log"
