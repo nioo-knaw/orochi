@@ -17,11 +17,20 @@ rule das:
         "../../../envs/dastool.yaml"
     shell:
         """
-        DAS_Tool -i {input.metabat},
-                    {input.vamb}
-                 -l metabat,vamb
+        DAS_Tool -i {input.vamb}
+                 -l vamb
                  -c {input.contigs}
                  -o {params.outprefix}
                  --write_bins 1
                  2> {log}
         """
+#    shell:
+#        """
+#        DAS_Tool -i {input.metabat},
+#                    {input.vamb}
+#                 -l metabat,vamb
+#                 -c {input.contigs}
+#                 -o {params.outprefix}
+#                 --write_bins 1
+#                 2> {log}
+#        """
