@@ -14,7 +14,8 @@ rule emapper_diamond:
     output:
         "results/annotation/emapper/proteins.faa.emapper.seed_orthologs"
     params:
-        db=config['emapper_diamond']
+        #db=config["emapper_diamond"]
+        db="/data/shared/db/eggnogdb/5.0.0/eggnog_proteins.dmnd"
     log: "logs/eggnog-mapper/emapper_diamond.log"
     conda:
         "../../../envs/eggnog-mapper.yaml"
