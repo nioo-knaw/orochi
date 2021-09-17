@@ -1,0 +1,32 @@
+{
+    "project" : "Orochi_trial",
+    "tmpdir" : "/tmp",
+    "adapters" : "/data/shared/tools/Trimmomatic/0.36/adapters/NexteraPE-PE.fa",
+    "min_qual" : "30",
+    "min_length" : "150",
+    "host_removal" : True,
+    "reference" : "data/test-data/reference/beta-vulgaris-subset.fasta",
+    "reference_index": "/data/shared/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic",
+    "emapper_database" : "/data/shared/db/eggnogdb/5.0.0/",
+    "emapper_diamond" : "/data/shared/db/eggnogdb/5.0.0/eggnog_proteins.dmnd",
+    "CAT_database" : "/data/shared/db/CAT/CAT_prepare_20200618/2020-06-18_CAT_database/",
+    "CAT_taxonomy" : "/data/shared/db/CAT/CAT_prepare_20200618/2020-06-18_taxonomy/",
+    "filter_contigs_length" : "444",
+    "filter_contigs_antismash" : "300",
+    "assembler" : "megahit",
+    "binner" : ["metabat", "vamb"],
+    "big" : "bigscape",
+    "kmers" : "33,55,77,99,127",
+    "assembly-klist" : {
+       "meta-large" : "27,37,47,57,67,77,87,97,107,117,127",
+     },
+    "treatment" : {
+        "A" : ["B55"]
+    },
+
+    "data" : {
+        "B55": { "forward":"data/B55_1.fq.gz", "rev":"data/B55_2.fq.gz"},
+        "B57": { "forward":"data/B57_1.fq.gz", "rev":"data/B57_2.fq.gz"},
+        "B83": { "forward":"data/B83_1.fq.gz", "rev":"data/B83_2.fq.gz"}
+    }
+}
