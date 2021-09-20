@@ -54,4 +54,3 @@ linting:
   script:
     - snakemake --lint --configfile config.sample.json
     - snakemake --use-conda --conda-create-envs-only --conda-frontend mamba -j 8
-    - snakemake --use-conda --conda-frontend mamba -j 8
