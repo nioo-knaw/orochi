@@ -76,7 +76,7 @@ rule toAmos:
     shell:
         "toAmos -s {input} -o {output} 2> {log}"
 
-rule minimus_setup:
+rule minimus2_setup:
     input:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg"
     output:
@@ -96,8 +96,8 @@ rule minimus_setup:
 
 rule minimus2:
     input:
-        file="scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg",
-        rule=rules.minimus_setup.output
+        file= "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg",
+        rule = rules.minimus2_setup.output
     output:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fasta",
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.singletons.seq"
