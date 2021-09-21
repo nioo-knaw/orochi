@@ -4,3 +4,4 @@ channels:
 dependencies:
   - coverm == 0.4.0
   - numpy==1.19.4
+  - samtools==1.9

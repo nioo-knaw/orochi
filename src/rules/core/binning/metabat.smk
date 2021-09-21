@@ -6,7 +6,7 @@ rule metabat:
         depth="results/binning/metabat/depth.txt",
         bin="results/binning/metabat/bins/bin.1.fa"
     params:
-        prefix="results/binning/metabat/bins/bin"
+        prefix=lambda wildcards, output: os.path.join(os.path.dirname(output[1]), "bin")
     log: "logs/binning/metabat/metabat.log"
     conda:
         "../../../envs/metabat.yaml"
@@ -17,15 +17,3 @@ rule metabat:
         metabat -i {input.contigs} -a {output.depth} -o {params.prefix} --minContig 1500 -v > {log}
         """
 
-rule mmgenome_metabat:
-    input:
-        bin="results/binning/metabat/bins/bin.1.fa"
-    output:
-        "results/binning/metabat/metabat.bins.txt"
-    params:
-        dir="results/binning/metabat/bins"
-    log: "logs/metabat/mmgenome_metabat.log"
-    run:
-        shell("echo -e 'scaffold\tbin' > {output}")
-        shell("for file in `ls {params.dir}/*.fa` ; do noext=${{file%.fa}}; bin=$(basename ${{noext}}); awk -v bin=$bin '/^>/ {{split(substr($0,2),a,\":\"); print a[1] \"\\t\" bin;}}' $file;  done >> {output}")
-        shell("sed --in-place -e s/[.]//g {output} 2> {log}")

@@ -7,7 +7,7 @@ rule mash_sketch:
     output:
         "scratch/treatment/mash/{sample}.msh"
     params:
-       prefix="scratch/treatment/mash/{sample}"
+       prefix=lambda wildcards, output: os.path.join(os.path.dirname(str(output)),os.path.basename(str(output)))
     log: "logs/mash/mash_sketch_{sample}.log"
     conda: "../../../envs/mash.yaml"
     shell: "mash sketch -k 27 -s 10000 -o {params.prefix} -r {input.forward} {input.rev} 2> {log}"
@@ -18,7 +18,7 @@ rule mash_paste:
     output:
         "scratch/treatment/all.msh"
     params:
-       prefix="scratch/treatment/all"
+       prefix=lambda wildcards, output: os.path.join(os.path.dirname(str(output)), "all")
     log: "logs/mash/mash_paste.log"
     conda: "../../../envs/mash.yaml"
     shell: "mash paste {params.prefix} {input} 2> {log}"

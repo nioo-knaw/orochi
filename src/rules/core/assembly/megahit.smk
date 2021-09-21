@@ -9,7 +9,7 @@ if config['assembler']=='megahit':
             # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
             opts=protected("scratch/assembly/megahit/{treatment}/{kmers}/options.json")
         params:
-            dir="scratch/assembly/megahit/{treatment}/{kmers}/",
+            dir=lambda wildcards, output: os.path.dirname(output[0]),
             kmers = lambda wildcards: config["assembly-klist"][wildcards.kmers]
         log: "logs/assembly/megahit/{treatment}/{kmers}/megahit.log"
         threads: 80

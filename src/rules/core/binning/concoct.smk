@@ -19,7 +19,7 @@ rule concoct:
         coverage="results/stats/coverage/coverage.tsv"
     output: "results/binning/concoct/clustering_merged.csv"
     params:
-        outdir="results/binning/concoct/"
+        outdir=lambda wildcards, output: os.path.dirname(str(output))
     log: "logs/concoct/concoct.log"
     conda: "../../../envs/concoct.yaml"
     shell: "concoct --composition_file {input.contigs} --coverage_file {input.coverage} -b {params.outdir}"
@@ -30,7 +30,7 @@ rule concoct_write_bins:
         clusters="results/binning/concoct/clustering_merged.csv"
     output: "results/binning/concoct/bin1.fasta"
     params:
-        outdir="results/binning/concoct/"
+        outdir=lambda wildcards, output: os.path.dirname(str(output))
     log: "logs/concoct/concoct_write_bins.log"
     conda: "../../../envs/concoct.yaml"
     shell:

@@ -54,7 +54,7 @@ rule map_to_host:
     output:
         "scratch/host_filtering/{sample}.sam"
     params:
-        refindex=config["reference"]
+        refindex=lambda wildcards, input: os.path.splitext(input[2]) [0]
     conda: "../../../envs/bwa.yaml"
     log: "logs/filter/bwa_{sample}.log"
     threads: 16

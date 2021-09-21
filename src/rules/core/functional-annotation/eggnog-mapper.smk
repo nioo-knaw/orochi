@@ -2,13 +2,15 @@ rule move_proteins:
     input: "scratch/prodigal/proteins.faa"
     output: "results/annotation/emapper/proteins.faa"
     params:
-        outdir="results/annotation/emapper"
+        outdir=lambda wildcards, output: os.path.dirname(str(output))
     log: "logs/eggnog-mapper/move_proteins.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell: "cp {input} {params.outdir} 2> {log}"
 
 rule emapper_diamond:
     input:
-        "results/annotation/emapper/proteins.faa"
+        faa="results/annotation/emapper/proteins.faa"
     output:
         "results/annotation/emapper/proteins.faa.emapper.seed_orthologs"
     params:

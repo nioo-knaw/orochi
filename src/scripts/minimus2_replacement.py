@@ -38,4 +38,4 @@ with open('minimus2', 'a') as new:
             i = i+1
 
 os.chmod("minimus2", 0o777)
-os.replace('minimus2', path_to_read[0:-1])
+os.replace("minimus2", path_to_read[0:-1])

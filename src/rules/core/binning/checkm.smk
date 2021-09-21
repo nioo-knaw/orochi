@@ -5,8 +5,8 @@ rule checkm_lineage_metabat:
         "results/binning/metabat/checkm/completeness.tsv",
         "results/binning/metabat/checkm/concatenated.fasta"
     params:
-        indir="results/binning/metabat",
-        outdir="results/binning/metabat/checkm"
+        indir=lambda wildcards, input: os.path.dirname(os.path.dirname(str(input))),
+        outdir=lambda wildcards, output: os.path.dirname(output[0])
     log:
         "logs/binning/checkm_lineage_metabat.log"
     threads: 40

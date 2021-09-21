@@ -20,7 +20,7 @@ rule antismash:
         "results/annotation/antismash/secondary.contigs.gbk",
         "results/annotation/antismash/secondary.contigs.json"
     params:
-        outdir="results/annotation/antismash/"
+        outdir=lambda wildcards, output: os.path.dirname(output[0])
     conda:
         "../../../envs/antismash.yaml"
     log: "logs/bgcs/antismash.log"
@@ -34,6 +34,8 @@ rule get_bgcs:
     output:
         "scratch/annotation/antismash/bgcs.fasta"
     log: "logs/bgcs/get_bgcs.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
     script:
         "../../../scripts/antismash_get_bgcs.py"
 
@@ -55,8 +57,8 @@ rule bigscape:
     input:
         gbks="results/annotation/antismash/secondary.contigs.gbk"
     params:
-        inputdir="results/annotation/antismash",
-        outdir="results/annotation/bigscape"
+        inputdir=lambda wildcards, input: os.path.dirname(str(input)),
+        outdir=lambda wildcards, output: os.path.dirname(str(output))
     output:
         "results/annotation/bigscape/index.html"
     conda:

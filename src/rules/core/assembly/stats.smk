@@ -4,7 +4,7 @@ rule quast:
     output:
         quast="scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt",
     params:
-        outdir="scratch/assembly/{assembler}/{treatment}/{kmers}/quast"
+        outdir=lambda wildcards, output: os.path.dirname(str(output))
     log:
         "logs/assembly/{assembler}/{treatment}/{kmers}/quast/quast.log"
     conda:
@@ -21,6 +21,8 @@ rule quast_format:
         "logs/stats/{assembler}/{treatment}/{kmers}/quast_format.log"
     params:
        run="{assembler}-{treatment}-{kmers}"
+    conda:
+        "../../../envs/orochi-base.yaml"
     shell: "printf '{params.run}\t' > {output} && cat {input} | sed 's/   */:/g' | cut -d : -f 2 | tr '\n' '\t' | cut -f 2- >> {output} 2> {log}"
 
 rule quast_merge:
