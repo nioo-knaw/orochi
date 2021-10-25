@@ -24,7 +24,7 @@ rule vamb_map:
              else "scratch/filter/{sample}_R1.fasta",
         rev="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
              else "scratch/filter/{sample}_R2.fasta"
-    output: "scratch/binning/vamb/{sample}.bam"
+    output: temp("scratch/binning/vamb/{sample}.bam")
     conda: "../../../envs/minimap2.yaml"
     log: "logs/vamb/vamb_map_{sample}.log"
     shell:
