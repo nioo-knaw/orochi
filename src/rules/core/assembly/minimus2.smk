@@ -2,7 +2,7 @@ rule merge_assemblies:
     input:
         expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        "scratch/assembly/megahit/minimus2/primary.contigs.fa"
+        "temp(scratch/assembly/megahit/minimus2/primary.contigs.fa")
     log:
         "logs/assembly/megahit/minimus2/merge_assemblies.log"
     conda:
@@ -14,7 +14,7 @@ rule save_smalls:
     input: 
         "scratch/assembly/megahit/minimus2/primary.contigs.fa"
     output:
-        "scratch/assembly/megahit/minimus2/primary.short.contigs.fa"
+        temp("scratch/assembly/megahit/minimus2/primary.short.contigs.fa")
     log:
         "logs/assembly/megahit/minimus2/save_smalls.log"
     conda:
@@ -28,7 +28,7 @@ rule filter_contigs:
     input:
         "scratch/assembly/megahit/minimus2/primary.contigs.fa"
     output:
-        "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
+        temp("scratch/assembly/megahit/minimus2/primary.long.contigs.fa")
     params:
         length=config["filter_contigs_length"]
     log:
@@ -56,7 +56,7 @@ rule contig_rename:
     input:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.fa"
     output:
-        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fa"
+        temp("scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fa")
     log:
         "logs/assembly/megahit/minimus2/contig_rename.log"
     conda:
@@ -68,7 +68,7 @@ rule toAmos:
     input:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fa"
     output:
-        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg"
+        temp("scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg")
     conda:
         "../../../envs/amos.yaml"
     log:
@@ -99,8 +99,8 @@ rule minimus2:
         file= "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.afg",
         rule = rules.minimus2_setup.output
     output:
-        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fasta",
-        "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.singletons.seq"
+        temp("scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fasta"),
+        temp("scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.singletons.seq")
     conda:
         "../../../envs/amos.yaml"
     log:
@@ -113,7 +113,7 @@ rule minimus2_merge:
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.fasta",
         "scratch/assembly/megahit/minimus2/primary.long.contigs.99.renamed.singletons.seq"
     output:  
-        "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
+        temp("scratch/assembly/megahit/minimus2/secondary.contigs.fasta")
     log:
         "logs/assembly/megahit/minimus2/minimus2_merge.log"
     conda:
@@ -125,7 +125,7 @@ rule readd_smalls:
     input:
         short="scratch/assembly/megahit/minimus2/primary.short.contigs.fa",
         merged="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
-    output: "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
+    output: temp("scratch/assembly/megahit/minimus2/all.merged.contigs.fasta")
     log:
         "logs/assembly/megahit/minimus2/readd_smalls.log"
     conda:
