@@ -3,8 +3,8 @@ rule filter:
         forward="scratch/unpack/{sample}_1.fastq",
         rev="scratch/unpack/{sample}_2.fastq"
      output:
-        forward="scratch/filter/{sample}_R1.fq",
-        rev="scratch/filter/{sample}_R2.fq",
+        forward=temp("scratch/filter/{sample}_R1.fq"),
+        rev=temp("scratch/filter/{sample}_R2.fq"),
         stats="scratch/stats/{sample}_contaminants_stats.txt"
      params:
          phix="refs/phix.fasta",
@@ -28,8 +28,8 @@ rule phix_removal:
         forward="scratch/filter/{sample}_R1.fq",
         rev="scratch/filter/{sample}_R2.fq",
     output:
-        forward="scratch/filter/{sample}_R1.nophix.fq",
-        rev="scratch/filter/{sample}_R2.nophix.fq",
+        forward=temp("scratch/filter/{sample}_R1.nophix.fq"),
+        rev=temp("scratch/filter/{sample}_R2.nophix.fq"),
     params:
         ref = "src/refs/phix174_ill.ref.fa.gz",
     log: "logs/filter/phix_removal_{sample}.log"
