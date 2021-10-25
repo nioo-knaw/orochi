@@ -69,7 +69,7 @@ rule bigscape:
         """
         git clone https://git.wur.nl/medema-group/BiG-SCAPE.git
         cd BiG-SCAPE
-        wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam32.0/Pfam-A.hmm.gz && gunzip Pfam-A.hmm.gz
+        wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/releases/Pfam33.1/Pfam-A.hmm.gz && gunzip Pfam-A.hmm.gz
         hmmpress Pfam-A.hmm
         python bigscape.py -i ../{params.inputdir} -o ../{params.outdir} -c {threads} --mode glocal --mibig --include_singletons --cores {threads} --mix
         """
