@@ -2,7 +2,7 @@ rule quast:
     input:
         "scratch/assembly/{assembler}/{treatment}/{kmers}/assembly.fa.gz"
     output:
-        quast="scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt",
+        quast=temp("scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt"),
     params:
         outdir=lambda wildcards, output: os.path.dirname(str(output))
     log:
@@ -16,7 +16,7 @@ rule quast_format:
     input:
         "scratch/assembly/{assembler}/{treatment}/{kmers}/quast/report.txt"
     output:
-        "scratch/stats/{assembler}/{treatment}/{kmers}/quast.report.txt"
+        temp("scratch/stats/{assembler}/{treatment}/{kmers}/quast.report.txt")
     log:
         "logs/stats/{assembler}/{treatment}/{kmers}/quast_format.log"
     params:
