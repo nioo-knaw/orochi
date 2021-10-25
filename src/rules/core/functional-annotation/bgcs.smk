@@ -2,7 +2,7 @@ rule filter_contigs_antismash:
     input:
         "scratch/assembly/megahit/minimus2/primary.contigs.fa"
     output:
-        "scratch/annotation/antismash/secondary.contigs.fa"
+        temp("scratch/annotation/antismash/secondary.contigs.fa")
     params:
         length=config["filter_contigs_antismash"]
     conda:
@@ -17,8 +17,8 @@ rule antismash:
         #expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
         "scratch/annotation/antismash/secondary.contigs.fa"
     output:
-        "results/annotation/antismash/secondary.contigs.gbk",
-        "results/annotation/antismash/secondary.contigs.json"
+        temp("results/annotation/antismash/secondary.contigs.gbk"),
+        temp("results/annotation/antismash/secondary.contigs.json")
     params:
         outdir=lambda wildcards, output: os.path.dirname(output[0])
     conda:
@@ -32,7 +32,7 @@ rule get_bgcs:
     input:
         "results/annotation/antismash/secondary.contigs.json"
     output:
-        "scratch/annotation/antismash/bgcs.fasta"
+        temp("scratch/annotation/antismash/bgcs.fasta")
     log: "logs/bgcs/get_bgcs.log"
     conda:
         "../../../envs/orochi-base.yaml"
