@@ -5,7 +5,7 @@ if config['assembler']=='megahit':
             rev = "scratch/treatment/{treatment}_rev.fastq",
     #        unpaired = "scratch/treatment/{treatment}_unpaired.fastq"
         output:
-            contigs="scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",
+            contigs=temp("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"),
             # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
             opts=protected("scratch/assembly/megahit/{treatment}/{kmers}/options.json")
         params:
@@ -21,7 +21,7 @@ if config['assembler']=='megahit':
         input:
             "scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa"
         output:
-            gzip="scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz",
+            gzip=temp("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa.gz"),
             fasta=temp("scratch/assembly/megahit/{treatment}/{kmers}/assembly.fa")
         log:
             "logs/assembly/megahit/{treatment}/{kmers}/rename_megahit.log"
