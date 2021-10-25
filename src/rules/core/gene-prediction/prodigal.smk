@@ -2,9 +2,9 @@ rule predict_genes:
     input:
         "scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output:
-        gbk="scratch/prodigal/coords.gbk",
-        proteins="scratch/prodigal/proteins.faa",
-        nucleotide="scratch/prodigal/orfs.fna",
+        gbk=temp("scratch/prodigal/coords.gbk"),
+        proteins=temp("scratch/prodigal/proteins.faa"),
+        nucleotide=temp("scratch/prodigal/orfs.fna"),
     log:
         "logs/prodigal.log"
     conda: 
