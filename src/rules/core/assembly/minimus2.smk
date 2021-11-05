@@ -2,7 +2,7 @@ rule merge_assemblies:
     input:
         expand("scratch/assembly/megahit/{treatment}/{kmers}/final.contigs.fa",treatment=config["treatment"], kmers=config["assembly-klist"])
     output:
-        "temp(scratch/assembly/megahit/minimus2/primary.contigs.fa")
+        temp("scratch/assembly/megahit/minimus2/primary.contigs.fa")
     log:
         "logs/assembly/megahit/minimus2/merge_assemblies.log"
     conda:
