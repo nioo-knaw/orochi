@@ -7,7 +7,7 @@ rule CAT:
         "results/annotation/CAT/assembly.predicted_proteins.gff",
         "results/annotation/CAT/assembly.predicted_proteins.faa",
         "results/annotation/CAT/assembly.ORF2LCA.txt",
-        "results/annotation/CAT/assembly.contig2classification.txt",
+        temp("results/annotation/CAT/assembly.contig2classification.txt"),
     params:
         db=config['CAT_database'],
         tax=config['CAT_taxonomy'],

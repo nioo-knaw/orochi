@@ -5,7 +5,7 @@ rule mash_sketch:
         rev="scratch/host_filtering/{sample}_R2.fastq" if config['host_removal'] \
             else "scratch/filter/{sample}_R2.fq",
     output:
-        "scratch/treatment/mash/{sample}.msh"
+        temp("scratch/treatment/mash/{sample}.msh")
     params:
        prefix=lambda wildcards, output: os.path.join(os.path.dirname(str(output)),os.path.basename(str(output)))
     log: "logs/mash/mash_sketch_{sample}.log"
@@ -16,7 +16,7 @@ rule mash_paste:
     input:
         expand("scratch/treatment/mash/{sample}.msh", sample=config["data"])
     output:
-        "scratch/treatment/all.msh"
+        temp("scratch/treatment/all.msh")
     params:
        prefix=lambda wildcards, output: os.path.join(os.path.dirname(str(output)), "all")
     log: "logs/mash/mash_paste.log"
@@ -25,7 +25,7 @@ rule mash_paste:
 
 rule mash_dist:
     input: "scratch/treatment/all.msh"
-    output: "results/stats/mash/table.txt"
+    output: temp("results/stats/mash/table.txt")
     log: "logs/mash/mash_dist.log"
     conda: "../../../envs/mash.yaml"
     shell: "mash dist -t {input} {input} > {output} 2> {log}"

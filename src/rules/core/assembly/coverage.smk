@@ -6,7 +6,7 @@ rule bamfiles:
              else "scratch/filter/{sample}_R2.fq",
         assembly = "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
     output:
-        "scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam"
+        temp("scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam")
     params:
         outdir=lambda wildcards, output: os.path.dirname(str(output))
     log:
