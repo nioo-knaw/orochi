@@ -1,6 +1,14 @@
+rule pre_metabat:
+    input: "scratch/assembly/megahit/minimus2/all.merged.contigs.fasta"
+    output: "scratch/assembly/megahit/minimus2/filtered_assembly.fasta"
+    log: "logs/binning/metabat/pre_metabat.log"
+    conda: "../../../envs/orochi-base.yaml"
+    threads: 16
+    shell: "python src/scripts/assembly_rmdup.py"
+
 rule metabat:
     input: 
-        contigs="scratch/assembly/megahit/minimus2/all.merged.contigs.fasta",
+        contigs="scratch/assembly/megahit/minimus2/filtered_assembly.fasta",
         bam=expand("scratch/coverm/bamfiles/all.merged.contigs.fasta.{sample}_R1.fastq.bam", sample=config["data"]) 
     output:
         depth="results/binning/metabat/depth.txt",
@@ -13,7 +21,8 @@ rule metabat:
     threads: 16
     shell: 
         """
+        mkdir results/binning/metabat
         jgi_summarize_bam_contig_depths --outputDepth {output.depth} {input.bam}
-        metabat -i {input.contigs} -a {output.depth} -o {params.prefix} --minContig 1500 -v > {log}
+        metabat2 -i {input.contigs} -a {output.depth} -o {params.prefix} -v > {log}
         """
 
