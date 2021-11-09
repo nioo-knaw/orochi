@@ -8,7 +8,8 @@ before_script:
   - conda config --add channels bioconda
   - conda clean -a -y
   - conda clean --tarballs -y
-  - mamba install snakemake click==7.0 rpy2
+  #- mamba install snakemake click==7.0 rpy2
+  - conda install snakemake click==7.0 rpy2
 
 stages:
     - rulegraph
