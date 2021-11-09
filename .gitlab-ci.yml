@@ -9,14 +9,13 @@ before_script:
   - conda clean -a -y
   - conda clean --tarballs -y
   - mamba install snakemake #click==7.0 rpy2
-  #- conda install snakemake click==7.0 rpy2
 
 stages:
     - rulegraph
     - dryrun
     - linting
-    - run
     - nohostfiltering
+    - run
     - cat
     
 # DAG
