@@ -2,14 +2,14 @@ image: continuumio/miniconda3
 
 before_script:
   - conda config --add channels conda-forge
-  - conda install -c conda-forge mamba==0.7.14
+  - conda install -c conda-forge mamba==0.17.0
   - conda config --add channels defaults
   - conda config --add channels r
   - conda config --add channels bioconda
   - conda clean -a -y
   - conda clean --tarballs -y
-  #- mamba install snakemake click==7.0 rpy2
-  - conda install snakemake click==7.0 rpy2
+  - mamba install snakemake click==7.0 rpy2
+  #- conda install snakemake click==7.0 rpy2
 
 stages:
     - rulegraph
