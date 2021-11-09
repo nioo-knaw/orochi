@@ -15,8 +15,8 @@ stages:
     - dryrun
     - linting
     - nohostfiltering
-    - run
     - cat
+    - run
     
 # DAG
 rulegraph:
