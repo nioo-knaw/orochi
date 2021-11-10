@@ -34,6 +34,6 @@ rule mmgenome_metabat:
     params:
         dir="results/binning/metabat/bins"
     run:
-        shell("echo -e 'scaffold\tbin' > {output}"),
-        shell("for file in `ls {params.dir}/*.fa` ; do noext=${file%.fa}; bin=$(basename ${noext}); awk -v bin=$bin '/^>/ {split(substr($0,2),a; print a[1] "\t" bin;}' $file;  done >> {output}"),
+        shell("echo -e 'scaffold\tbin' > {output}")
+        shell("for file in `ls {params.dir}/*.fa` ; do noext=${file%.fa}; bin=$(basename ${noext}); awk -v bin=$bin '/^>/ {split(substr($0,2),a; print a[1] "\t" bin;}' $file;  done >> {output}")
         shell("sed --in-place -e s/[.]//g {output}")
