@@ -33,6 +33,11 @@ rule mmgenome_metabat:
         "results/binning/metabat/metabat.bins.txt"
     params:
         dir="results/binning/metabat/bins"
+        dir=lambda wildcards, output: os.path.join(os.path.dirname(output), "bins")
+    log: "logs/binning/metabat/mmgenome_metabat.log"
+    conda:
+        "../../../envs/orochi-base.yaml"
+    threads: 16
     shell:
         """
         echo -e 'scaffold\tbin' > {output}
