@@ -3,7 +3,7 @@ rule das:
         #concoct="",
         #groopm="",
         #maxbin="",
-        #metabat="results/binning/metabat/metabat.bins.txt",
+        metabat="results/binning/metabat/metabat.bins.txt",
         vamb="results/binning/vamb/clusters.tsv",
         contigs="scratch/assembly/megahit/minimus2/secondary.contigs.fasta"
     output: 
@@ -17,20 +17,12 @@ rule das:
         "../../../envs/dastool.yaml"
     shell:
         """
-        DAS_Tool -i {input.vamb}
-                 -l vamb
+        DAS_Tool -i {input.metabat},{input.vamb}
+                 -l metabat,vamb
                  -c {input.contigs}
                  -o {params.outprefix}
                  --write_bins 1
+                 --search_engine diamond
+                 -t 24
                  2> {log}
         """
-#    shell:
-#        """
-#        DAS_Tool -i {input.metabat},
-#                    {input.vamb}
-#                 -l metabat,vamb
-#                 -c {input.contigs}
-#                 -o {params.outprefix}
-#                 --write_bins 1
-#                 2> {log}
-#        """
