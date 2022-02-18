@@ -30,10 +30,11 @@ rule mmgenome_metabat:
     input:
         bin="results/binning/metabat/bins/bin.1.fa"
     output:
-        "results/binning/metabat/metabat.bins.txt"
+        bins="results/binning/metabat/metabat.bins.txt",
+        non_used=".metabat_done.txt"
     params:
-        dir="results/binning/metabat/bins"
-        dir=lambda wildcards, output: os.path.join(os.path.dirname(output), "bins")
+        #dir="results/binning/metabat/bins"
+        dir=lambda wildcards, output: os.path.join(os.path.dirname(output[0]), "bins")
     log: "logs/binning/metabat/mmgenome_metabat.log"
     conda:
         "../../../envs/orochi-base.yaml"
