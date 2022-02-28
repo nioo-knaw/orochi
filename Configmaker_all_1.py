@@ -4,18 +4,14 @@
 project = str(input("Name of your project (leave blank to use default): "))
 if project == "":
     project_line = "\"project\" : " +"\"" + "My_project" +"\","
-    #print(project_line)
 else:
     project_line = "\"project\" : " +"\"" + project +"\","
-    #print(project_line)
 
 host_removal = str(input("Do you want to remove host DNA from the analysis? (yes/no): "))
 if host_removal == "yes":
     host_removal_line = "\"host_removal\" : " + "True" + ","
-    #print(host_removal_line)
 elif host_removal == "no":
     host_removal_line = "\"host_removal\" : " + "False" + ","
-    #print(host_removal_line)
 else:
     print("Error: unvalid option, please type'yes' or 'no'")
 
@@ -23,28 +19,23 @@ reference = str(input("Do you have your own reference genome? (yes/no): "))
 if reference == "no":
     reference_line = "\"reference\" : " +"\"" + "data/test-data/reference/beta-vulgaris-subset.fasta" +"\","
     reference_index_line = "\"reference_index\" : " +"\"" + "/data/shared/genomes/Eukaryotes/Phaseolus_vulgaris/GCA_000499845.1_PhaVulg1_0_genomic" +"\","
-    #print(reference_line)
-    #print(reference_index_line)
+
 elif reference == "yes":
     own_ref = str(input("Path to your reference genome: "))
     own_ref_index = str(input("Path to the index file of your reference genome: "))
     reference_line = "\"reference\" : " +"\"" + own_ref +"\","
     reference_index_line = "\"reference_index\" : " +"\"" + own_ref_index +"\","
-    #print(reference_line)
-    #print(reference_index_line)
 
 assembler = str(input("Choose an assembler (megahit/spades) (Default is megahit): "))
 if assembler == "megahit" or assembler == "":
     assembler_line = "\"assembler\" : " +"\"" + "megahit" +"\","
-    #print(assembler_line)
 elif assembler == "spades":
     assembler_line = "\"assembler\" : " +"\"" + assembler +"\","
-    #print(assembler_line)
 else:
     print("Error: please type a valid option")
 
-x_0 = "{{{0} " ## Abrir dict
-x_1 = "}}{0}" ## Cerrar dict
+x_0 = "{{{0} " ## Open dict
+x_1 = "}}{0}" ## Close dict
 tmpdir_line = "\"tmpdir\" : " +"\"" + "/tmp" +"\","
 adapters_line = "\"adapters\" : " +"\"" + "/data/shared/tools/Trimmomatic/0.36/adapters/NexteraPE-PE.fa" +"\","
 min_qual_line = "\"min_qual\" : " +"\"" + "30" +"\","
@@ -65,13 +56,10 @@ treatment_line = "\"treatment\" : "
 
 import os
 data_path = str(input("Where are your input files? (Please follow the format /path/) (Leave blank to use default): "))
-#print(data_path)
 if data_path == "":
-    data_path_line = 'Documents/data/' #Parece que se puede dejar el punto
-    #print(data_path_line)
+    data_path_line = 'data/'
 else:
     data_path_line = data_path
-    #print(data_path_line)
 
 files = os.listdir(data_path_line)
 for i in files:
@@ -85,11 +73,7 @@ for i in files:
         forward_list.append(i)
     elif "_R2_" in i:
         reverse_list.append(i)
-#print(forward_list)
-#print(reverse_list)
-### Ya quede con dos listas, una con los elementos de forward y otra con los de reverse, todos ordenados
 
-### Ahora necesito sacar el nombre con el que va a quedar cada linea
 
 lista_para_nombresdelinea = files
 main_name_list = list()
