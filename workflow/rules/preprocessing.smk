@@ -11,6 +11,8 @@ rule fastp:
             report = "01_trimmed_reads/quality_reports/{sample}.html"
         params:
             report_name = lambda wildcards:"{wildcard.sample}"
+        conda:
+            "../envs/preprocessing.yaml"
         shell:
             "time fastp -i {input.fq1} -I {input.fq2} -o {output.cleanF} -O {output.cleanR} \
                         -h {output.report} -R {params.report_name} -y -l 30 -r --cut_window_size 4 \
@@ -36,6 +38,8 @@ rule filter_host:
             filterR = "02_filtered_reads/{sample}_filt_2.fastq.gz"
         params:
             threads=config['threads']
+        conda:
+            "../envs/preprocessing.yaml"
         shell:
             "time bbmap.sh -Xmx52g threads={params.threads} minid=0.95 maxindel=3 \
                            in1={input.readF} in2={input.readR} \
