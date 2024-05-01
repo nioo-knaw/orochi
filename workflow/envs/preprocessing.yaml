@@ -1,0 +1,5 @@
+channels:
+  - conda-forge
+dependencies:
+  - fastp=0.23.4
+  - bbmap=39.06
