@@ -18,7 +18,7 @@ samples = (
 # for smk,rule in smks:
 #     include: smk
 
-include: "rules/core/preprocessing/preprocessing.smk"
+include: "rules/preprocessing.smk"
 # include: "rules/core/preprocessing/common.smk"
 # # Load extensions
 # for ext, rule in list(listfiles('workflow/rules/extensions/{section}/{part}.smk')):
