@@ -3,7 +3,7 @@
 
 # The path to the sample sheet (TSV format) that contains the sample information.
 # The sample sheet should contain the following columns: SampleID, Fastq1, Fastq2, Group, and Condition.
-samples: config/samples.tsv
+samples: "config/samples.tsv"
 
 # The path to the temporary directory.
 tmpdir: /tmp
@@ -21,7 +21,7 @@ min_length: 150
 host_removal: True
 
 # host_genome: The path to the host genome.
-host_genome: /path/to/host/genome
+host_genome: "resources/data/reference/beta-vulgaris-subset.fasta"
 
 # host_index: The path to the host genome index.
 host_index: /path/to/host/genome/index
