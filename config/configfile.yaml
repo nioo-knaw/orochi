@@ -3,10 +3,13 @@
 
 # The path to the sample sheet (TSV format) that contains the sample information.
 # The sample sheet should contain the following columns: SampleID, Fastq1, Fastq2, Group, and Condition.
-samples: config/sample_sheet.tsv
+samples: config/samples.tsv
 
 # The path to the temporary directory.
 tmpdir: /tmp
+
+# The default number of threads to use for each rule.
+threads: 32
 
 # min_qual: The minimum quality score for trimming.
 min_qual: 30
