@@ -40,7 +40,7 @@ include: "rules/preprocessing.smk"
 #         output.append(file)
 
 rule all:
-    input: "02_filtered_reads/B55_filt_1.fastq.gz"
+    input: "results/02_filtered_reads/B55_filt_1.fastq.gz"
 
     # input: expand(output,
     #               sample=config["data"],
