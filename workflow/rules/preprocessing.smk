@@ -8,7 +8,7 @@ rule fastp:
         output:
             cleanF = temp("results/01_trimmed_reads/{sample}_trim_1.fastq.gz"),
             cleanR = temp("results/01_trimmed_reads/{sample}_trim_2.fastq.gz"),
-            report = "01_trimmed_reads/quality_reports/{sample}.html"
+            report = "results/01_trimmed_reads/quality_reports/{sample}.html"
         params:
             report_name = lambda wildcards:"{wildcard.sample}"
         conda:
