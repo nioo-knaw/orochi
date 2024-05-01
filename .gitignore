@@ -16,3 +16,6 @@
 # Virtual environments
 venv/
 .venv/
+
+# Snakemake conda environments
+.snakemake/
