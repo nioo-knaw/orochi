@@ -1,44 +1,52 @@
-__author__ = "Mattias de Hollander"
-__copyright__ = "Copyright 2020, Mattias de Hollander"
-__email__ = "m.dehollander@nioo.knaw.nl"
-__license__ = "GNU GPLv3"
-
 from snakemake.utils import R, listfiles
+import pandas as pd
+import os
 
-if os.path.isfile("config.json"):
-    configfile: "config.json"
 
-# Dynamically load all modules/rules
-smks = list(listfiles('src/rules/core/{section}/{part}.smk'))
+if os.path.isfile("config/configfile.yaml"):
+    configfile: "config/configfile.yaml"
 
-for smk,rule in smks:
-    include: smk
+samples = (
+    pd.read_csv(config["samples"], sep="\t", dtype={"sample": str})
+    .set_index("sample", drop=False)
+    .sort_index()
 
-# Load extensions
-for ext, rule in list(listfiles('src/rules/extensions/{section}/{part}.smk')):
-    section, name = rule
-    if section in ["antismash"]:
-        include: ext
+)
+# # Dynamically load all modules/rules
+# smks = list(listfiles('rules/core/{section}/{part}.smk'))
+#
+# for smk,rule in smks:
+#     include: smk
+
+include: "rules/core/preprocessing/preprocessing.smk"
+# include: "rules/core/preprocessing/common.smk"
+# # Load extensions
+# for ext, rule in list(listfiles('workflow/rules/extensions/{section}/{part}.smk')):
+#     section, name = rule
+#     if section in ["antismash"]:
+#         include: ext
 
 #Load report
 #
-#for rpt, rule in list(listfiles('src/rules/report/{part}.smk')):
+#for rpt, rule in list(listfiles('workflow/rules/report/{part}.smk')):
 #    name = rule
 #    include: rpt
 #
 
 # Dynamically add all output files
-output = []
-for name,rule in rules.__dict__.items():
-    for file in rule.output:
-        output.append(file)
+# output = []
+# for name,rule in rules.__dict__.items():
+#     for file in rule.output:
+#         output.append(file)
 
-rule final:
-    input: expand(output,\
-                  sample=config["data"],\
-                  treatment=config["treatment"],\
-                  assembler=config["assembler"],\
-                  binner=config["binner"],\
-                  kmers=config["assembly-klist"]\
-                 )
+rule all:
+    input: "02_filtered_reads/A_filt_1.fastq.gz"
+
+    # input: expand(output,
+    #               sample=config["data"],
+    #               treatment=config["treatment"],
+    #               assembler=config["assembler"],
+    #               binner=config["binner"],
+    #               kmers=config["assembly-klist"]
+    #              )
 
