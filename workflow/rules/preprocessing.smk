@@ -8,14 +8,15 @@ rule fastp:
         output:
             cleanF = temp("results/01_trimmed_reads/{sample}_trim_1.fastq.gz"),
             cleanR = temp("results/01_trimmed_reads/{sample}_trim_2.fastq.gz"),
-            report = "results/01_trimmed_reads/quality_reports/{sample}.html"
+            report_html = "results/01_trimmed_reads/quality_reports/{sample}.html",
+            report_json = "results/01_trimmed_reads/quality_reports/{sample}.json"
         params:
             report_name = lambda wildcards:"{wildcard.sample}"
         conda:
             "../envs/preprocessing.yaml"
         shell:
             "time fastp -i {input.fq1} -I {input.fq2} -o {output.cleanF} -O {output.cleanR} \
-                        -h {output.report} -R {params.report_name} -y -l 30 -r --cut_window_size 4 \
+                        -h {output.report_html} -j {output.report_json} -R {params.report_name} -y -l 30 -r --cut_window_size 4 \
                         --cut_mean_quality 23 --n_base_limit 0"
 
 rule concat_host_phix:

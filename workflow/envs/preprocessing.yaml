@@ -1,3 +1,4 @@
+name: orochi_preprocessing
 channels:
   - conda-forge
 dependencies:
