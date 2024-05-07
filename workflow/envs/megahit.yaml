@@ -1,0 +1,5 @@
+name: orochi_megahit
+channels:
+  - bioconda
+dependencies:
+  - megahit
