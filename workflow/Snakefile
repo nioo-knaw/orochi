@@ -19,6 +19,7 @@ samples = (
 #     include: smk
 
 include: "rules/preprocessing.smk"
+include: "rules/coassembly.smk"
 # include: "rules/core/preprocessing/common.smk"
 # # Load extensions
 # for ext, rule in list(listfiles('workflow/rules/extensions/{section}/{part}.smk')):
@@ -34,14 +35,14 @@ include: "rules/preprocessing.smk"
 #
 
 # Dynamically add all output files
-# output = []
+# outfiles = []
 # for name,rule in rules.__dict__.items():
 #     for file in rule.output:
-#         output.append(file)
+#         outfiles.append(file)
 
 rule all:
-    input:
-        "results/02_filtered_reads/B55_filt_1.fastq.gz"
+    input: "results/03_coassembly/1/final.contigs.fa"
+
 
 
     # input: expand(output,
