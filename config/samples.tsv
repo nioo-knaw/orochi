@@ -1,3 +1,4 @@
 sample	treatment1	treatment2	fq1	fq2
 B55	pathogenA	iron	resources/data/B55_1.fq.gz	resources/data/B55_2.fq.gz
 B57	pathogenB	no_iron	resources/data/B57_1.fq.gz	resources/data/B57_2.fq.gz
+B83	pathogenA	no_iron	resources/data/B83_1.fq.gz	resources/data/B83_2.fq.gz
