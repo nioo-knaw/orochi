@@ -2,26 +2,26 @@
 import os
 
 if config['sample_pooling']=='supervised':
+    def get_forward_files(wildcards):
+        return ["results/02_filtered_reads/" + sample + "_filt_1.fastq.gz" for sample in
+                samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values]
+
+
+    def get_rev_files(wildcards):
+        return ["results/02_filtered_reads/" + sample + "_filt_2.fastq.gz" for sample in
+                samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values]
+
+
     rule supervised_pooling:
         input:
-            forward=lambda wildcards: expand("results/02_filtered_reads/{sample}_filt_1.fastq.gz", sample=samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values),
-            rev=lambda wildcards: expand("results/02_filtered_reads/{sample}_filt_2.fastq.gz", sample=samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values)
+            forward=get_forward_files,
+            rev=get_rev_files
         output:
-            forward = "results/03_assembly/coassembly/pools/{sample_pool}_forward.fastq",
-            rev = "results/03_assembly/coassembly/pools/{sample_pool}_rev.fastq",
-        # log:
-        #     forward = "logs/pool/merge_per_treatment_{sample_pool}_forward.log",
-        #     rev = "logs/pool/merge_per_treatment_{sample_pool}_rev.log"
+            forward="results/03_assembly/coassembly/pools/{sample_pool}_forward.fastq",
+            rev="results/03_assembly/coassembly/pools/{sample_pool}_rev.fastq"
         run:
-            if len({input.forward}) > 1:
-                shell("cat {input.forward}  > {output.forward}") # 2> {log.forward}")
-                shell("cat {input.rev}  > {output.rev}") # 2> {log.rev}")
-            else:
-                shell("ln -s {input.forward} {output.forward}")
-                shell("ln -s {input.rev} {output.rev}")
-            # shell("cat {input.forward}  > {output.forward}") # 2> {log.forward}")
-            # shell("cat {input.rev}  > {output.rev}") # 2> {log.rev}")
-
+            shell("cat {input.forward} > {output.forward}")
+            shell("cat {input.rev} > {output.rev}")
 
 # if config['sample_pooling'] == 'simka':
 #     rule simka_pooling:
