@@ -41,7 +41,8 @@ include: "rules/coassembly.smk"
 #         outfiles.append(file)
 
 rule all:
-    input: "results/03_coassembly/1/final.contigs.fa"
+    input: "results/03_assembly/coassembly/megahit_assembly/assembly_A/A_final.contigs.fa",
+           "results/03_assembly/coassembly/megahit_assembly/assembly_B/B_final.contigs.fa"
 
 
 
