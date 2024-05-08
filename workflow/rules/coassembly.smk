@@ -13,8 +13,8 @@ if config['sample_pooling']=='supervised':
         #     forward = "logs/pool/merge_per_treatment_{sample_pool}_forward.log",
         #     rev = "logs/pool/merge_per_treatment_{sample_pool}_rev.log"
         run:
-            shell("cat {input.forward}  > {output.forward} 2> {log.forward}")
-            shell("cat {input.rev}  > {output.rev} 2> {log.rev}")
+            shell("cat {input.forward}  > {output.forward}") # 2> {log.forward}")
+            shell("cat {input.rev}  > {output.rev}") # 2> {log.rev}")
 
 
 # if config['sample_pooling'] == 'simka':
