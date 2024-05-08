@@ -45,7 +45,7 @@ min_contig_length: 1000
 min_contig_antismash: 5000
 
 # assembly_method: The assembly method to use. Options: single assembly (spades), co-assembly (megahit).
-assembly_method: co-assembly
+assembly_method: single assembly
 
 # sample_pooling: The sample pooling method to use. Options: supervised, unsupervised.
 sample_pooling: supervised
