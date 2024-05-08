@@ -4,9 +4,9 @@ if config['assembly_method']=='single assembly':
             forward = "results/02_filtered_reads/{sample}_filt_1.fastq.gz",
             rev = "results/02_filtered_reads/{sample}_filt_2.fastq.gz",
         output:
-            "results/03_single_sample_assembly/{sample}/contigs.fasta",
+            "results/03_assembly/single_sample_assembly/{sample}/contigs.fasta",
         params:
-            outdir = "results/03_single_sample_assembly/{sample}",
+            outdir = "results/03_assembly/single_sample_assembly/{sample}",
             kmers = config['kmers'],
         conda:
             "../envs/single_assembly.yaml"
@@ -16,8 +16,8 @@ if config['assembly_method']=='single assembly':
         input:
             contigs = rules.spades.output
         output:
-            gzip = protected("results/03_single_sample_assembly/{sample}/assembly.fasta.gz"),
-            fasta = temp("results/03_single_sample_assembly/{sample}/assembly.fasta")
+            gzip = protected("results/03_assembly/single_sample_assembly/{sample}/assembly.fasta.gz"),
+            fasta = temp("results/03_assembly/single_sample_assembly/{sample}/assembly.fasta")
         run:
             shell("cat {input.contigs} | awk '{{print $1}}' | sed 's/NODE/contig/' > {output.fasta}")
             shell("gzip -c {output.fasta} > {output.gzip}")
