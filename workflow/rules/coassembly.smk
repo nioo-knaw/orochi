@@ -47,7 +47,7 @@ if config['assembly_method']=='coassembly':
         threads: 32
         conda:
             "../envs/megahit.yaml"
-        shell:"megahit --out-dir results/03_assembly/coassembly/megahit_assembly/assembly_{wildcards.sample_pool}/{wildcards.sample_pool}_final.contigs.fa -m 0.9 -t {threads} --presets meta-large -1 {input.forward} -2 {input.rev}"
+        shell:"megahit --out-dir results/03_assembly/coassembly/megahit_assembly/assembly_{sample_pool}/{sample_pool}_final.contigs.fa -m 0.9 -t {threads} --presets meta-large -1 {input.forward} -2 {input.rev}"
 
     # rule rename_megahit:
     #     input:
