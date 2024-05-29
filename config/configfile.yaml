@@ -26,6 +26,9 @@ host_genome: "resources/data/reference/beta-vulgaris-subset.fasta"
 # host_index: The path to the host genome index.
 host_index: /path/to/host/genome/index
 
+# bbmap_D: The desired kmer depth for read normalisation
+bbmap_D: 20
+
 # emapper_database: The path to the eggNOG database.
 emapper_database: /path/to/emapper/database
 
@@ -44,7 +47,7 @@ min_contig_length: 1000
 # min_contig_antismash: The minimum length of the contigs for antiSMASH analysis.
 min_contig_antismash: 5000
 
-# assembly_method: The assembly method to use. Options: single assembly (spades), co-assembly (megahit).
+# assembly_method: The assembly method to use. Options: single assembly (spades), coassembly (megahit).
 assembly_method: single assembly
 
 # sample_pooling: The sample pooling method to use. Options: supervised, unsupervised.
