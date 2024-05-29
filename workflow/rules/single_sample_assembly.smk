@@ -21,3 +21,15 @@ if config['assembly_method']=='single assembly':
         run:
             shell("cat {input.contigs} | awk '{{print $1}}' | sed 's/NODE/contig/' > {output.fasta}")
             shell("gzip -c {output.fasta} > {output.gzip}")
+
+    rule assembly_quality_single:
+        input:
+            assembly = rules.rename_spades.output.gzip
+        output:
+            mq_out = "results/03_assembly/single_sample_assembly/{sample}/quast_results/report.html"
+        params:
+            threads = config['threads'],
+            outdir = "results/03_assembly/single_sample_assembly/{sample}/quast_results/"
+        conda:
+            "../envs/single_assembly.yaml"
+        shell: "metaquast.py {input.assembly} --threads {params.threads} -o {params.outdir}"
