@@ -61,4 +61,4 @@ rule normal_reads:
     conda:
         "../envs/preprocessing.yaml"
     shell:
-        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={params.threads} out={output.out1} outt={output.out2} hist={output.hist} -Xmx100g"
+        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={params.threads} out={output.out1} out2={output.out2} hist={output.hist} -Xmx100g"
