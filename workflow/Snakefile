@@ -26,9 +26,10 @@ include: "rules/coassembly.smk"
 #     section, name = rule
 #     if section in ["antismash"]:
 #         include: ext
+include: "rules/single_sample_assembly.smk"
 
-#Load report
-#
+
+# # Load report
 #for rpt, rule in list(listfiles('workflow/rules/report/{part}.smk')):
 #    name = rule
 #    include: rpt
@@ -41,8 +42,12 @@ include: "rules/coassembly.smk"
 #         outfiles.append(file)
 
 rule all:
-    input: "results/03_assembly/coassembly/megahit_assembly/assembly_A/A_final.contigs.fa",
-           "results/03_assembly/coassembly/megahit_assembly/assembly_B/B_final.contigs.fa"
+    input:
+        "results/02_filtered_reads/B57_normalized_1.fq.gz",
+        "results/02_filtered_reads/B57_normalized_2.fq.gz",
+        "results/03_assembly/single_sample_assembly/B57/quast_results/report.html",
+        "results/03_assembly/coassembly/megahit_assembly/assembly_A/A_final.contigs.fa",
+        "results/03_assembly/coassembly/megahit_assembly/assembly_B/B_final.contigs.fa"
 
 
 
