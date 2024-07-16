@@ -16,8 +16,7 @@ rule fastp:
             "../envs/preprocessing.yaml"
         shell:
             "time fastp -i {input.fq1} -I {input.fq2} -o {output.cleanF} -O {output.cleanR} \
-                        -h {output.report_html} -j {output.report_json} -R {params.report_name} -y -l 30 -r --trim_poly_g --cut_window_size 4 \
-                        --cut_mean_quality 23 --n_base_limit 0"
+                        -h {output.report_html} -j {output.report_json} -R {params.report_name} -y -l 30 -r --trim_poly_g --n_base_limit 0"
 
 rule concat_host_phix:
         input:
