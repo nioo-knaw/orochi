@@ -6,8 +6,8 @@ rule supervised_pooling:
         forward=lambda wildcards: get_forward_files(wildcards, "_filt_"),
         rev=lambda wildcards: get_rev_files(wildcards, "_filt_")
     output:
-        forward="results/03_assembly/coassembly/pools/{sample_pool}_forward.fastq",
-        rev="results/03_assembly/coassembly/pools/{sample_pool}_rev.fastq"
+        forward="results/03_assembly/coassembly/pools/{sample_pool}_forward.fastq.gz",
+        rev="results/03_assembly/coassembly/pools/{sample_pool}_rev.fastq.gz"
     run:
         shell("cat {input.forward} > {output.forward}")
         shell("cat {input.rev} > {output.rev}")
