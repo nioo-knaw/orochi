@@ -1,0 +1,5 @@
+name: coassembly
+channels:
+  - bioconda
+dependencies:
+  - bbmap=39.06

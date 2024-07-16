@@ -47,18 +47,3 @@ rule filter_host:
                            outu1={output.filterF} outu2={output.filterR} \
                            ref={input.concat}"
 
-rule normal_reads:
-    input:
-        r1 = rules.filter_host.output.filterF,
-        r2 = rules.filter_host.output.filterR
-    output:
-        out1="results/02_filtered_reads/{sample}_normalized_1.fq.gz",
-        out2="results/02_filtered_reads/{sample}_normalized_2.fq.gz",
-        hist="results/02_filtered_reads/{sample}.hist"
-    params:
-        kmerdepth=config['bbmap_D'],
-        threads=config['threads']
-    conda:
-        "../envs/preprocessing.yaml"
-    shell:
-        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={params.threads} out={output.out1} out2={output.out2} hist={output.hist} -Xmx100g"

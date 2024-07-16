@@ -50,7 +50,10 @@ min_contig_antismash: 5000
 # assembly_method: The assembly method to use. Options: single_assembly (spades), coassembly (megahit).
 assembly_method: coassembly
 
-# sample_pooling: The sample pooling method to use. Options: supervised, unsupervised.
+# normalize_reads: Whether to use read normalisation: Yes or No
+normalize_reads: "Yes"
+
+# sample_pooling: The sample pooling method to use. Options: supervised, unsupervised, no.
 sample_pooling: supervised
 
 # assembly_threads: The number of threads to use for assembly.
