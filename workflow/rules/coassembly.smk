@@ -46,7 +46,7 @@ rule megahit:
             otherwise="results/03_assembly/coassembly/pools/{sample_pool}_rev.fastq")
 
     output:
-        contigs="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_final.contigs.fa.gz",
+        contigs="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_final.contigs.fa",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
         # opts=protected("results/03_coassembly/{sample_pool}/{kmers}/options.json")
     params:
@@ -56,7 +56,7 @@ rule megahit:
     threads: 32
     conda:
         "../envs/megahit.yaml"
-    shell:"megahit --out-dir results/03_assembly/coassembly/assembly_{wildcards.sample_pool} --out-prefix {wildcards.sample_pool}_final -m 0.9 --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev}"
+    shell:"megahit -f --out-dir results/03_assembly/coassembly/assembly_{wildcards.sample_pool} --out-prefix {wildcards.sample_pool}_final -m 0.9 --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev}"
 
     # rule rename_megahit:
     #     input:
