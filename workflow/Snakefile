@@ -46,8 +46,8 @@ include: "rules/single_sample_assembly.smk"
 target = None
 
 if config['assembly_method'] == "coassembly":
-    target = expand("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_final.contigs.fa.gz",
-        sample_pool=samples["sample_pool"])
+    target = expand("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_final.contigs.fa",
+        sample_pool=samples["sample_pool"].unique())
 elif config['assembly_method'] == "single_assembly":
     target = expand("results/03_assembly/single_sample_assembly/{sample}/assembly.fasta.gz", sample=samples["sample"])
 else:
