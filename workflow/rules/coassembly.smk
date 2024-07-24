@@ -63,7 +63,10 @@ rule rename_megahit:
         rules.megahit.output
     output:
         fasta="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta",
-        gzip="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz"
+        gzip="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz",
+        done= temp("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.done")
     run:
         shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip {output.fasta}")
+        shell("touch {output.done}")
+
