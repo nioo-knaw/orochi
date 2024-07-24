@@ -58,14 +58,12 @@ rule megahit:
         "../envs/megahit.yaml"
     shell:"megahit -f --out-dir results/03_assembly/coassembly/assembly_{wildcards.sample_pool} --out-prefix {wildcards.sample_pool}_final -m 0.9 --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev}"
 
-    # rule rename_megahit:
-    #     input:
-    #         "scratch/assembly/megahit/{sample_pool}/{kmers}/final.contigs.fa"
-    #     output:
-    #         gzip=temp("scratch/assembly/megahit/{sample_pool}/{kmers}/assembly.fa.gz"),
-    #         fasta=temp("scratch/assembly/megahit/{sample_pool}/{kmers}/assembly.fa")
-    #     log:
-    #         "logs/assembly/megahit/{sample_pool}/{kmers}/rename_megahit.log"
-    #     run:
-    #         shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta} 2> {log}")
-    #         shell("gzip -c {output.fasta} > {output.gzip}")
+rule rename_megahit:
+    input:
+        rules.megahit.output
+    output:
+        fasta="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta",
+        gzip="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz"
+    run:
+        shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
+        shell("gzip {output.fasta}")
