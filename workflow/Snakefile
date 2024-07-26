@@ -36,8 +36,10 @@ include: "rules/single_sample_assembly.smk"
 
 rule all:
     input:
-        "results/02_filtered_reads/B57_filt_1.fastq.gz",
-        "results/03_assembly/single_sample_assembly/B57/assembly.fasta.gz"
+        #"results/02_filtered_reads/B57_filt_1.fastq.gz",
+        "results/03_assembly/single_sample_assembly/B57/assembly.fasta.gz",
+       # "results/03_assembly/single_sample_assembly/B57/quast_results/report.html",
+        "results/03_assembly/single_sample_assembly/B57/quality/coverage.tsv"
 
     # input: expand(output,
     #               sample=config["data"],
