@@ -1,4 +1,3 @@
-from snakemake.utils import R, listfiles
 import pandas as pd
 import os
 
@@ -29,7 +28,6 @@ include: "rules/single_sample_assembly.smk"
 #     if section in ["antismash"]:
 #         include: ext
 include: "rules/single_sample_assembly.smk"
-
 
 # # Load report
 #for rpt, rule in list(listfiles('workflow/rules/report/{part}.smk')):
