@@ -6,7 +6,7 @@
 samples: "config/samples.tsv"
 
 # The path to the temporary directory.
-tmpdir: /tmp
+tmpdir: "/tmp"
 
 # The default number of threads to use for each rule.
 threads: 32
@@ -24,19 +24,22 @@ host_removal: True
 host_genome: "resources/data/reference/beta-vulgaris-subset.fasta"
 
 # host_index: The path to the host genome index.
-host_index: /path/to/host/genome/index
+host_index: "/path/to/host/genome/index"
+
+# bbmap_D: The desired kmer depth for read normalisation
+bbmap_D: 20
 
 # emapper_database: The path to the eggNOG database.
-emapper_database: /path/to/emapper/database
+emapper_database: "/path/to/emapper/database"
 
 # emapper_diamond: @Todo: Add description
-emapper_diamond: /path/to/emapper/diamond
+emapper_diamond: "/path/to/emapper/diamond"
 
 # CAT_database: The path to the CAT database.
-CAT_database: /path/to/CAT/database
+CAT_database: "/path/to/CAT/database"
 
 # CAT_taxonomy: The path to the CAT taxonomy files
-CAT_taxonomy: /path/to/CAT/taxonomy
+CAT_taxonomy: "/path/to/CAT/taxonomy"
 
 # min_contig_length: The minimum length of the contigs.
 min_contig_length: 1000
@@ -44,15 +47,18 @@ min_contig_length: 1000
 # min_contig_antismash: The minimum length of the contigs for antiSMASH analysis.
 min_contig_antismash: 5000
 
-# assembly_method: The assembly method to use. Options: single assembly (spades), co-assembly (megahit).
-assembly_method: single assembly
+# assembly_method: The assembly method to use. Options: single_assembly (spades), coassembly (megahit).
+assembly_method: coassembly
 
-# sample_pooling: The sample pooling method to use. Options: supervised, unsupervised.
+# normalize_reads: Whether to use read normalisation: Yes or No
+normalize_reads: "Yes"
+
+# sample_pooling: The sample pooling method to use. Options: supervised, unsupervised, no.
 sample_pooling: supervised
 
 # assembly_threads: The number of threads to use for assembly.
 assembly_threads: 32
 
 # kmers: The k-mer sizes to use for assembly.
-kmers: 21,33,55,77,99,127
+kmers: "21,33,55,77,99,127"
 
