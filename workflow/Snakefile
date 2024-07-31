@@ -1,4 +1,3 @@
-from snakemake.utils import R, listfiles
 import pandas as pd
 import os
 
@@ -18,7 +17,9 @@ samples = (
 # for smk,rule in smks:
 #     include: smk
 
+include: "rules/common.smk"
 include: "rules/preprocessing.smk"
+include: "rules/coassembly.smk"
 include: "rules/single_sample_assembly.smk"
 
 
@@ -29,17 +30,24 @@ include: "rules/single_sample_assembly.smk"
 #
 
 # Dynamically add all output files
-# output = []
+# outfiles = []
 # for name,rule in rules.__dict__.items():
 #     for file in rule.output:
-#         output.append(file)
+#         outfiles.append(file)
+
+target = None
+
+if config['assembly_method'] == "coassembly":
+    target = expand("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz",
+        sample_pool=samples["sample_pool"].unique())
+elif config['assembly_method'] == "single_assembly":
+    target = expand("results/03_assembly/single_sample_assembly/{sample}/assembly.fasta.gz", sample=samples["sample"])
+else:
+    raise ValueError("Unsupported assembly type")
 
 rule all:
     input:
-        #"results/02_filtered_reads/B57_filt_1.fastq.gz",
-        "results/03_assembly/single_sample_assembly/B57/assembly.fasta.gz",
-       # "results/03_assembly/single_sample_assembly/B57/quast_results/report.html",
-        "results/03_assembly/single_sample_assembly/B57/quality/coverage.tsv"
+        target
 
     # input: expand(output,
     #               sample=config["data"],
