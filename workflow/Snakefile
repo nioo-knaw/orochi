@@ -38,13 +38,13 @@ include: "rules/gene_prediction.smk"
 
 target = None
 
-if config['assembly_method'] == "coassembly":
-    target = expand("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz",
-        sample_pool=samples["sample_pool"].unique())
-elif config['assembly_method'] == "single_assembly":
-    target = expand("results/03_assembly/single_sample_assembly/{sample}/assembly.fasta.gz", sample=samples["sample"])
-else:
-    raise ValueError("Unsupported assembly type")
+# if config['assembly_method'] == "coassembly":
+#     target = expand("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz",
+#         sample_pool=samples["sample_pool"].unique())
+# elif config['assembly_method'] == "single_assembly":
+#     target = expand("results/03_assembly/single_sample_assembly/{sample}/assembly.fasta.gz", sample=samples["sample"])
+# else:
+#     raise ValueError("Unsupported assembly type")
 
 if config['assembly_method'] == "coassembly":
     target = expand("results/04_gene_prediction/prodigal/{sample_pool}/{sample_pool}_genes.gff",
