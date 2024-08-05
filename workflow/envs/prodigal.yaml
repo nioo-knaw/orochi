@@ -1,0 +1,5 @@
+name: orochi_prodigal
+channels:
+  - bioconda
+dependencies:
+  - prodigal
