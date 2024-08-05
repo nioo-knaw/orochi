@@ -16,8 +16,7 @@ rule prodigal:
     conda:
         "../envs/prodigal.yaml"
 
-    shell:
-        "prodigal -i input.contigs -o output.gff -a output.faa -d output.fna -p meta -f gff"
+    shell:"prodigal -i {input.contigs} -o {output.gff} -a {output.faa} -d {output.fna} -p meta -f gff"
 
 
 
