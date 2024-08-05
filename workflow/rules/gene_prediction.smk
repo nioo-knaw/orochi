@@ -3,8 +3,8 @@
 rule prodigal:
     input:
         contigs=branch(config['assembly_method'] == "coassembly",
-            then="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz",
-            otherwise="results/03_assembly/single_sample_assembly/{sample}/assembly.fasta.gz"),
+            then="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta",
+            otherwise="results/03_assembly/single_sample_assembly/{sample}/assembly.fasta"),
 
 
     output:
