@@ -1,0 +1,5 @@
+name: orochi_augustify
+channels:
+  - bioconda
+dependencies:
+  - augustus

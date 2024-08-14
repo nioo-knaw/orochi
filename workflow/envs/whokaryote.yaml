@@ -1,0 +1,5 @@
+name: orochi_whokaryote
+channels:
+  - bioconda
+dependencies:
+  - whokaryote
