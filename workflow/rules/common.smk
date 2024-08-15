@@ -1,9 +1,4 @@
-def get_extension():
-    if config['normalize_reads'] == 'Yes':
-        sample_extension = "_normalized_"
-    elif config['normalize_reads'] == "No":
-        sample_extension = "_filt_"
-    return sample_extension
+"""Common functions and rules used in the workflow"""
 
 def get_forward_files(wildcards, extension):
     return ["results/02_filtered_reads/" + sample + extension + "1.fastq.gz" for sample in
@@ -14,20 +9,17 @@ def get_rev_files(wildcards, extension):
     return ["results/02_filtered_reads/" + sample + extension + "2.fastq.gz" for sample in
             samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values]
 
+def prefix(assembly_method, samples):
+    if assembly_method == "coassembly":
+        return samples["sample_pool"].unique()
+    elif assembly_type == "single_assembly":
+        return samples["sample"].unique()
 
-# def assembly_input():
-#     # Determine the normalization status based on the config
-#     norm_status = config['normalize_reads']
-#     print(f"Normalization: {norm_status}")
-#
-#     # Construct the file paths for both forward and reverse reads
-#     if norm_status == "Yes":
-#         return [
-#             "results/03_assembly/coassembly/pools/{sample_pool}_normalized_f.fastq",  # Forward read
-#             "results/03_assembly/coassembly/pools/{sample_pool}_normalized_r.fastq" # Reverse read
-#         ]
-#     else:
-#         return [
-#             "results/03_assembly/coassembly/pools/{sample_pool}_forward.fastq",  # Forward read
-#             "results/03_assembly/coassembly/pools/{sample_pool}_rev.fastq"  # Reverse read
-#         ]
+rule downstream_test:
+    input:
+        "results/04_gene_prediction/augustify/{sample}/{sample}_eukgenes.gff"
+
+    output:
+        test_file="results/05_test/{sample}/{sample}_test.txt"
+    run:
+        shell("touch {output.test_file}")

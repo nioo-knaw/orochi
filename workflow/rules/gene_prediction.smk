@@ -56,11 +56,3 @@ rule augustify:
         "../scripts/augustify.py -g {input} -p {params.param_file} -m {output.genes} -P {output.proteins} -t {params.threads}"
 
 
-rule downstream_test:
-    input:
-        "results/04_gene_prediction/augustify/{sample}/{sample}_eukgenes.gff"
-
-    output:
-        test_file="results/05_test/{sample}/{sample}_test.txt"
-    run:
-        shell("touch {output.test_file}")
