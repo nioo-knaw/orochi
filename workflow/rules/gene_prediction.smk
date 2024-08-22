@@ -38,7 +38,7 @@ rule whokaryote:
         outdir="results/04_gene_prediction/whokaryote/{sample}"
 
     shell:
-        "whokaryote --contigs {input.contigs} --outdir {params.outdir} --prodigal_file {input.prodigal_gff} --minsize 1000 --f"
+        "whokaryote.py --contigs {input.contigs} --outdir {params.outdir} --prodigal_file {input.prodigal_gff} --minsize 1000 --f"
 
 
 rule augustify:
