@@ -1,5 +1,6 @@
 name: coassembly
 channels:
+  - conda-forge
   - bioconda
 dependencies:
   - bbmap=39.06
