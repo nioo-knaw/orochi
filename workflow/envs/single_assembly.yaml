@@ -1,5 +1,6 @@
 name: orochi_singleAssembly
 channels:
+  - conda-forge
   - bioconda
 dependencies:
   - spades == 3.15.5

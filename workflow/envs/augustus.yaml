@@ -1,5 +1,6 @@
 name: orochi_augustify
 channels:
+  - conda-forge
   - bioconda
 dependencies:
   - augustus

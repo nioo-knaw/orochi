@@ -1,5 +1,6 @@
 name: orochi_megahit
 channels:
+  - conda-forge
   - bioconda
 dependencies:
   - megahit
