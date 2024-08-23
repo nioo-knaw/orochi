@@ -30,6 +30,8 @@ rule normal_reads:
     params:
         kmerdepth=config['bbmap_D'],
         threads=config['threads']
+    benchmark:
+        "results/benchmark/normal_reads/{sample_pool}.tsv"
     conda:
         "../envs/coassembly.yaml"
     shell:
@@ -53,6 +55,8 @@ rule megahit:
         # dir=lambda wildcards, output: os.path.dirname(output[0]),
         kmers = config["kmers"]
     # log: "logs/assembly/megahit/{sample_pool}/megahit.log"
+    benchmark:
+        "results/benchmark/megahit/{sample_pool}.tsv"
     threads: 32
     conda:
         "../envs/megahit.yaml"
