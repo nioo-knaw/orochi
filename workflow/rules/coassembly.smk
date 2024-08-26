@@ -12,12 +12,6 @@ rule supervised_pooling:
         shell("cat {input.forward} > {output.forward}")
         shell("cat {input.rev} > {output.rev}")
 
-# if config['sample_pooling'] == 'simka':
-#     rule simka_pooling:
-#         input:
-#             all_reads=lambda wildcards: expand(f"results/02_filtered_reads/{{sample}}_filt_1.fastq.gz", sample=samples[samples["sample"] == wildcards.sample]["sample"].values) + expand(f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz", sample=samples[samples["sample"] == wildcards.sample]["sample"].values)
-#         output:
-#             sample_pools= f"results/03_coassembly/pools/{{sample_pool}}.fastq"
 
 rule normal_reads:
     input:
@@ -54,7 +48,7 @@ rule megahit:
     params:
         # dir=lambda wildcards, output: os.path.dirname(output[0]),
         kmers = config["kmers"],
-        output_dir = f"{outdir}/results/03_assembly/coassembly/assembly_{{wildcards.sample_pool}}"
+        output_dir = f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}"
     # log: "{outdir}/logs/assembly/megahit/{sample_pool}/megahit.log"
     benchmark:
         f"{outdir}/results/benchmark/megahit/{{sample_pool}}.tsv"
