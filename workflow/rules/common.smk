@@ -1,12 +1,12 @@
 """Common functions and rules used in the workflow"""
 
 def get_forward_files(wildcards, extension):
-    return ["results/02_filtered_reads/" + sample + extension + "1.fastq.gz" for sample in
+    return [f"{outdir}/results/02_filtered_reads/" + sample + extension + "1.fastq.gz" for sample in
             samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values]
 
 
 def get_rev_files(wildcards, extension):
-    return ["results/02_filtered_reads/" + sample + extension + "2.fastq.gz" for sample in
+    return [f"{outdir}/results/02_filtered_reads/" + sample + extension + "2.fastq.gz" for sample in
             samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values]
 
 def prefix(assembly_method, samples):
@@ -17,9 +17,9 @@ def prefix(assembly_method, samples):
 
 rule downstream_test:
     input:
-        "results/04_gene_prediction/augustify/{sample}/{sample}_eukgenes.gff"
+        f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukgenes.gff"
 
     output:
-        test_file="results/05_test/{sample}/{sample}_test.txt"
+        test_file=f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt"
     run:
         shell("touch {output.test_file}")
