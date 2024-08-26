@@ -6,10 +6,10 @@ rule fastp:
             # readF = "raw/{sample}_R1.fastq.gz",
             # readR = "raw/{sample}_R2.fastq.gz"
         output:
-            cleanF = temp("results/01_trimmed_reads/{sample}_trim_1.fastq.gz"),
-            cleanR = temp("results/01_trimmed_reads/{sample}_trim_2.fastq.gz"),
-            report_html = "results/01_trimmed_reads/quality_reports/{sample}.html",
-            report_json = "results/01_trimmed_reads/quality_reports/{sample}.json"
+            cleanF = temp(f"{outdir}/results/01_trimmed_reads/{{sample}}_trim_1.fastq.gz"),
+            cleanR = temp(f"{outdir}/results/01_trimmed_reads/{{sample}}_trim_2.fastq.gz"),
+            report_html = f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.html",
+            report_json = f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.json"
         params:
             report_name = lambda wildcards:"{wildcard.sample}"
         conda:
@@ -34,8 +34,8 @@ rule filter_host:
             concat = rules.concat_host_phix.output.concat,
 
         output:
-            filterF = "results/02_filtered_reads/{sample}_filt_1.fastq.gz",
-            filterR = "results/02_filtered_reads/{sample}_filt_2.fastq.gz"
+            filterF = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+            filterR = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
         params:
             threads=config['threads']
         conda:

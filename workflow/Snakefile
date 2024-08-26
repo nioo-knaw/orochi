@@ -11,6 +11,9 @@ samples = (
     .sort_index()
 
 )
+
+outdir = config["outdir"]
+
 # # Dynamically load all modules/rules
 # smks = list(listfiles('rules/core/{section}/{part}.smk'))
 #
@@ -39,10 +42,10 @@ include: "rules/gene_prediction.smk"
 target = None
 
 # if config['assembly_method'] == "coassembly":
-#     target = expand("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz",
+#     target = expand("{outdir}/results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz",
 #         sample_pool=samples["sample_pool"].unique())
 # elif config['assembly_method'] == "single_assembly":
-#     target = expand("results/03_assembly/single_sample_assembly/{sample}/assembly.fasta.gz", sample=samples["sample"])
+#     target = expand("{outdir}/results/03_assembly/single_sample_assembly/{sample}/assembly.fasta.gz", sample=samples["sample"])
 # else:
 #     raise ValueError("Unsupported assembly type")
 
@@ -55,13 +58,13 @@ target = None
 #     raise ValueError("Unsupported assembly type")
 
 if config['assembly_method'] == "coassembly":
-    target = expand("results/05_test/{sample_pool}/{sample_pool}_test.txt",
-        sample_pool=samples["sample_pool"].unique())
+    target = expand(f"{config['outdir']}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt",
+                    sample_pool=samples["sample_pool"].unique())
 elif config['assembly_method'] == "single_assembly":
-    target = expand("results/05_test/{sample}/{sample}_test.txt", sample=samples["sample"])
+    target = expand(f"{config['outdir']}/results/05_test/{{sample}}/{{sample}}_test.txt",
+                    sample=samples["sample"])
 else:
     raise ValueError("Unsupported assembly type")
-
 
 rule all:
     input:

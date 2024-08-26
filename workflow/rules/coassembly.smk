@@ -6,8 +6,8 @@ rule supervised_pooling:
         forward=lambda wildcards: get_forward_files(wildcards, "_filt_"),
         rev=lambda wildcards: get_rev_files(wildcards, "_filt_")
     output:
-        forward="results/03_assembly/coassembly/pools/{sample_pool}_forward.fastq.gz",
-        rev="results/03_assembly/coassembly/pools/{sample_pool}_rev.fastq.gz"
+        forward=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
+        rev=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz"
     run:
         shell("cat {input.forward} > {output.forward}")
         shell("cat {input.rev} > {output.rev}")
@@ -15,23 +15,23 @@ rule supervised_pooling:
 # if config['sample_pooling'] == 'simka':
 #     rule simka_pooling:
 #         input:
-#             all_reads=lambda wildcards: expand("results/02_filtered_reads/{sample}_filt_1.fastq.gz", sample=samples[samples["sample"] == wildcards.sample]["sample"].values) + expand("results/02_filtered_reads/{sample}_filt_2.fastq.gz", sample=samples[samples["sample"] == wildcards.sample]["sample"].values)
+#             all_reads=lambda wildcards: expand(f"results/02_filtered_reads/{{sample}}_filt_1.fastq.gz", sample=samples[samples["sample"] == wildcards.sample]["sample"].values) + expand(f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz", sample=samples[samples["sample"] == wildcards.sample]["sample"].values)
 #         output:
-#             sample_pools= "results/03_coassembly/pools/{sample_pool}.fastq"
+#             sample_pools= f"results/03_coassembly/pools/{{sample_pool}}.fastq"
 
 rule normal_reads:
     input:
         r1 = rules.supervised_pooling.output.forward,
         r2 = rules.supervised_pooling.output.rev
     output:
-        out1="results/03_assembly/coassembly/pools/{sample_pool}_normalized_f.fastq",
-        out2="results/03_assembly/coassembly/pools/{sample_pool}_normalized_r.fastq",
-        hist="results/03_assembly/coassembly/pools/{sample_pool}.hist"
+        out1=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_f.fastq",
+        out2=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_r.fastq",
+        hist=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}.hist"
     params:
         kmerdepth=config['bbmap_D'],
         threads=config['threads']
     benchmark:
-        "results/benchmark/normal_reads/{sample_pool}.tsv"
+        f"{outdir}/results/benchmark/normal_reads/{{sample_pool}}.tsv"
     conda:
         "../envs/coassembly.yaml"
     shell:
@@ -41,35 +41,36 @@ rule normal_reads:
 rule megahit:
     input:
         fwd=branch(config['normalize_reads'] == "Yes",
-            then="results/03_assembly/coassembly/pools/{sample_pool}_normalized_f.fastq",
-            otherwise="results/03_assembly/coassembly/pools/{sample_pool}_forward.fastq"),
+            then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_f.fastq",
+            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq"),
         rev=branch(config['normalize_reads'] == "Yes",
-            then="results/03_assembly/coassembly/pools/{sample_pool}_normalized_r.fastq",
-            otherwise="results/03_assembly/coassembly/pools/{sample_pool}_rev.fastq")
+            then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_r.fastq",
+            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq")
 
     output:
-        contigs="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_final.contigs.fa",
+        contigs=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_final.contigs.fa",
         # This file contains all the settings of a run. When this file is not present megahit with run in normal mode, otherwise it continues with previous settings
-        # opts=protected("results/03_coassembly/{sample_pool}/{kmers}/options.json")
+        # opts=protected(f"{outdir}/results/03_coassembly/{{sample_pool}}/{{params.kmers}}/options.json")
     params:
         # dir=lambda wildcards, output: os.path.dirname(output[0]),
-        kmers = config["kmers"]
-    # log: "logs/assembly/megahit/{sample_pool}/megahit.log"
+        kmers = config["kmers"],
+        output_dir = f"{outdir}/results/03_assembly/coassembly/assembly_{{wildcards.sample_pool}}"
+    # log: "{outdir}/logs/assembly/megahit/{sample_pool}/megahit.log"
     benchmark:
-        "results/benchmark/megahit/{sample_pool}.tsv"
+        f"{outdir}/results/benchmark/megahit/{{sample_pool}}.tsv"
     threads: 32
     conda:
         "../envs/megahit.yaml"
-    shell:"megahit -f --out-dir results/03_assembly/coassembly/assembly_{wildcards.sample_pool} --out-prefix {wildcards.sample_pool}_final -m 0.9 --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev}"
+    shell:"megahit -f --out-dir {params.output_dir} --out-prefix {wildcards.sample_pool}_final -m 0.9 --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev}"
 
 rule rename_megahit:
     input:
         rules.megahit.output
         
     output:
-        fasta=temp("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta"),
-        gzip="results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.fasta.gz",
-        done= temp("results/03_assembly/coassembly/assembly_{sample_pool}/{sample_pool}_assembly.done")
+        fasta=temp(f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta"),
+        gzip=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta.gz",
+        done= temp(f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.done")
     run:
         shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")

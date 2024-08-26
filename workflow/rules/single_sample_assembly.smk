@@ -1,12 +1,12 @@
 
 rule spades:
     input:
-        forward = "results/02_filtered_reads/{sample}_filt_1.fastq.gz",
-        rev = "results/02_filtered_reads/{sample}_filt_2.fastq.gz",
+        forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+        rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
     output:
-        "results/03_assembly/single_sample_assembly/{sample}/{sample}_contigs.fasta",
+        f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/{{sample}}_contigs.fasta",
     params:
-        outdir = "results/03_assembly/single_sample_assembly/{sample}",
+        outdir = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}",
         kmers = config['kmers'],
     conda:
         "../envs/single_assembly.yaml"
@@ -16,8 +16,8 @@ rule rename_spades:
     input:
         contigs = rules.spades.output
     output:
-        gzip = "results/03_assembly/single_sample_assembly/{sample}/{sample}_assembly.fasta.gz",
-        fasta = temp("results/03_assembly/single_sample_assembly/{sample}/{sample}_assembly.fasta")
+        gzip = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/{{sample}}_assembly.fasta.gz",
+        fasta = temp(f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/{{sample}}_assembly.fasta")
     run:
         shell("cat {input.contigs} | awk '{{print $1}}' | sed 's/NODE/contig/' > {output.fasta}")
         shell("gzip -c {output.fasta} > {output.gzip}")
@@ -26,21 +26,21 @@ rule assembly_quality_single:
     input:
         assembly = rules.rename_spades.output.gzip
     output:
-        mq_out = "results/03_assembly/single_sample_assembly/{sample}/quast_results/report.html"
+        mq_out = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/quast_results/report.html"
     params:
         threads = config['threads'],
-        outdir = "results/03_assembly/single_sample_assembly/{sample}/quast_results/"
+        outdir = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/quast_results/"
     conda:
         "../envs/single_assembly.yaml"
     shell: "metaquast.py {input.assembly} --no-icarus --threads {params.threads} -o {params.outdir}"
 
 rule coverm:
     input:
-        contigs_f = "results/02_filtered_reads/{sample}_filt_1.fastq.gz",
-        contigs_r = "results/02_filtered_reads/{sample}_filt_2.fastq.gz",
+        contigs_f = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+        contigs_r = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
         assembly = rules.rename_spades.output.gzip
     output:
-        coverm_out = "results/03_assembly/single_sample_assembly/{sample}/quality/coverage.tsv"
+        coverm_out = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/quality/coverage.tsv"
     params:
         threads = config['threads']
     conda:
