@@ -17,7 +17,7 @@ def prefix(assembly_method, samples):
 
 rule downstream_test:
     input:
-        f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukgenes.gff"
+        f"{outdir}/results/03_assembly/coassembly/assembly_{{sample}}/{{sample}}_assembly.done"
 
     output:
         test_file=f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt"
