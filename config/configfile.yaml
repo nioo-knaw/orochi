@@ -14,6 +14,9 @@ tmpdir: "/tmp"
 # The default number of threads to use for each rule.
 threads: 32
 
+# Max memory to be used by bbmap/bbnorm (I advise using as much as possible). Only change the number between -Xmx and g. E.g. -Xmx1500g, -Xmx400g:
+bbmap_mem: '-Xmx100g'
+
 # min_qual: The minimum quality score for trimming.
 min_qual: 30
 
@@ -29,7 +32,7 @@ host_genome: "resources/data/reference/beta-vulgaris-subset.fasta"
 # host_index: The path to the host genome index.
 host_index: "/path/to/host/genome/index"
 
-# bbmap_D: The desired kmer depth for read normalisation
+# bbmap_D: The desired kmer depth for read normalisation @Todo: rename to bbnorm, is more clear.
 bbmap_D: 20
 
 # emapper_database: The path to the eggNOG database.
@@ -62,6 +65,10 @@ sample_pooling: supervised
 # assembly_threads: The number of threads to use for assembly.
 assembly_threads: 32
 
+# assembly_mem: The amount of memory to use for assembly. This is a percentage of max memory. E.g. 0.9, 0.8 etc.
+megahit_mem: '0.9'
+
 # kmers: The k-mer sizes to use for assembly.
+# @Todo: this is overwritten bij --presets meta-large in megahit. Which is k 27 - 127 with steps of 10. Do something with this.
 kmers: "27,37,47,57,67,77,87"
 

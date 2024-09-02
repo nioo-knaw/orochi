@@ -11,7 +11,7 @@ rule fastp:
             report_html = f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.html",
             report_json = f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.json"
         params:
-            report_name = lambda wildcards:"{wildcard.sample}"
+            report_name = lambda wildcards:"{wildcards.sample}"
         conda:
             "../envs/preprocessing.yaml"
         shell:
@@ -34,8 +34,11 @@ rule build_index:
         reference="resources/contaminants_refs/contaminants_concat.fna"
     output: 
         ref_index=directory("ref/")
+    params:
+        threads=config['threads'],
+        memory=config['bbmap_mem']
     shell:
-        "bbmap.sh ref={input.reference}"
+        "bbmap.sh ref={input.reference} threads={params.threads} {params.memory}"
 
 rule filter_host:
         input:
@@ -48,13 +51,14 @@ rule filter_host:
             filterF = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
             filterR = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
         params:
-            threads=config['threads']
+            threads=config['threads'],
+            memory=config['bbmap_mem']
         conda:
             "../envs/preprocessing.yaml"
         shell:
             "time bbmap.sh threads={params.threads} minid=0.95 maxindel=3 \
                            in1={input.readF} in2={input.readR} \
-                           outu1={output.filterF} outu2={output.filterR}"
+                           outu1={output.filterF} outu2={output.filterR} {params.memory}"
 
 
 
