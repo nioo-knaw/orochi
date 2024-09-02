@@ -27,11 +27,22 @@ rule concat_host_phix:
         shell:
             "cat {input.host} {input.phix} > {output.concat}"
 
+rule build_index:
+    conda:
+        "../envs/preprocessing.yaml"
+    input: 
+        reference="resources/contaminants_refs/contaminants_concat.fna"
+    output: 
+        ref_index=directory("ref/")
+    shell:
+        "bbmap.sh ref={input.reference}"
+
 rule filter_host:
         input:
             readF = rules.fastp.output.cleanF,
             readR = rules.fastp.output.cleanR,
-            concat = rules.concat_host_phix.output.concat,
+            concat = "resources/contaminants_refs/contaminants_concat.fna",
+            ref_index=directory("ref/")
 
         output:
             filterF = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
@@ -41,8 +52,9 @@ rule filter_host:
         conda:
             "../envs/preprocessing.yaml"
         shell:
-            "time bbmap.sh -Xmx52g threads={params.threads} minid=0.95 maxindel=3 \
+            "time bbmap.sh threads={params.threads} minid=0.95 maxindel=3 \
                            in1={input.readF} in2={input.readR} \
-                           outu1={output.filterF} outu2={output.filterR} \
-                           ref={input.concat}"
+                           outu1={output.filterF} outu2={output.filterR}"
+
+
 
