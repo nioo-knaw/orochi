@@ -45,7 +45,7 @@ rule filter_host:
             readF = rules.fastp.output.cleanF,
             readR = rules.fastp.output.cleanR,
             concat = "resources/contaminants_refs/contaminants_concat.fna",
-            ref_index=directory("ref/")
+            ref_index="ref/"
 
         output:
             filterF = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
