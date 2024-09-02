@@ -23,13 +23,14 @@ rule normal_reads:
         hist=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}.hist"
     params:
         kmerdepth=config['bbmap_D'],
-        threads=config['threads']
+        threads=config['threads'],
+        memory=config['bbmap_mem']
     benchmark:
         f"{outdir}/results/benchmark/normal_reads/{{sample_pool}}.tsv"
     conda:
         "../envs/coassembly.yaml"
     shell:
-        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={params.threads} out={output.out1} out2={output.out2} hist={output.hist} -Xmx1500g"
+        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={params.threads} out={output.out1} out2={output.out2} hist={output.hist} {params.memory}"
 
 
 rule megahit:
@@ -48,14 +49,15 @@ rule megahit:
     params:
         # dir=lambda wildcards, output: os.path.dirname(output[0]),
         kmers = config["kmers"],
-        output_dir = f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}"
+        output_dir = f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}",
+        memory=config['megahit_mem']
     # log: "{outdir}/logs/assembly/megahit/{sample_pool}/megahit.log"
     benchmark:
         f"{outdir}/results/benchmark/megahit/{{sample_pool}}.tsv"
     threads: 32
     conda:
         "../envs/megahit.yaml"
-    shell:"megahit -f --out-dir {params.output_dir} --out-prefix {wildcards.sample_pool}_final -m 0.9 --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev}"
+    shell:"megahit -f --out-dir {params.output_dir} --out-prefix {wildcards.sample_pool}_final -m {params.memory} --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev}"
 
 rule rename_megahit:
     input:
