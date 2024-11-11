@@ -1,0 +1,7 @@
+name: orochi_mapping
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bwa
+  - samtools
