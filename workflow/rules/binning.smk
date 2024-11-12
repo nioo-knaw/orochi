@@ -7,7 +7,7 @@ rule index_bwa:
     input:
         assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta"
     output:
-        f"{outdir}/results/06_binning/mapping/{{sample_pool}}/{{sample_pool}}_assembly.fasta.bwt"
+        f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta.bwt"
     conda:
         "../envs/bwa.yaml"
     shell:
@@ -16,18 +16,20 @@ rule index_bwa:
 rule mapping:
     input:
         assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
-        assembly_index=f"{outdir}/results/06_binning/mapping/{{sample_pool}}/{{sample_pool}}_assembly.fasta.bwt",
+        assembly_index=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta.bwt",
         forward=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_f.fastq",
         rev=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_r.fastq"
 
     output:
         bam=f"{outdir}/results/06_binning/mapping/{{sample_pool}}/{{sample_pool}}_sorted.bam",
         bam_index=f"{outdir}/results/06_binning/mapping/{{sample_pool}}/{{sample_pool}}_sorted.bam.bai",
+    params:
+        threads=config['threads']
     conda:
         "../envs/bwa.yaml"
     shell:
-        "bwa mem -t 4 {input.assembly} {input.forward} {input.rev} | samtools sort -@ 4 -o {output.bam}"
-        "samtools index {output.bam}"
+        "bwa mem -t {params.threads} {input.assembly} {input.forward} {input.rev} | samtools sort -@ {params.threads} -o {output.bam}"
+        "samtools index {output.bam_index}"
 
 # rule mapping:
 #     input:
@@ -71,11 +73,13 @@ rule metabat2:
     output:
         bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample}}/{{sample}}_bins/"),
         bin_tsv=f"{outdir}/results/06_binning/metabat2/{{sample}}/{{sample}}_bins.tsv"
+    params:
+        threads=config['threads']
 
     conda:
         "../envs/metabat2.yaml"
     shell:
-        "metabat2 -i {input.assembly} -a {input.depth} -o {output.bin_dir} -t 4"
+        "metabat2 -i {input.assembly} -a {input.depth} -o {output.bin_dir} -t {params.threads}"
 
 rule maxbin2:
     input:
