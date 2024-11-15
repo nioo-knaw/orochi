@@ -81,7 +81,7 @@ checkpoint metabat2:
     conda:
         "../envs/metabat2.yaml"
     shell:
-        "metabat2 -i {input.assembly} -a {input.depth} -o {params.bin_prefix} -t {params.threads} && touch {output.completed}"
+        "metabat2 -i {input.assembly} -a {input.depth} -o {params.bin_prefix} -t {params.threads}"
 
 
 # rule maxbin2:
