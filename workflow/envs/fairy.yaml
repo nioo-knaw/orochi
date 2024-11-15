@@ -1,0 +1,6 @@
+name: orochi_fairy
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fairy
