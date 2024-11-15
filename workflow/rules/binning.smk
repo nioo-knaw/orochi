@@ -67,12 +67,12 @@ rule fairy_coverage:
 #     shell:
 #         "jgi_summarize_bam_contig_depths --outputDepth {output} {input}"
 
-rule metabat2:
+checkpoint metabat2:
     input:
         assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
         depth=f"{outdir}/results/06_binning/coverage/coverage_{{sample_pool}}.tsv"
     output:
-        bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_metabat2"),
+        bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bin"),
         completed=f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_metabat2.done"
     params:
         threads=config['threads']
@@ -81,6 +81,7 @@ rule metabat2:
         "../envs/metabat2.yaml"
     shell:
         "metabat2 -i {input.assembly} -a {input.depth} -o {output.bin_dir} -t {params.threads} && touch {output.completed}"
+
 
 # rule maxbin2:
 #     input:
