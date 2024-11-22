@@ -1,0 +1,6 @@
+name: orochi_dastool
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - dastool
