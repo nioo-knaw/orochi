@@ -66,7 +66,7 @@ rule maxbin_coverage:
     output:
         maxbin_coverage=f"{outdir}/results/06_binning/coverage/fairy/maxbin2/coverage_{{sample_pool}}_maxbin.tsv"
     run:
-        make_maxbin_coverage({input.fairy_input},{output.maxbin_coverage})
+        make_maxbin_coverage(input_file={input.fairy_input},output_file={output.maxbin_coverage})
 
 
 checkpoint maxbin2:
