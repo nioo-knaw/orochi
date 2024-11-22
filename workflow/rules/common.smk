@@ -24,13 +24,15 @@ def get_metabat_bins(wildcards):
     # Return the list of bin files
     return sorted(glob(f"{checkpoint_output}/{wildcards.sample_pool}_bin.*.fa"))
 
+def get_maxbin_bins(wildcards):
+    # Retrieve checkpoint output
+    checkpoint_output = checkpoints.maxbin2.get(sample_pool=wildcards.sample_pool).output.bin_dir
+    # Return the list of bin files
+    return sorted(glob(f"{checkpoint_output}/{wildcards.sample_pool}_bin.*.fasta"))
 
-rule downstream_test:
-    input:
-        get_metabat_bins
+def get_dastool_bins(wildcards):
+    # Retrieve checkpoint output
+    checkpoint_output = checkpoints.dastool.get(sample_pool=wildcards.sample_pool).output.bin_dir
+    # Return the list of bin files
+    return sorted(glob(f"{checkpoint_output}/{wildcards.sample_pool}_bin.*.fa"))
 
-    output:
-        test_file=f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt"
-    run:
-        shell("echo {input}")
-        shell("touch {output.test_file}")

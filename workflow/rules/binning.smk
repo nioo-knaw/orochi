@@ -1,4 +1,10 @@
 """ Rules related to binning/creating MAGs """
+import pandas as pd
+
+binning_tools = {
+    "metabat2": ".fa",
+    "maxbin2": ".fasta"
+}
 
 # Estimating coverage with fairy. First sketch the reads.
 rule fairy_sketch:
@@ -20,7 +26,7 @@ rule fairy_coverage:
         assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
         sketch_files=expand(f"{outdir}/results/06_binning/coverage/fairy_sketch/{{sample}}_filt_1.fastq.gz.paired.bcsp", sample=samples["sample"])
     output:
-        coverage_file=f"{outdir}/results/06_binning/coverage/coverage_{{sample_pool}}.tsv"
+        coverage_file=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
     params:
         threads=config['threads']
     conda:
@@ -28,49 +34,11 @@ rule fairy_coverage:
     shell:
         "fairy coverage {input.sketch_files} {input.assembly} -t {params.threads} -o {output.coverage_file}"
 
-# rule index_bwa:
-#     input:
-#         assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta"
-#     output:
-#         f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta.bwt"
-#     conda:
-#         "../envs/bwa.yaml"
-#     shell:
-#         "bwa index {input.assembly}"
-
-# rule mapping:
-#     input:
-#         assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
-#         assembly_index=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta.bwt",
-#         forward=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_f.fastq",
-#         rev=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_r.fastq"
-#
-#     output:
-#         bam=f"{outdir}/results/06_binning/mapping/{{sample_pool}}/{{sample_pool}}_sorted.bam",
-#         bam_index=f"{outdir}/results/06_binning/mapping/{{sample_pool}}/{{sample_pool}}_sorted.bam.bai",
-#     params:
-#         threads=config['threads']
-#     conda:
-#         "../envs/bwa.yaml"
-#     shell:
-#         "bwa mem -t {params.threads} {input.assembly} {input.forward} {input.rev} | samtools sort -@ {params.threads} -o {output.bam}"
-#         "samtools index {output.bam}"
-#
-#
-# rule jgi_summarize_bam_contig_depths:
-#     input:
-#         f"{outdir}/results/06_binning/mapping/{{sample}}/{{sample}}_sorted.bam"
-#     output:
-#         f"{outdir}/results/06_binning/mapping/{{sample}}/{{sample}}_depth.txt"
-#     conda:
-#         "../envs/metabat2.yaml"
-#     shell:
-#         "jgi_summarize_bam_contig_depths --outputDepth {output} {input}"
 
 checkpoint metabat2:
     input:
         assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
-        depth=f"{outdir}/results/06_binning/coverage/coverage_{{sample_pool}}.tsv"
+        depth=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
     output:
         bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins"),
         # completed=f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_metabat2.done"
@@ -84,17 +52,87 @@ checkpoint metabat2:
         "metabat2 -i {input.assembly} -a {input.depth} -o {params.bin_prefix} -t {params.threads}"
 
 
-# rule maxbin2:
-#     input:
-#         f"{outdir}/results/06_binning/{{sample}}/{{sample}}_sorted.bam",
-#         f"{outdir}/results/03_assembly/coassembly/assembly_{{sample}}/{{sample}}_assembly.fasta",
-#     output:
-#         bins=f"{outdir}/results/06_binning/{{sample}}/{{sample}}_bins"
-#     conda:
-#         "../envs/maxbin2.yaml"
-#     shell:
-#         "run_MaxBin.pl -contig {input[1]} -reads {input[0]} -out {output} -thread 4"
-#
+def make_maxbin_coverage(input_file, output_file):
+    """Filter columns with '-var' in their header name."""
+    df = pd.read_csv(input_file, sep='\t')
+    filtered_df = df.loc[:, ~df.columns.str.contains('-var')]
+    filtered_df = filtered_df.loc[:, ~filtered_df.columns.str.contains('contigLen')]
+    filtered_df = filtered_df.loc[:, ~filtered_df.columns.str.contains('totalAvgDepth')]
+    filtered_df.to_csv(output_file, sep='\t', index=False, header=False)
+
+rule maxbin_coverage:
+    input:
+        fairy_input=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
+    output:
+        maxbin_coverage=f"{outdir}/results/06_binning/coverage/fairy/maxbin2/coverage_{{sample_pool}}_maxbin.tsv"
+    run:
+        make_maxbin_coverage({input.fairy_input},{output.maxbin_coverage})
+
+
+checkpoint maxbin2:
+    input:
+        assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
+        coverage=f"{outdir}/results/06_binning/coverage/fairy/maxbin2/coverage_{{sample_pool}}_maxbin.tsv"
+    output:
+        bin_dir=directory(f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins"),
+        summary=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.summary",
+        marker_counts=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.marker",
+        marker_genes=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.marker_of_each_gene.tar.gz",
+        unbinned=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.noclass",
+        log=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.log",
+        tooshort=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.tooshort" #@Todo: make this temp.
+
+    params:
+        threads=config['threads'],
+        bin_prefix=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin"
+    conda:
+        "../envs/maxbin2.yaml"
+    shell:
+        "run_MaxBin.pl -contig {input.assembly} -abund {input.coverage} -out {params.bin_prefix} -thread {params.threads}"
+
+
+rule dastool_contigs2bin:
+    input:
+        bins_dir=f"{outdir}/results/06_binning/{{tool}}/{{sample_pool}}/{{sample_pool}}_bins",
+    output:
+        tsv=f"{outdir}/results/06_binning/{{tool}}/{{sample_pool}}/{{sample_pool}}_contigs2bin.tsv"
+    params:
+        script="../scripts/Fasta_to_Contigs2Bin.sh",
+        extension=lambda wildcards: binning_tools[wildcards.tool]
+    shell:
+        "bash {params.script} -e {params.extension} -i {input.bins_dir} > {output.tsv} "
+
+def format_dastool_input(input_files):
+    """
+    Converts a list of input Contigs2Bin.tsv files into a comma-separated string.
+    """
+    return ",".join(input_files)
+
+checkpoint dastool:
+    input:
+        assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
+        # contigs2bin_files=expand(f"{outdir}/results/06_binning/{{tool}}/{{sample_pool}}/{{sample_pool}}_contigs2bin.tsv",
+        #                     tool=binning_tools.keys(),
+        #                     sample_pool=samples["sample_pool"]),
+        contigs2bin_metabat=f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_contigs2bin.tsv",
+        contigs2bin_maxbin=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_contigs2bin.tsv"
+    output:
+        dastool_output=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}"),
+        quality_reports=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_summary.tsv",
+        bin_dir=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/DASTool_bins"),
+        c2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contigs2bin.tsv"
+
+    params:
+        threads=config['threads'],
+        dastool_output=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}",
+        input_list=lambda wildcards, input: format_dastool_input([input.contigs2bin_metabat, input.contigs2bin_maxbin])
+        # input_list=lambda wildcards, input: format_dastool_input(input.contigs2bin_files) #Comma-separated list
+    conda:
+        "../envs/dastool.yaml"
+    shell:
+        "dastool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {params.threads} --write_bins"
+
+
 # rule vamb:
 #     input:
 #         f"{outdir}/results/06_binning/{{sample}}/{{sample}}_sorted.bam",
