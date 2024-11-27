@@ -2,8 +2,8 @@
 import pandas as pd
 
 binning_tools = {
-    "metabat2": ".fa",
-    "maxbin2": ".fasta"
+    "metabat2": "fa",
+    "maxbin2": "fasta"
 }
 
 # Estimating coverage with fairy. First sketch the reads.
@@ -66,7 +66,7 @@ rule maxbin_coverage:
     output:
         maxbin_coverage=f"{outdir}/results/06_binning/coverage/fairy/maxbin2/coverage_{{sample_pool}}_maxbin.tsv"
     run:
-        make_maxbin_coverage(input_file={input.fairy_input},output_file={output.maxbin_coverage})
+        make_maxbin_coverage(input_file=input.fairy_input, output_file=output.maxbin_coverage)
 
 
 checkpoint maxbin2:
@@ -75,12 +75,12 @@ checkpoint maxbin2:
         coverage=f"{outdir}/results/06_binning/coverage/fairy/maxbin2/coverage_{{sample_pool}}_maxbin.tsv"
     output:
         bin_dir=directory(f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins"),
-        summary=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.summary",
-        marker_counts=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.marker",
-        marker_genes=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.marker_of_each_gene.tar.gz",
-        unbinned=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.noclass",
-        log=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.log",
-        tooshort=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bin.tooshort" #@Todo: make this temp.
+        # summary=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.summary",
+        # marker_counts=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.marker",
+        # marker_genes=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.marker_of_each_bin.tar.gz",
+        # unbinned=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.noclass",
+        # log=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.log",
+        # tooshort=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.tooshort" #@Todo: make this temp.
 
     params:
         threads=config['threads'],
@@ -88,7 +88,10 @@ checkpoint maxbin2:
     conda:
         "../envs/maxbin2.yaml"
     shell:
-        "run_MaxBin.pl -contig {input.assembly} -abund {input.coverage} -out {params.bin_prefix} -thread {params.threads}"
+        """
+	mkdir -p {output.bin_dir}
+	run_MaxBin.pl -contig {input.assembly} -abund {input.coverage} -out {params.bin_prefix} -thread {params.threads}
+	"""
 
 
 rule dastool_contigs2bin:
@@ -97,7 +100,7 @@ rule dastool_contigs2bin:
     output:
         tsv=f"{outdir}/results/06_binning/{{tool}}/{{sample_pool}}/{{sample_pool}}_contigs2bin.tsv"
     params:
-        script="../scripts/Fasta_to_Contigs2Bin.sh",
+        script=workflow.source_path("../scripts/Fasta_to_Contig2Bin.sh"),
         extension=lambda wildcards: binning_tools[wildcards.tool]
     shell:
         "bash {params.script} -e {params.extension} -i {input.bins_dir} > {output.tsv} "
@@ -130,7 +133,7 @@ checkpoint dastool:
     conda:
         "../envs/dastool.yaml"
     shell:
-        "dastool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {params.threads} --write_bins"
+        "DAS_Tool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {params.threads} --write_bins"
 
 
 # rule vamb:
