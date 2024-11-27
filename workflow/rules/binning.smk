@@ -94,9 +94,21 @@ checkpoint maxbin2:
 	"""
 
 
+def resolve_tool_bins(wildcards):
+    """
+    Returns the list of bin files for a given tool.
+    """
+    if wildcards.tool == "metabat2":
+        return checkpoints.metabat2.get(sample_pool=wildcards.sample_pool).output.bin_dir
+    elif wildcards.tool == "maxbin2":
+        return checkpoints.maxbin2.get(sample_pool=wildcards.sample_pool).output.bin_dir
+    else:
+        raise ValueError(f"Unknown tool: {wildcards.tool}")
+
+
 rule dastool_contigs2bin:
     input:
-        bins_dir=f"{outdir}/results/06_binning/{{tool}}/{{sample_pool}}/{{sample_pool}}_bins",
+        bins_dir=resolve_tool_bins  # Dynamically resolve the correct bin directory,
     output:
         tsv=f"{outdir}/results/06_binning/{{tool}}/{{sample_pool}}/{{sample_pool}}_contigs2bin.tsv"
     params:
@@ -105,11 +117,13 @@ rule dastool_contigs2bin:
     shell:
         "bash {params.script} -e {params.extension} -i {input.bins_dir} > {output.tsv} "
 
+
 def format_dastool_input(input_files):
     """
     Converts a list of input Contigs2Bin.tsv files into a comma-separated string.
     """
     return ",".join(input_files)
+
 
 checkpoint dastool:
     input:
