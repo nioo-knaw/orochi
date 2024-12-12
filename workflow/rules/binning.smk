@@ -134,10 +134,10 @@ checkpoint dastool:
         contigs2bin_metabat=f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_contigs2bin.tsv",
         contigs2bin_maxbin=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_contigs2bin.tsv"
     output:
-        dastool_output=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}"),
-        quality_reports=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_summary.tsv",
-        bin_dir=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/DASTool_bins"),
-        c2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contigs2bin.tsv"
+        # dastool_output=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}"),
+        # quality_reports=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_summary.tsv",
+        bin_dir=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins"),
+        # c2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contigs2bin.tsv"
 
     params:
         threads=config['threads'],
