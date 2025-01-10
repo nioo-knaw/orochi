@@ -150,13 +150,22 @@ checkpoint dastool:
         "DAS_Tool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {params.threads} --write_bins"
 
 
-# rule vamb:
-#     input:
-#         f"{outdir}/results/06_binning/{{sample}}/{{sample}}_sorted.bam",
-#         f"{outdir}/results/03_assembly/coassembly/assembly_{{sample}}/{{sample}}_assembly.fasta",
-#     output:
-#         bins=f"{outdir}/results/06_binning/{{sample}}/{{sample}}_bins"
-#     conda:
-#         "../envs/vamb.yaml"
-#     shell:
-#         "vamb --outdir {output} --fasta {input[1]} --bam {input[0]} --minfasta 2000 --minreads 2 --threads 4"
+checkpoint dereplicate_bins:
+    input:
+        bins_dir=expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins", sample_pool=samples["sample_pool"])
+        # bins_dir=lambda wildcards: [checkpoints.dastool.get(sample_pool=sample_pool).output.bin_dir for sample_pool in samples["sample_pool"]]
+    output:
+        dereplicated_bins=directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
+    params:
+        drep_output=f"{outdir}/results/06_binning/drep",
+        threads=config['threads'],
+        bin_dirs=lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in input.bins_dir])
+    log:
+        debug_log=f"{outdir}/results/06_binning/drep/drep_rule.log"
+    conda:
+        "../envs/drep.yaml"
+    shell:
+        """
+        echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
+        dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {params.threads}"
+        """

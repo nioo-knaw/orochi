@@ -36,3 +36,9 @@ def get_dastool_bins(wildcards):
     # Return the list of bin files
     return sorted(glob(f"{checkpoint_output}/{wildcards.sample_pool}_bin.*.fa"))
 
+def get_drep_bins(wildcards):
+    # Retrieve checkpoint output
+    checkpoint_output = checkpoints.dereplicate_bins.get().output.dereplicated_bins
+    # Return the list of bin files
+    return sorted(glob(f"{checkpoint_output}/*.fa"))
+
