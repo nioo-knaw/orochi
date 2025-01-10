@@ -1,0 +1,10 @@
+name: orochi_clustering
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python == 3.11
+  - scipy == 1.13.1
+  - pandas == 2.2.2
+  - matplotlib == 3.8.4
+  - scikit-learn == 1.5.1
