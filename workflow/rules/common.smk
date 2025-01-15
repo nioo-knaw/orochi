@@ -3,11 +3,38 @@ import os
 from glob import glob
 
 def get_forward_files(wildcards, extension):
+    if config['sample_pooling'] == "supervised":
+        samples_pooling = (
+            pd.read_csv(config["samples"],sep="\t",dtype={"sample": str})
+            .set_index("sample",drop=False)
+            .sort_index()
+
+        )
+    else:
+        samples_pooling = (
+            pd.read_csv(rules.clustering.output.smp,sep="\t",dtype={"sample": str})
+            .set_index("sample",drop=False)
+            .sort_index()
+        )
     return [f"{outdir}/results/02_filtered_reads/" + sample + extension + "1.fastq.gz" for sample in
-            samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values]
+            samples_pooling[samples_pooling["sample_pool"] == wildcards.sample_pool]["sample"].values]
 
 
 def get_rev_files(wildcards, extension):
+    if config['sample_pooling'] == "supervised":
+        samples = (
+            pd.read_csv(config["samples"],sep="\t",dtype={"sample": str})
+            .set_index("sample",drop=False)
+            .sort_index()
+
+        )
+    else:
+        samples = (
+            pd.read_csv(rules.clustering.output.smp,sep="\t",dtype={"sample": str})
+            .set_index("sample",drop=False)
+            .sort_index()
+        )
+
     return [f"{outdir}/results/02_filtered_reads/" + sample + extension + "2.fastq.gz" for sample in
             samples[samples["sample_pool"] == wildcards.sample_pool]["sample"].values]
 

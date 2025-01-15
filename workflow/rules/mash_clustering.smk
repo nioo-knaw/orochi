@@ -1,7 +1,7 @@
 rule mash_sketch:
     input:
-        forward = lambda wildcards: samples.loc[samples["sample"] == wildcards.sample].fq1.item(),
-        rev = lambda wildcards: samples.loc[samples["sample"] == wildcards.sample].fq2.item(),
+        forward=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+        rev=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
     output:
         temp(f"{outdir}/results/clustering/{{sample}}.msh")
     params:
@@ -26,12 +26,12 @@ rule mash_dist:
 
 rule clustering:
     input: rules.mash_dist.output
-    output: f"{outdir}/.samplesFileModified.checkpoint"
+    output:
+        chk=f"{outdir}/.samplesFileModified.checkpoint",
+        smp='config/samples_unsupervised.tsv'
     params:
-        clusterNumber = config["clustering"]
+        clusterNumber = config["clustering"],
+        script=workflow.source_path("../scripts/clustering.py")
     conda: "../envs/python_clustering.yaml"
     shell:
-        """
-        python3 scripts/clustering.py -k {params.clusterNumber} && \
-        touch {output}
-        """
+        "python3 {params.script} -f {input} -k {params.clusterNumber} && touch {output.chk}"
