@@ -5,10 +5,10 @@ rule downstream_test:
         # get_metabat_bins,
         # get_maxbin_bins,
         # get_dastool_bins,
-        # get_drep_bins,
+        get_drep_bins,
         # test_target,
-        'config/samples_unsupervised.tsv',
-        rules.clustering.output,
+        # 'config/samples_unsupervised.tsv',
+        # rules.clustering.output,
         f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
 
     output:
