@@ -161,7 +161,7 @@ checkpoint dereplicate_bins:
     params:
         drep_output=f"{outdir}/results/06_binning/drep",
         threads=config['threads'],
-        bin_dirs=lambda wildcards, input: ' '.join([f'"{dir}/*.fa"' for dir in sorted(set(input.bins_dir))])
+        bin_dirs=lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))])
     log:
         debug_log=f"{outdir}/results/06_binning/drep/drep_rule.log"
     conda:
