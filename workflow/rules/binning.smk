@@ -169,5 +169,5 @@ checkpoint dereplicate_bins:
     shell:
         """
         echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
-        dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {params.threads}"
+        dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {params.threads}
         """
