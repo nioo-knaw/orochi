@@ -109,6 +109,6 @@ else:
 # Adding cluster division to "samples.tsv"
 df = pd.read_csv('config/samples.tsv', sep='\t')
 df.iloc[:, -1] = cluster_labels
-df.to_csv('config/samples_supervised.tsv', sep='\t', index=False)
+df.to_csv('config/samples_unsupervised.tsv', sep='\t', index=False)
 
-print("'samples_supervised.tsv' file successfully changed.")
+print("'samples_unsupervised.tsv' file successfully changed.")
