@@ -3,10 +3,6 @@ import os
 
 rule supervised_pooling:
     input:
-        samples=branch(config['sample_pooling'] == "unsupervised",
-            then=rules.clustering.output.smp,
-            otherwise="config/samples.tsv"), # rules.clustering.output.smp,
-
         forward=lambda wildcards: get_forward_files(wildcards, "_filt_"),
         rev=lambda wildcards: get_rev_files(wildcards, "_filt_")
     output:
