@@ -7,9 +7,10 @@ rule downstream_test:
         # get_dastool_bins,
         # get_drep_bins,
         # test_target,
-        'config/samples_unsupervised.tsv',
-        rules.clustering.output,
+        #'config/samples_unsupervised.tsv',
+        #rules.clustering.output,
         f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
+        f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna"
 
     output:
         test_file=f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt"
