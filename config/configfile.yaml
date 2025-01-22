@@ -60,7 +60,7 @@ assembly_method: coassembly
 normalize_reads: "Yes"
 
 # sample_pooling: The sample pooling method to use. Options: supervised, unsupervised, no.
-sample_pooling: unsupervised
+sample_pooling: supervised
 
 # clustering: Chosen number of clusters. Only active if UNSUPERVISED sample pooling chosen. Type "0" if number of clusters should be calculated based on data.
 clustering: 0
