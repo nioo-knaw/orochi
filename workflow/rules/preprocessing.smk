@@ -58,10 +58,11 @@ rule filter_host:
             memory=config['bbmap_mem']
         conda:
             "../envs/preprocessing.yaml"
+        log: f"{outdir}/logs/filter_host_{{sample}}.log"
         shell:
             "time bbmap.sh threads={params.threads} minid=0.95 maxindel=3 \
                            in1={input.readF} in2={input.readR} \
-                           outu1={output.filterF} outu2={output.filterR} {params.memory}"
+                           outu1={output.filterF} outu2={output.filterR} {params.memory} 2> {log}"
 
 
 
