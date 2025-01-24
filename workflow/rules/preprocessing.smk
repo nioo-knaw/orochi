@@ -14,9 +14,10 @@ rule fastp:
             report_name = lambda wildcards:"{wildcards.sample}"
         conda:
             "../envs/preprocessing.yaml"
+        log: f"{outdir}/logs/fastp_{{sample}}.log",
         shell:
             "time fastp -i {input.fq1} -I {input.fq2} -o {output.cleanF} -O {output.cleanR} \
-                        -h {output.report_html} -j {output.report_json} -R {params.report_name} -y -l 30 -r --trim_poly_g --n_base_limit 0"
+                        -h {output.report_html} -j {output.report_json} -R {params.report_name} -y -l 30 -r --trim_poly_g --n_base_limit 0 2> {log}"
 
 rule concat_host_phix:
         input:
