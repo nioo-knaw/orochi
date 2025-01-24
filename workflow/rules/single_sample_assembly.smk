@@ -32,7 +32,7 @@ rule assembly_quality_single:
         outdir = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/quast_results/"
     conda:
         "../envs/single_assembly.yaml"
-    shell: "metaquast.py {input.assembly} --no-icarus --threads {params.threads} -o {params.outdir}"
+    shell: "metaquast.py {input.assembly} --no-krona --threads {params.threads} -o {params.outdir}"
 
 rule coverm:
     input:
