@@ -25,8 +25,9 @@ rule concat_host_phix:
             phix = "resources/contaminants_refs/GCF_000819615.1_ViralProj14015_genomic.fna"
         output:
             concat = temp("resources/contaminants_refs/contaminants_concat.fna")
+        log: f"{outdir}/logs/concat_host_phix.log"
         shell:
-            "cat {input.host} {input.phix} > {output.concat}"
+            "cat {input.host} {input.phix} > {output.concat} 2> {log}"
 
 rule build_index:
     conda:
@@ -38,8 +39,9 @@ rule build_index:
     params:
         threads=config['threads'],
         memory=config['bbmap_mem']
+    log: f"{outdir}/logs/build_index.log"
     shell:
-        "bbmap.sh ref={input.reference} threads={params.threads} {params.memory}"
+        "bbmap.sh ref={input.reference} threads={params.threads} {params.memory} 2> {log}"
 
 rule filter_host:
         input:
