@@ -75,3 +75,5 @@ megahit_mem: '0.9'
 # @Todo: this is overwritten bij --presets meta-large in megahit. Which is k 27 - 127 with steps of 10. Do something with this.
 kmers: "27,37,47,57,67,77,87"
 
+# Phyloflash database path
+phyloflash_db: "/path/to/phyloflash/database"
