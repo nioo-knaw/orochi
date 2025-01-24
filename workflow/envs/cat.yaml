@@ -1,0 +1,5 @@
+name: orochi_cat
+channels:
+  - bioconda
+dependencies:
+  - cat == 6.0.1
