@@ -1,0 +1,5 @@
+name: orochi_eggnog
+channels:
+  - bioconda
+dependencies:
+  - eggnog-mapper == 2.1.12
