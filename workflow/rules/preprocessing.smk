@@ -14,9 +14,10 @@ rule fastp:
             report_name = lambda wildcards:"{wildcards.sample}"
         conda:
             "../envs/preprocessing.yaml"
+        log: f"{outdir}/logs/fastp_{{sample}}.log",
         shell:
-            "time fastp -i {input.fq1} -I {input.fq2} -o {output.cleanF} -O {output.cleanR} \
-                        -h {output.report_html} -j {output.report_json} -R {params.report_name} -y -l 30 -r --trim_poly_g --n_base_limit 0"
+            "fastp -i {input.fq1} -I {input.fq2} -o {output.cleanF} -O {output.cleanR} \
+                        -h {output.report_html} -j {output.report_json} -R {params.report_name} -y -l 30 -r --trim_poly_g --n_base_limit 0 2> {log}"
 
 rule concat_host_phix:
         input:
@@ -24,8 +25,9 @@ rule concat_host_phix:
             phix = "resources/contaminants_refs/GCF_000819615.1_ViralProj14015_genomic.fna"
         output:
             concat = temp("resources/contaminants_refs/contaminants_concat.fna")
+        log: f"{outdir}/logs/concat_host_phix.log"
         shell:
-            "cat {input.host} {input.phix} > {output.concat}"
+            "cat {input.host} {input.phix} > {output.concat} 2> {log}"
 
 rule build_index:
     conda:
@@ -37,8 +39,9 @@ rule build_index:
     params:
         threads=config['threads'],
         memory=config['bbmap_mem']
+    log: f"{outdir}/logs/build_index.log"
     shell:
-        "bbmap.sh ref={input.reference} threads={params.threads} {params.memory}"
+        "bbmap.sh ref={input.reference} threads={params.threads} {params.memory} 2> {log}"
 
 rule filter_host:
         input:
@@ -55,10 +58,11 @@ rule filter_host:
             memory=config['bbmap_mem']
         conda:
             "../envs/preprocessing.yaml"
+        log: f"{outdir}/logs/filter_host_{{sample}}.log"
         shell:
-            "time bbmap.sh threads={params.threads} minid=0.95 maxindel=3 \
+            "bbmap.sh threads={params.threads} minid=0.95 maxindel=3 \
                            in1={input.readF} in2={input.readR} \
-                           outu1={output.filterF} outu2={output.filterR} {params.memory}"
+                           outu1={output.filterF} outu2={output.filterR} {params.memory} 2> {log}"
 
 
 
