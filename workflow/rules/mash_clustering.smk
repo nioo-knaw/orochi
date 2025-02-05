@@ -8,7 +8,8 @@ rule mash_sketch:
        prefix = lambda wildcards: samples.loc[samples["sample"] == wildcards.sample, "sample"].item(),
        out_dir = f"{outdir}/results/clustering/"
     conda: "../envs/mash.yaml"
-    shell: "mash sketch -k 27 -s 10000 -o {params.out_dir}{params.prefix} -r {input.forward} {input.rev}"
+    log: f"{outdir}/logs/mash_sketch_{{sample}}.log"
+    shell: "mash sketch -k 27 -s 10000 -o {params.out_dir}{params.prefix} -r {input.forward} {input.rev} 2> {log}"
 
 rule mash_paste:
     input:
@@ -16,13 +17,15 @@ rule mash_paste:
     output:
         temp("results/clustering/all.msh")
     conda: "../envs/mash.yaml"
-    shell: "mash paste {rules.mash_sketch.params.out_dir}all {input}"
+    log: f"{outdir}/logs/mash_paste.log"
+    shell: "mash paste {rules.mash_sketch.params.out_dir}all {input} 2> {log}"
 
 rule mash_dist:
     input: rules.mash_paste.output
     output: f"{outdir}/results/clustering/mashDistances.txt",
     conda: "../envs/mash.yaml"
-    shell: "mash dist -t {input} {input} > {output}"
+    log: f"{outdir}/logs/mash_dist.log"
+    shell: "mash dist -t {input} {input} > {output} 2> {log}"
 
 rule clustering:
     input: rules.mash_dist.output
@@ -33,5 +36,6 @@ rule clustering:
         clusterNumber = config["clustering"],
         script=workflow.source_path("../scripts/clustering.py")
     conda: "../envs/python_clustering.yaml"
+    log: f"{outdir}/logs/clustering.log"
     shell:
-        "python3 {params.script} -f {input} -k {params.clusterNumber} && touch {output.chk}"
+        "python3 {params.script} -f {input} -k {params.clusterNumber} && touch {output.chk} 2> {log}"
