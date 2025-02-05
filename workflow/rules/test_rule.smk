@@ -11,7 +11,7 @@ rule downstream_test:
         #rules.clustering.output,
         f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
         f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna",
-	f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.contig2classification.names.summarise.txt"
+        f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.contig2classification.names.summarise.txt"
 
     output:
         test_file=f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt"
