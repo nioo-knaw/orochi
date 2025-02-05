@@ -40,15 +40,12 @@ rule CAT:
 
 
 
-
-
-#rule dram:
-#    input: rules.prodigal.output.fna
-#    output: "{outdir}/results/05_prokaryotic_annotation"
-#    params:
-#
-#    conda:
-#        "../envs/dram.yaml"
-#    shell:
-#        "DRAM.py annotate -i 'my_bins/*.fa' -o {output}"
-
+rule dram:
+    input: rules.prodigal.output.fna
+    output: f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}/{{sample_pool}}_annotations.tsv"
+    params:
+        outdir = f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}"
+    conda:
+        "../envs/dram.yaml"
+    shell:
+        "DRAM.py annotate -i '{input}' -o {params.outdir}"
