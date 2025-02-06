@@ -51,8 +51,9 @@ rule augustify:
         "../envs/augustus.yaml"
     params:
         param_file="../resources/augustify_params.txt",
-        threads=config['threads']
-    script:
-        "../scripts/augustify.py -g {input} -p {params.param_file} -m {output.genes} -P {output.proteins} -t {params.threads}"
+        threads=config['threads'],
+        script="../scripts/augustify.py"
+    shell:
+        "python {params.script} -g {input} -p {params.param_file} -m {output.genes} -P {output.proteins} -t {params.threads}"
 
 
