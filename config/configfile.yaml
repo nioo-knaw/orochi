@@ -1,19 +1,22 @@
 # This config file is used to store the configuration of the Orochi pipeline.
 # For each parameter, we've provided a brief description of what it does and an example value. Please modify the values as needed.
 
+
 ## STARTING POINT
 # The path to the sample sheet (TSV format) that contains the sample information.
 # The sample sheet should contain the following columns: SampleID, Fastq1, Fastq2, Group, and Condition.
 samples: "config/samples.tsv"
 
 # The path to the output directory.
-outdir: "/home/nioo/luisa-mariaa/orochi_trial/2024_orochi/OrochiPipeline/results"
+outdir: "/path/to/output/directory"
 
 # The path to the temporary directory.
 tmpdir: "/tmp"
 
 # The default number of threads to use for each rule.
 threads: 32
+
+
 
 ## QUALITY CONTROL
 # Max memory to be used by bbmap/bbnorm (I advise using as much as possible). Only change the number between -Xmx and g. E.g. -Xmx1500g, -Xmx400g:
@@ -34,31 +37,15 @@ host_genome: "resources/data/reference/beta-vulgaris-subset.fasta"
 # host_index: The path to the host genome index.
 host_index: "/path/to/host/genome/index"
 
+
+
 ## READ NORMALISATION
 # bbmap_D: The desired kmer depth for read normalisation @Todo: rename to bbnorm, is more clear.
 bbmap_D: 20
 
-## FUNCTIONAL ANNOTATION
-# emapper_database: The path to the eggNOG database.
-emapper_database: "/path/to/emapper/database"
-
-# emapper_diamond: @Todo: Add description
-emapper_diamond: "/path/to/emapper/diamond"
-
-## TAXONOMIC ANNOTATION
-# CAT_database: The path to the CAT database.
-CAT_database: "/home/nioo/luisa-mariaa/orochi_trial/2024_orochi/OrochiPipeline/CAT/20240422_CAT_nr/db"
-
-# CAT_taxonomy: The path to the CAT taxonomy files
-CAT_taxonomy: "/home/nioo/luisa-mariaa/orochi_trial/2024_orochi/OrochiPipeline/CAT/20240422_CAT_nr/tax"
 
 
-# min_contig_length: The minimum length of the contigs.
-min_contig_length: 1000
-
-# min_contig_antismash: The minimum length of the contigs for antiSMASH analysis.
-min_contig_antismash: 5000
-
+## ASSEMBLY OPTIONS
 # assembly_method: The assembly method to use. Options: single_assembly (spades), coassembly (megahit).
 assembly_method: coassembly
 
@@ -81,3 +68,24 @@ megahit_mem: '0.9'
 # @Todo: this is overwritten bij --presets meta-large in megahit. Which is k 27 - 127 with steps of 10. Do something with this.
 kmers: "27,37,47,57,67,77,87"
 
+
+
+## ANNOTATIONS
+# min_contig_length: The minimum length of the contigs.
+min_contig_length: 1000
+
+
+## FUNCTIONAL ANNOTATION
+# emapper_database: The path to the eggNOG database.
+emapper_database: "/path/to/emapper/database"
+
+# min_contig_antismash: The minimum length of the contigs for antiSMASH analysis.
+min_contig_antismash: 5000
+
+
+## TAXONOMIC ANNOTATION
+# CAT_database: The path to the CAT database.
+CAT_database: "/path/to/CAT/db"
+
+# CAT_taxonomy: The path to the CAT taxonomy files
+CAT_taxonomy: "/path/to/CAT/tax"
