@@ -6,7 +6,7 @@
 samples: "config/samples.tsv"
 
 # The path to the output directory.
-outdir: "/scratch/mattiash/OrichTestRun"
+outdir: "/path/to/output"
 
 # The path to the temporary directory.
 tmpdir: "/tmp"
