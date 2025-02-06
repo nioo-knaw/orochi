@@ -37,15 +37,27 @@ rule CAT:
         CAT_pack summarise -c {input.contigs} -i {output.names} -o {output.summary}
         """
 
-
-
-
-rule dram:
-    input: rules.prodigal.output.fna
-    output: f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}/{{sample_pool}}_annotations.tsv"
+rule eggnog:
+    input:
+        proteins = rules.prodigal.output.faa
     params:
-        outdir = f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}"
+        db = config["emapper_database"],
+        threads = config["threads"],
+        out_dir = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}"
     conda:
-        "../envs/dram.yaml"
+        "../envs/eggnog.yaml"
+    output:
+        f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations"
     shell:
-        "DRAM.py annotate -i '{input}' -o {params.outdir}"
+        "emapper.py -i {input.proteins} --cpu {params.threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs"
+
+
+#rule dram:
+#    input: rules.prodigal.output.fna
+#    output: f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}/{{sample_pool}}_annotations.tsv"
+#    params:
+#        outdir = f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}"
+#    conda:
+#        "../envs/dram.yaml"
+#    shell:
+#        "DRAM.py annotate -i '{input}' -o {params.outdir}"

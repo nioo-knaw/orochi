@@ -12,7 +12,8 @@ rule downstream_test:
         f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
         f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna",
         f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.contig2classification.names.summarise.txt",
-        f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}/{{sample_pool}}_annotations.tsv"
+        f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations"
+        #f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}/{{sample_pool}}_annotations.tsv"
 
     output:
         test_file=f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt"
