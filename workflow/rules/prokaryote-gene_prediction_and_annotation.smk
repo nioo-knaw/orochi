@@ -37,6 +37,27 @@ rule CAT:
         CAT_pack summarise -c {input.contigs} -i {output.names} -o {output.summary}
         """
 
+rule MetaPhlAn4:
+    input:
+        forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+        rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
+    output: f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
+    params:
+#        prefix = samples["sample"],
+#        prefix = lambda wildcards:"{wildcards.sample}",
+        bowtie = f"{{sample}}.bowtie2.bz2",
+        threads = config["threads"],
+        tmpdir = config["tmpdir"]
+    conda:
+        "../envs/metaphlan4.yaml"
+    shell:
+        """
+        mkdir -p {params.tmpdir}
+        metaphlan {input.forward},{input.rev} --bowtie2out {params.tmpdir}/{params.bowtie} --nproc {params.threads} --input_type fastq -o {output}
+        """
+
+
+
 rule eggnog:
     input:
         proteins = rules.prodigal.output.faa
@@ -50,14 +71,3 @@ rule eggnog:
         f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations"
     shell:
         "emapper.py -i {input.proteins} --cpu {params.threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs"
-
-
-#rule dram:
-#    input: rules.prodigal.output.fna
-#    output: f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}/{{sample_pool}}_annotations.tsv"
-#    params:
-#        outdir = f"{outdir}/results/05_prokaryote_annotation/DRAM/{{sample_pool}}"
-#    conda:
-#        "../envs/dram.yaml"
-#    shell:
-#        "DRAM.py annotate -i '{input}' -o {params.outdir}"
