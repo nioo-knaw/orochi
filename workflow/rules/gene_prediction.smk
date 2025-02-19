@@ -50,9 +50,9 @@ rule augustify:
     conda:
         "../envs/augustus.yaml"
     params:
-        param_file="../resources/augustify_params.txt",
+        param_file=os.path.abspath("resources/augustify_params.txt"),
         threads=config['threads'],
-        script="../scripts/augustify.py"
+        script=os.path.abspath("workflow/scripts/augustify.py")
     shell:
         "python {params.script} -g {input} -p {params.param_file} -m {output.genes} -P {output.proteins} -t {params.threads}"
 
