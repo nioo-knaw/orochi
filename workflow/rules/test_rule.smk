@@ -5,7 +5,7 @@ rule downstream_test:
         # get_metabat_bins,
         # get_maxbin_bins,
         # get_dastool_bins,
-        get_drep_bins,
+        # get_drep_bins,
         # test_target,
         # 'config/samples_unsupervised.tsv',
         # rules.clustering.output,
