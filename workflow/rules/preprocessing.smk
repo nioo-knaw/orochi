@@ -24,7 +24,7 @@ rule concat_host_phix:
             host = config["host_genome"],
             phix = "resources/contaminants_refs/GCF_000819615.1_ViralProj14015_genomic.fna"
         output:
-            concat = temp("resources/contaminants_refs/contaminants_concat.fna")
+            concat = temp(f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna")
         log: f"{outdir}/logs/concat_host_phix.log"
         shell:
             "cat {input.host} {input.phix} > {output.concat} 2> {log}"
@@ -33,22 +33,22 @@ rule build_index:
     conda:
         "../envs/preprocessing.yaml"
     input: 
-        reference="resources/contaminants_refs/contaminants_concat.fna"
+        reference=f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna"
     output: 
-        ref_index=directory("ref/")
+        ref_index=directory(f"{outdir}/results/00_misc/contaminants_refs/ref/")
     params:
         threads=config['threads'],
         memory=config['bbmap_mem']
     log: f"{outdir}/logs/build_index.log"
     shell:
-        "bbmap.sh ref={input.reference} threads={params.threads} {params.memory} 2> {log}"
+        "bbmap.sh ref={input.reference} out={output.ref_index} threads={params.threads} {params.memory} 2> {log}"
 
 rule filter_host:
         input:
             readF = rules.fastp.output.cleanF,
             readR = rules.fastp.output.cleanR,
-            concat = "resources/contaminants_refs/contaminants_concat.fna",
-            ref_index="ref/"
+            concat = f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna",
+            ref_index=f"{outdir}/results/00_misc/contaminants_refs/ref/"
 
         output:
             filterF = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",

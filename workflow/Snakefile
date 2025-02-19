@@ -56,7 +56,9 @@ else:
 
 rule all:
     input:
-        target
+        target,
+        # expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt",
+        #    sample=samples["sample"])
 
     # input: expand(output,
     #               sample=config["data"],
