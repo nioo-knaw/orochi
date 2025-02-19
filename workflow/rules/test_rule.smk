@@ -10,6 +10,7 @@ rule downstream_test:
         # 'config/samples_unsupervised.tsv',
         # rules.clustering.output,
         f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
+        f"{outdir}/size_filter/contigs_{minsize}_{{sample_pool}}.fasta",
         f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_proteins.faa",
         f"{outdir}/results/04_gene_prediction/whokaryote/{{sample_pool}}/eukaryotes.fasta",
         f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins.faa",
