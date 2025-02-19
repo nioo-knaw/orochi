@@ -1,14 +1,33 @@
-name: Linting
+name: Tests
 
 on: [push]
 
 jobs:
-  linting:
+  Formatting:
     runs-on: ubuntu-latest
     steps:
-    - name: Linting
-      uses: snakemake/snakemake-github-action@v2.0.0
+      - uses: actions/checkout@v2
+        with:
+          # Full git history is needed to get a proper
+          # list of changed files within `super-linter`
+          fetch-depth: 0
+      - name: Formatting
+        uses: github/super-linter@v5
+        env:
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_BRANCH: master
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_SNAKEMAKE_SNAKEFMT: true
+
+  Linting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
       with:
-        directory: .test
+        fetch-depth: 0
+    - name: Lint workflow
+      uses: snakemake/snakemake-github-action@v2
+      with:
+        directory: .
         snakefile: workflow/Snakefile
         args: "--lint"
