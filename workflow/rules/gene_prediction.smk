@@ -45,8 +45,8 @@ rule augustify:
     input:
         f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/eukaryotes.fasta"
     output:
-        genes=f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukgenes.gff",
-        proteins=f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukproteins.faa",
+        tax=f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukclass.txt",
+        gff=f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukproteins.gff",
     conda:
         "../envs/augustus.yaml"
     params:
@@ -54,6 +54,6 @@ rule augustify:
         threads=config['threads'],
         script=os.path.abspath("workflow/scripts/augustify.py")
     shell:
-        "python {params.script} -g {input} -p {params.param_file} -m {output.genes} -P {output.proteins} -t {params.threads}"
+        "python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {params.threads}"
 
 
