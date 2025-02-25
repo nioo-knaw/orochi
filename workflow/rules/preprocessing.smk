@@ -41,7 +41,7 @@ rule build_index:
         memory=config['bbmap_mem']
     log: f"{outdir}/logs/build_index.log"
     shell:
-        "bbmap.sh ref={input.reference} out={output.ref_index} threads={params.threads} {params.memory} 2> {log}"
+        "bbmap.sh ref={input.reference} path={output.ref_index} threads={params.threads} {params.memory} 2> {log}"
 
 rule filter_host:
         input:
@@ -55,13 +55,14 @@ rule filter_host:
             filterR = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
         params:
             threads=config['threads'],
-            memory=config['bbmap_mem']
+            memory=config['bbmap_mem'],
+            ref_dir=f"{outdir}/results/00_misc/contaminants_refs"
         conda:
             "../envs/preprocessing.yaml"
         log: f"{outdir}/logs/filter_host_{{sample}}.log"
         shell:
             "bbmap.sh threads={params.threads} minid=0.95 maxindel=3 \
-                           in1={input.readF} in2={input.readR} \
+                           in1={input.readF} in2={input.readR} path={input.ref_index} \
                            outu1={output.filterF} outu2={output.filterR} {params.memory} 2> {log}"
 
 
