@@ -10,9 +10,9 @@ rule downstream_test:
         #'config/samples_unsupervised.tsv',
         #rules.clustering.output,
         f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
-#        f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna",
-#        f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.contig2classification.names.summarise.txt",
-#        f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations",
+        f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna",
+        f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.contig2classification.names.summarise.txt",
+        f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations",
 #        f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
 #        expand(f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{samples}.txt", samples = SAMPLES)
 

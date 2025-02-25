@@ -41,21 +41,22 @@ rule MetaPhlAn4:
     input:
         forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
-    output: f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
+    output:
+        file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
     params:
 #        prefix = samples["sample"],
 #        prefix = lambda wildcards:"{wildcards.sample}",
+        mtphln_outdir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
         bowtie = f"{{sample}}.bowtie2.bz2",
         threads = config["threads"],
-        tmpdir = config["tmpdir"]
+#        scripts_dir = f"{outdir}/workflow/scripts/"
     conda:
         "../envs/metaphlan4.yaml"
     shell:
         """
-        mkdir -p {params.tmpdir}
-        metaphlan {input.forward},{input.rev} --bowtie2out {params.tmpdir}/{params.bowtie} --nproc {params.threads} --input_type fastq -o {output}
+        mkdir -p {params.mtphln_outdir}
+        metaphlan {input.forward},{input.rev} --bowtie2out {params.mtphln_outdir}/{params.bowtie} --nproc {params.threads} --input_type fastq -o {output.file}
         """
-
 
 
 rule eggnog:
