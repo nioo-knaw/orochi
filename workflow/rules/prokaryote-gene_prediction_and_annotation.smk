@@ -44,12 +44,9 @@ rule MetaPhlAn4:
     output:
         file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
     params:
-#        prefix = samples["sample"],
-#        prefix = lambda wildcards:"{wildcards.sample}",
         mtphln_outdir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
         bowtie = f"{{sample}}.bowtie2.bz2",
-        threads = config["threads"],
-#        scripts_dir = f"{outdir}/workflow/scripts/"
+        threads = config["threads"]
     conda:
         "../envs/metaphlan4.yaml"
     shell:
