@@ -55,6 +55,24 @@ rule MetaPhlAn4:
         metaphlan {input.forward},{input.rev} --bowtie2out {params.mtphln_outdir}/{params.bowtie} --nproc {params.threads} --input_type fastq -o {output.file}
         """
 
+rule MetaPhlAn_secondary:
+    input:
+        rules.MetaPhlAn4.params.mtphln_outdir
+    output:
+        merged_table = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
+    params:
+        mtphln_dir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
+        scripts_dir= "./workflow/scripts/"
+    conda:
+        "../envs/metaphlan4.yaml"
+    shell:
+        """
+        merge_metaphlan_tables.py {input}/*.txt > {output.merged_table}
+        """
+        
+       # Rscript {params.scripts_dir}/MetaPhlAn_calculate_diversity.R -f {output.merged_table} -o {params.mtphln_dir}/beta_diversity
+       # Rscript {params.scripts_dir}/MetaPhlAn_calculate_diversity.R -f {output.merged_table} -d alpha -m shannon -o {params.mtphln_dir}/alpha_diversity
+       # """
 
 rule eggnog:
     input:
