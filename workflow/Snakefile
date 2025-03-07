@@ -28,8 +28,8 @@ include: "rules/coassembly.smk"
 include: "rules/single_sample_assembly.smk"
 include: "rules/size_filter.smk"
 include: "rules/binning.smk"
+include: "rules/euk_gene_prediction.smk"
 include: "rules/test_rule.smk"
-include: "rules/gene_prediction.smk"
 
 
 # # Load report

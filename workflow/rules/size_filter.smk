@@ -6,7 +6,7 @@ rule size_filter_contigs:
             then=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample}}/{{sample}}_assembly.fasta",
             otherwise=f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/{{sample}}_assembly.fasta")
     output:
-        f"{outdir}/size_filter/contigs_{minsize}_{{sample}}.fasta"
+        f"{outdir}/results/03_assembly/size_filtered/{{sample}}_{minsize}/contigs_{{sample}}_{minsize}.fasta"
     conda:
         "../envs/size_filter.yaml"
     params:
