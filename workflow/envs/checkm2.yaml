@@ -1,0 +1,6 @@
+name: orochi_checkm2
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - checkm2
