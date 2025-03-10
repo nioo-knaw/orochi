@@ -22,7 +22,7 @@ rule whokaryote:
     output:
         headers_euk=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/eukaryote_contig_headers.txt",
         headers_prok=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/prokaryote_contig_headers.txt",
-        contigs_size=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/contigs_{minsize}.fasta",
+        contigs_size=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/contigs{minsize}.fasta",
         euk_fasta=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/eukaryotes.fasta",
         prok_fasta=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/prokaryotes.fasta",
         unclassified_fasta=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/unclassified.fasta"
