@@ -11,6 +11,7 @@ rule size_filter_contigs:
         "../envs/size_filter.yaml"
     params:
         size=config['min_contig_length'],
-        outdir=f"{outdir}/size_filter"
+        outdir=f"{outdir}/results/03_assembly/size_filtered/{{sample}}_{minsize}",
+        script=os.path.abspath("workflow/scripts/sizefilter_contigs.py")
     shell:
-        "sizefilter_contigs.py --contigs {input} --outdir {params.outdir} --minsize {params.size}"
+        "python {params.script} --contigs {input} --outdir {params.outdir} --minsize {params.size} --sample_name {wildcards.sample}"
