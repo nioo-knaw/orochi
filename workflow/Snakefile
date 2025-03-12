@@ -25,6 +25,7 @@ include: "rules/preprocessing.smk"
 include: "rules/mash_clustering.smk"
 include: "rules/coassembly.smk"
 include: "rules/single_sample_assembly.smk"
+include: "rules/prokaryote-gene_prediction_and_annotation.smk"
 include: "rules/binning.smk"
 include: "rules/test_rule.smk"
 # include: "rules/gene_prediction.smk"
@@ -56,8 +57,9 @@ else:
 
 rule all:
     input:
-        target
-
+        target,
+        expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
+        f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
     # input: expand(output,
     #               sample=config["data"],
     #               treatment=config["treatment"],

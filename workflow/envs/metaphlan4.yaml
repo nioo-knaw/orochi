@@ -1,0 +1,8 @@
+name: orochi_metaphlan4
+channels:
+  - bioconda
+  - anaconda
+  - conda-forge
+dependencies:
+  - metaphlan == 4.1.1
+  - numpy == 2.2.2
