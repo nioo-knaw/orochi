@@ -14,7 +14,7 @@ rule downstream_test:
         f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_proteins.faa",
         f"{outdir}/results/04_gene_prediction/whokaryote/{{sample_pool}}/eukaryotes.fasta",
         f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins.gff",
-        f"{outdir}/results/06_binning/drep/checkm2/quality_report.tsv"
+        f"{outdir}/results/06_binning/checkm2/quality_report.tsv"
 
 
     output:
