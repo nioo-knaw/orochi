@@ -5,7 +5,7 @@ rule downstream_test:
         # get_metabat_bins,
         # get_maxbin_bins,
         # get_dastool_bins,
-        get_drep_bins,
+        # get_drep_bins,
         # test_target,
         f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
         f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna",
@@ -14,6 +14,12 @@ rule downstream_test:
         f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
 #        f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
 #        expand(f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{samples}.txt", samples = SAMPLES)
+        f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta",
+        f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_proteins.faa",
+        f"{outdir}/results/04_gene_prediction/whokaryote/{{sample_pool}}/eukaryotes.fasta",
+        f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins.gff",
+        f"{outdir}/results/06_binning/checkm2/quality_report.tsv"
+
 
     output:
 #        test_file=f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
@@ -22,3 +28,5 @@ rule downstream_test:
         shell("echo {input}")
 #        shell("touch {output.test_file} && touch {output.test_file1}")
         shell("touch {output.test_file1}")
+
+        shell("touch {output.test_file}")

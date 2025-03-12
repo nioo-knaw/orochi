@@ -24,7 +24,7 @@ rule concat_host_phix:
             host = config["host_genome"],
             phix = "resources/contaminants_refs/GCF_000819615.1_ViralProj14015_genomic.fna"
         output:
-            concat = temp("resources/contaminants_refs/contaminants_concat.fna")
+            concat = temp(f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna")
         log: f"{outdir}/logs/concat_host_phix.log"
         shell:
             "cat {input.host} {input.phix} > {output.concat} 2> {log}"
@@ -33,35 +33,36 @@ rule build_index:
     conda:
         "../envs/preprocessing.yaml"
     input: 
-        reference="resources/contaminants_refs/contaminants_concat.fna"
+        reference=f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna"
     output: 
-        ref_index=directory("ref/")
+        ref_index=directory(f"{outdir}/results/00_misc/contaminants_refs/ref/")
     params:
         threads=config['threads'],
         memory=config['bbmap_mem']
     log: f"{outdir}/logs/build_index.log"
     shell:
-        "bbmap.sh ref={input.reference} threads={params.threads} {params.memory} 2> {log}"
+        "bbmap.sh ref={input.reference} path={output.ref_index} threads={params.threads} {params.memory} 2> {log}"
 
 rule filter_host:
         input:
             readF = rules.fastp.output.cleanF,
             readR = rules.fastp.output.cleanR,
-            concat = "resources/contaminants_refs/contaminants_concat.fna",
-            ref_index="ref/"
+            concat = f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna",
+            ref_index=f"{outdir}/results/00_misc/contaminants_refs/ref/"
 
         output:
             filterF = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
             filterR = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
         params:
             threads=config['threads'],
-            memory=config['bbmap_mem']
+            memory=config['bbmap_mem'],
+            ref_dir=f"{outdir}/results/00_misc/contaminants_refs"
         conda:
             "../envs/preprocessing.yaml"
         log: f"{outdir}/logs/filter_host_{{sample}}.log"
         shell:
             "bbmap.sh threads={params.threads} minid=0.95 maxindel=3 \
-                           in1={input.readF} in2={input.readR} \
+                           in1={input.readF} in2={input.readR} path={input.ref_index} \
                            outu1={output.filterF} outu2={output.filterR} {params.memory} 2> {log}"
 
 

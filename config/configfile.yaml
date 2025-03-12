@@ -8,7 +8,7 @@
 samples: "config/samples.tsv"
 
 # The path to the output directory.
-outdir: "/scratch/mattiash/OrichTestRun"
+outdir: "/path/to/output"
 
 # The path to the temporary directory.
 tmpdir: "/tmp"
@@ -65,6 +65,8 @@ megahit_mem: '0.9'
 # @Todo: this is overwritten bij --presets meta-large in megahit. Which is k 27 - 127 with steps of 10. Do something with this.
 kmers: "27,37,47,57,67,77,87"
 
+# Phyloflash database path
+phyloflash_db: "/path/to/phyloflash/database"
 
 
 ## ANNOTATIONS
@@ -86,3 +88,6 @@ CAT_database: "/path/to/CAT/db"
 
 # CAT_taxonomy: The path to the CAT taxonomy files
 CAT_taxonomy: "/path/to/CAT/tax"
+
+# CheckM2 database path
+checkm_db: "/path/to/database/CheckM2_database/uniref100.KO.1.dmnd"

@@ -1,0 +1,6 @@
+name: orochi_sizefilter
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - biopython
