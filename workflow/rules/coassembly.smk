@@ -3,18 +3,15 @@ import os
 
 rule supervised_pooling:
     input:
-        samples=branch(config['sample_pooling'] == "unsupervised",
-            then=rules.clustering.output.smp,
-            otherwise="config/samples.tsv"), # rules.clustering.output.smp,
-
         forward=lambda wildcards: get_forward_files(wildcards, "_filt_"),
         rev=lambda wildcards: get_rev_files(wildcards, "_filt_")
     output:
         forward=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
         rev=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz"
+    log: f"{outdir}/logs/supervised_pooling_{{sample_pool}}.log"
     run:
-        shell("cat {input.forward} > {output.forward}")
-        shell("cat {input.rev} > {output.rev}")
+        shell("cat {input.forward} > {output.forward} 2> {log}")
+        shell("cat {input.rev} > {output.rev} 2>> {log}")
 
 
 rule normal_reads:
@@ -33,8 +30,9 @@ rule normal_reads:
         f"{outdir}/results/benchmark/normal_reads/{{sample_pool}}.tsv"
     conda:
         "../envs/coassembly.yaml"
+    log: f"{outdir}/logs/normal_reads{{sample_pool}}.log"
     shell:
-        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={params.threads} out={output.out1} out2={output.out2} hist={output.hist} {params.memory}"
+        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={params.threads} out={output.out1} out2={output.out2} hist={output.hist} {params.memory} 2> {log}"
 
 
 rule megahit:
@@ -55,13 +53,13 @@ rule megahit:
         kmers = config["kmers"],
         output_dir = f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}",
         memory=config['megahit_mem']
-    # log: "{outdir}/logs/assembly/megahit/{sample_pool}/megahit.log"
+    log: f"{outdir}/logs/megahit_{{sample_pool}}.log"
     benchmark:
         f"{outdir}/results/benchmark/megahit/{{sample_pool}}.tsv"
     threads: 32
     conda:
         "../envs/megahit.yaml"
-    shell:"megahit -f --out-dir {params.output_dir} --out-prefix {wildcards.sample_pool}_final -m {params.memory} --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev}"
+    shell:"megahit -f --out-dir {params.output_dir} --out-prefix {wildcards.sample_pool}_final -m {params.memory} --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev} 2> {log}"
 
 rule rename_megahit:
     input:
