@@ -171,3 +171,20 @@ checkpoint dereplicate_bins:
         echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
         dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {params.threads}
         """
+
+rule checkm2:
+    input:
+        drep_dir=f"{outdir}/results/06_binning/drep/dereplicated_genomes"
+    output:
+        checkm_output=f"{outdir}/results/06_binning/checkm2/quality_report.tsv",
+        diamond_output=f"{outdir}/results/06_binning/checkm2/diamond_output/DIAMOND_RESULTS.tsv",
+        protein_files=directory(f"{outdir}/results/06_binning/checkm2/protein_files")
+    params:
+        threads=config['threads'],
+        output_dir=f"{outdir}/results/06_binning/checkm2",
+        db_path=config['checkm_db']
+    log: f"{outdir}/logs/checkm2.log"
+    conda:
+        "../envs/checkm2.yaml"
+    shell:
+        "checkm2 predict --threads {params.threads} -x fa --input {input.drep_dir} --output-directory {params.output_dir} --force --database_path {params.db_path} 2> {log}"
