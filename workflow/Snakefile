@@ -62,7 +62,7 @@ rule all:
     input:
         target,
         expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
-    #    f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
+        f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.tsv"
     # input: expand(output,
     #               sample=config["data"],
     #               treatment=config["treatment"],
