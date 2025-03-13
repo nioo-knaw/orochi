@@ -1,8 +1,9 @@
 rule prodigal:
     input:
-        contigs=branch(config['assembly_method'] == "coassembly",
-            then=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
-            otherwise=f"{outdir}/results/03_assembly/single_sample_assembly/{{sample_pool}}/{{sample_pool}}_assembly.fasta")
+         contigs=f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta"
+#        contigs=branch(config['assembly_method'] == "coassembly",
+#            then=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
+#            otherwise=f"{outdir}/results/03_assembly/single_sample_assembly/{{sample_pool}}/{{sample_pool}}_assembly.fasta")
     output:
         gff = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_genes.gff",
         faa = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_proteins.faa",
@@ -39,8 +40,10 @@ rule CAT:
 
 rule MetaPhlAn4:
     input:
-        forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
-        rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
+#        forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+#        rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
+         forward = rules.filter_host.output.filterF,
+         rev = rules.filter_host.output.filterR
     output:
         file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
     params:
@@ -55,20 +58,21 @@ rule MetaPhlAn4:
         metaphlan {input.forward},{input.rev} --bowtie2out {params.mtphln_outdir}/{params.bowtie} --nproc {params.threads} --input_type fastq -o {output.file}
         """
 
-rule MetaPhlAn_secondary:
-    input:
-        rules.MetaPhlAn4.params.mtphln_outdir
-    output:
-        merged_table = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
-    params:
-        mtphln_dir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
-        scripts_dir= "./workflow/scripts/"
-    conda:
-        "../envs/metaphlan4.yaml"
-    shell:
-        """
-        merge_metaphlan_tables.py {input}/*.txt > {output.merged_table}
-        """
+#rule MetaPhlAn_secondary:
+#    input:
+#        rules.MetaPhlAn4.params.mtphln_outdir
+#    output:
+#        merged_table = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.tsv"
+#    params:
+#        mtphln_dir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
+ #       scripts_dir= "./workflow/scripts/"
+#    conda:
+#        "../envs/metaphlan4.yaml"
+#    shell:
+#        """
+#        mkdir -p {params.mtphln_dir}
+#        merge_metaphlan_tables.py {input}/*.txt > {output.merged_table}
+#        """
         
        # Rscript {params.scripts_dir}/MetaPhlAn_calculate_diversity.R -f {output.merged_table} -o {params.mtphln_dir}/beta_diversity
        # Rscript {params.scripts_dir}/MetaPhlAn_calculate_diversity.R -f {output.merged_table} -d alpha -m shannon -o {params.mtphln_dir}/alpha_diversity

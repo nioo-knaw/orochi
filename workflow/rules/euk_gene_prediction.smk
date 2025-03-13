@@ -1,18 +1,18 @@
 """ Rules related to gene prediction """
 
-rule prodigal:
-    input:
-        contigs=f"{outdir}/results/03_assembly/size_filtered/{{sample}}_{minsize}/contigs_{{sample}}_{minsize}.fasta"
+#rule prodigal:
+#    input:
+#        contigs=f"{outdir}/results/03_assembly/size_filtered/{{sample}}_{minsize}/contigs_{{sample}}_{minsize}.fasta"
 
-    output:
-        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_genes.gff",
-        faa=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_proteins.faa",
-        fna=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_orfs.fna"
+#    output:
+#        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_genes.gff",
+#        faa=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_proteins.faa",
+#        fna=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_orfs.fna"
 
-    conda:
-        "../envs/prodigal.yaml"
+#    conda:
+#        "../envs/prodigal.yaml"
 
-    shell:"prodigal -i {input.contigs} -o {output.gff} -a {output.faa} -d {output.fna} -p meta -f gff"
+#    shell:"prodigal -i {input.contigs} -o {output.gff} -a {output.faa} -d {output.fna} -p meta -f gff"
 
 rule whokaryote:
     input:
