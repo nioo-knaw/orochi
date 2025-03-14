@@ -26,10 +26,11 @@ include: "rules/preprocessing.smk"
 include: "rules/mash_clustering.smk"
 include: "rules/coassembly.smk"
 include: "rules/single_sample_assembly.smk"
-include: "rules/prokaryote-gene_prediction_and_annotation.smk"
 include: "rules/size_filter.smk"
-include: "rules/binning.smk"
+include: "rules/prokaryote-gene_prediction_and_annotation.smk"
 include: "rules/euk_gene_prediction.smk"
+include: "rules/binning.smk"
+include: "rules/mag_linkage.smk"
 include: "rules/test_rule.smk"
 
 
