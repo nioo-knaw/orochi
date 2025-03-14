@@ -16,7 +16,8 @@ rule prodigal:
 
 rule CAT:
     input:
-        contigs = {rules.rename_megahit.output.fasta},
+#        contigs = {rules.rename_megahit.output.fasta},
+        contigs = f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta",
         proteins = {rules.prodigal.output.faa}
     output:
         CAT = f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.contig2classification.txt",
