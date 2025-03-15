@@ -6,9 +6,9 @@ rule phyloflash:
         reverse_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz"
 
     output:
-        phyloflash_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash",
-        phyloflash_report=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}_phyloFlash.report.csv",
-        phyloflash_fasta=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.all.final.fasta"
+        phyloflash_out=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.phyloFlash.tar.gz",
+        # phyloflash_report=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}_phyloFlash.report.csv",
+        # phyloflash_fasta=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.all.final.fasta"
 
     conda:
         "../envs/phyloflash.yaml"
@@ -16,11 +16,11 @@ rule phyloflash:
     params:
         db=config["phyloflash_db"],
         threads=config["threads"],
-        outdir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/"
+        phylo_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/"
 
     shell:
-        "phyloFlash.pl -o {output.phyloflash_dir} -dbhome {params.db} -lib {wildcards.sample_pool} \
-         -CPUs {params.threads} -read1 {input.forward_reads} -read2 {input.reverse_reads}; mv {wildcards.sample_pool}.* {params.outdir}"
+        "phyloFlash.pl -dbhome {params.db} -lib {wildcards.sample_pool} -zip \
+         -CPUs {params.threads} -read1 {input.forward_reads} -read2 {input.reverse_reads}; mv {wildcards.sample_pool}.phyloFlash.* {params.phylo_dir}"
 
 rule unzip_reads:
     input:
