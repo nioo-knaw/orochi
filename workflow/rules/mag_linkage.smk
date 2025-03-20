@@ -18,9 +18,17 @@ rule phyloflash:
         threads=config["threads"],
         phylo_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/"
 
-    shell:
+    shell: # We have to zip the phyloflash output and move it becaues it will be stored in the WD otherwise.
         "phyloFlash.pl -dbhome {params.db} -lib {wildcards.sample_pool} -zip \
-         -CPUs {params.threads} -read1 {input.forward_reads} -read2 {input.reverse_reads}; mv {wildcards.sample_pool}.phyloFlash.* {params.phylo_dir}"
+         -CPUs {params.threads} -read1 {input.forward_reads} -read2 {input.reverse_reads}; \ mv {wildcards.sample_pool}.phyloFlash.* {params.phylo_dir}"
+
+rule unzip_phyloflash:
+    input:
+        phyloflash_tar=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.phyloFlash.tar.gz"
+    output:
+        phyloflash_output=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.all.final.fasta"
+    shell:
+        "tar -xzf {input.phyloflash_tar}"
 
 rule unzip_reads:
     input:
