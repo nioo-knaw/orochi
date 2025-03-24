@@ -2,13 +2,39 @@
 
 rule antismash:
     input:
-        "path/to/contigs"
+        gff=f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins.gff"
 
     output:
-        "path/to/output"
+        html=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/antismash.html",
+        json=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/antismash.json"
+    conda:
+        "../envs/antismash.yaml"
+    params:
+        outdir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial",
+        threads=config['threads'],
+        database_dir=config['antismash_db']
 
     shell:
-        "antismash_meta -options"
+        "antismash -c {params.threads} --genefinding-gff3 {input.gff} --output-dir {params.outdir} \
+        --taxon bacteria --output-basename bacterial --cc-mibig --cb-general --cb-knownclusters --databases {params.database_dir}"
+
+rule fungismash:
+    input:
+        gff=f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins.gff"
+
+    output:
+        html=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/antismash.html",
+        json=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/antismash.json"
+    conda:
+        "../envs/antismash.yaml"
+    params:
+        outdir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/",
+        threads=config['threads'],
+        database_dir=config['antismash_db']
+
+    shell:
+        "antismash -c {params.threads} --genefinding-gff3 {input.gff} --output-dir {params.outdir} \
+        --taxon fungi --cassis --output-basename fungal --cc-mibig --cb-general --cb-knownclusters --databases {params.database_dir}"
 
 rule bigscape:
     input:
