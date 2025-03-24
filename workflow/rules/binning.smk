@@ -193,3 +193,31 @@ rule checkm2:
         "../envs/checkm2.yaml"
     shell:
         "checkm2 predict --threads {params.threads} -x fa --input {input.drep_dir} --output-directory {params.output_dir} --force --database_path {params.db_path} 2> {log}"
+
+rule BAT:
+    input:
+        # drep_dir=f"{outdir}/results/06_binning/drep/dereplicated_genomes",
+        dastool_dir=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
+        proteins= {rules.prodigal.output.faa},
+        alignment= f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.alignment.diamond"
+    output:
+        bat_class=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.txt",
+        bat_names=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt",
+        bat_summary=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.summarise.txt"
+    params:
+        threads=config['threads'],
+        output_dir=f"{outdir}/results/06_binning/BAT/{{sample_pool}}",
+        db_path=config['CAT_database'],
+        tax_path=config['CAT_taxonomy'],
+        prefix=f"{{sample_pool}}"
+    log: f"{outdir}/logs/{{sample_pool}}_bat.log"
+    conda:
+        "../envs/cat.yaml"
+    shell:
+        """ 
+        mkdir -p {params.output_dir}
+        CAT_pack bins -b {input.dastool_dir} -d {params.db_path} -t {params.tax_path} -p {input.proteins} \
+         -a {input.alignment} -n {params.threads} -o {params.output_dir}{params.prefix} 2> {log}
+        CAT_pack add_names -i {output.bat_class} -o {output.bat_names} -t {params.tax_path} --only_official --exclude_scores
+        CAT_pack summarise -i {output.bat_names} -o {output.bat_summary}
+        """
