@@ -17,7 +17,8 @@ rule downstream_test:
         f"{outdir}/results/04_gene_prediction/whokaryote/{{sample_pool}}/eukaryotes.fasta",
         f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins.gff",
         f"{outdir}/results/06_binning/checkm2/quality_report.tsv",
-        f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_markerMAG_link.csv"
+        f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome.txt",
+        f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.summarise.txt"
 
 
     output:
@@ -28,4 +29,4 @@ rule downstream_test:
 #        shell("touch {output.test_file} && touch {output.test_file1}")
         shell("touch {output.test_file1}")
 
-        shell("touch {output.test_file}")
+
