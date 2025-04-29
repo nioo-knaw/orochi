@@ -41,7 +41,7 @@ rule build_index:
     params:
         # threads=config['threads'],
         memory=config['bbmap_mem']
-    reources:
+    resources:
         mem_mb=1500000
     threads:
         workflow.cores * 0.5
