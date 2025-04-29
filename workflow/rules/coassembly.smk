@@ -43,10 +43,10 @@ rule megahit:
     input:
         fwd=branch(config['normalize_reads'] == "Yes",
             then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_f.fastq",
-            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq"),
+            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz"),
         rev=branch(config['normalize_reads'] == "Yes",
             then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_r.fastq",
-            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq")
+            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz")
 
     output:
         contigs=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_final.contigs.fa",
