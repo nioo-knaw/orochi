@@ -1,6 +1,8 @@
 """ Rules related to binning/creating MAGs """
 import pandas as pd
 
+# @Todo: Figure out a way to also do binning for single-sample assembly. We need to use coverM here. Maybe different rules for single-sample assembly?
+
 binning_tools = {
     "metabat2": "fa",
     "maxbin2": "fasta"
@@ -12,9 +14,11 @@ rule fairy_sketch:
         forward=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
     output:
-        sketch_file=f"{outdir}/results/06_binning/coverage/fairy_sketch/{{sample}}_filt_1.fastq.gz.paired.bcsp",
+        sketch_file=f"{outdir}/results/06_binning/coverage/fairy_sketch/{{sample}}_filt_1.fastq.gz.paired.bcsp"
     params:
         sketch_dir=f"{outdir}/results/06_binning/coverage/fairy_sketch"
+    resources:
+        mem_mb=lambda wildcards: int(config['max_mem'] * 0.4)
     conda:
         "../envs/fairy.yaml"
     shell:
@@ -28,12 +32,14 @@ rule fairy_coverage:
         sketch_files=expand(f"{outdir}/results/06_binning/coverage/fairy_sketch/{{sample}}_filt_1.fastq.gz.paired.bcsp", sample=samples["sample"])
     output:
         coverage_file=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
-    params:
-        threads=config['threads']
+    threads:
+        config['threads']
+    resources:
+        mem_mb=config['max_mem']
     conda:
         "../envs/fairy.yaml"
     shell:
-        "fairy coverage {input.sketch_files} {input.assembly} -t {params.threads} -o {output.coverage_file}"
+        "fairy coverage {input.sketch_files} {input.assembly} -t {threads} -o {output.coverage_file}"
 
 
 checkpoint metabat2:
@@ -43,16 +49,18 @@ checkpoint metabat2:
 
         depth=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
     output:
-        bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins"),
+        bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins")
         # completed=f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_metabat2.done"
     params:
-        threads=config['threads'],
         bin_prefix=f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin"
-
+    threads:
+        config['threads']
+    resources:
+        mem_mb=config['max_mem']
     conda:
         "../envs/metabat2.yaml"
     shell:
-        "metabat2 -i {input.assembly} -a {input.depth} -o {params.bin_prefix} -t {params.threads}"
+        "metabat2 -i {input.assembly} -a {input.depth} -o {params.bin_prefix} -t {threads}"
 
 
 def make_maxbin_coverage(input_file, output_file):
@@ -78,7 +86,7 @@ checkpoint maxbin2:
         assembly=f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta",
         coverage=f"{outdir}/results/06_binning/coverage/fairy/maxbin2/coverage_{{sample_pool}}_maxbin.tsv"
     output:
-        bin_dir=directory(f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins"),
+        bin_dir=directory(f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins")
         # summary=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.summary",
         # marker_counts=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.marker",
         # marker_genes=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.marker_of_each_bin.tar.gz",
@@ -87,14 +95,17 @@ checkpoint maxbin2:
         # tooshort=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.tooshort" #@Todo: make this temp.
 
     params:
-        threads=config['threads'],
         bin_prefix=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin"
+    threads:
+        config['threads']
+    resources:
+        mem_mb=config['max_mem']
     conda:
         "../envs/maxbin2.yaml"
     shell:
         """
 	mkdir -p {output.bin_dir}
-	run_MaxBin.pl -contig {input.assembly} -abund {input.coverage} -out {params.bin_prefix} -thread {params.threads}
+	run_MaxBin.pl -contig {input.assembly} -abund {input.coverage} -out {params.bin_prefix} -thread {threads}
 	"""
 
 
@@ -145,14 +156,15 @@ checkpoint dastool:
         # c2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contigs2bin.tsv"
 
     params:
-        threads=config['threads'],
         dastool_output=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}",
         input_list=lambda wildcards, input: format_dastool_input([input.contigs2bin_metabat, input.contigs2bin_maxbin])
         # input_list=lambda wildcards, input: format_dastool_input(input.contigs2bin_files) #Comma-separated list
+    threads:
+        config['threads']
     conda:
         "../envs/dastool.yaml"
     shell:
-        "DAS_Tool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {params.threads} --write_bins"
+        "DAS_Tool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {threads} --write_bins"
 
 
 checkpoint dereplicate_bins:
@@ -165,8 +177,9 @@ checkpoint dereplicate_bins:
         dereplicated_bins=directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
     params:
         drep_output=f"{outdir}/results/06_binning/drep",
-        threads=config['threads'],
         bin_dirs=lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))])
+    threads:
+        config['threads']
     log:
         debug_log=f"{outdir}/results/06_binning/drep/drep_rule.log"
     conda:
@@ -174,7 +187,7 @@ checkpoint dereplicate_bins:
     shell:
         """
         echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
-        dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {params.threads}
+        dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {threads}
         """
 
 rule checkm2:
@@ -185,11 +198,12 @@ rule checkm2:
         diamond_output=f"{outdir}/results/06_binning/checkm2/diamond_output/DIAMOND_RESULTS.tsv",
         protein_files=directory(f"{outdir}/results/06_binning/checkm2/protein_files")
     params:
-        threads=config['threads'],
         output_dir=f"{outdir}/results/06_binning/checkm2",
         db_path=config['checkm_db']
+    threads:
+        config['threads']
     log: f"{outdir}/logs/checkm2.log"
     conda:
         "../envs/checkm2.yaml"
     shell:
-        "checkm2 predict --threads {params.threads} -x fa --input {input.drep_dir} --output-directory {params.output_dir} --force --database_path {params.db_path} 2> {log}"
+        "checkm2 predict --threads {threads} -x fa --input {input.drep_dir} --output-directory {params.output_dir} --force --database_path {params.db_path} 2> {log}"

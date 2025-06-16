@@ -16,7 +16,8 @@ tmpdir: "/tmp"
 # The default number of threads to use for each rule.
 threads: 32
 
-
+# The maximum memory to be used by the pipeline in MB. (So 1GB = 1000MB, 1TB = 1000000MB)
+max_mem: 1000000
 
 ## QUALITY CONTROL
 # Max memory to be used by bbmap/bbnorm (I advise using as much as possible). Only change the number between -Xmx and g. E.g. -Xmx1500g, -Xmx400g:

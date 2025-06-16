@@ -27,9 +27,9 @@ rule normal_reads:
         # threads=config['threads'],
         memory=config['bbmap_mem']
     threads:
-        workflow.cores * 0.5
+        int(workflow.cores * 0.5)
     resources:
-        mem_mb=1500000
+        mem_mb=config['max_mem'] # * 0.6
     benchmark:
         f"{outdir}/results/benchmark/normal_reads/{{sample_pool}}.tsv"
     conda:
@@ -60,9 +60,9 @@ rule megahit:
     log: f"{outdir}/logs/megahit_{{sample_pool}}.log"
     benchmark:
         f"{outdir}/results/benchmark/megahit/{{sample_pool}}.tsv"
-    threads: workflow.cores * 0.9
+    threads: int(workflow.cores * 0.9)
     resources:
-        mem_mb=2500000
+        mem_mb=config['max_mem']
     conda:
         "../envs/megahit.yaml"
     shell:"megahit -f --out-dir {params.output_dir} --out-prefix {wildcards.sample_pool}_final -m {params.memory} --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev} 2> {log}"

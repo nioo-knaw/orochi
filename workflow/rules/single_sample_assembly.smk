@@ -7,7 +7,10 @@ rule spades:
         f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/{{sample}}_contigs.fasta",
     params:
         outdir = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}",
-        kmers = config['kmers'],
+        kmers = config['kmers']
+    threads: int(workflow.cores * 0.8)
+    resources:
+        mem_mb = config['max_mem']
     conda:
         "../envs/single_assembly.yaml"
     shell: "spades.py --meta -m 1200 -1 {input.forward} -2 {input.rev} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/"
@@ -28,11 +31,13 @@ rule assembly_quality_single:
     output:
         mq_out = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/quast_results/report.html"
     params:
-        threads = config['threads'],
+        # threads = config['threads'],
         outdir = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/quast_results/"
+    threads:
+        int(workflow.cores * 0.8)
     conda:
         "../envs/single_assembly.yaml"
-    shell: "metaquast.py {input.assembly} --no-krona --threads {params.threads} -o {params.outdir}"
+    shell: "metaquast.py {input.assembly} --no-krona --threads {threads} -o {params.outdir}"
 
 rule coverm:
     input:
@@ -41,8 +46,8 @@ rule coverm:
         assembly = rules.rename_spades.output.gzip
     output:
         coverm_out = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/quality/coverage.tsv"
-    params:
-        threads = config['threads']
+    threads:
+        int(workflow.cores * 0.8)
     conda:
         "../envs/single_assembly.yaml"
-    shell: "coverm contig --mapper bwa-mem --reference {input.assembly} -1 {input.contigs_f} -2 {input.contigs_r} --threads {params.threads} > {output.coverm_out}"
+    shell: "coverm contig --mapper bwa-mem --reference {input.assembly} -1 {input.contigs_f} -2 {input.contigs_r} --threads {threads} > {output.coverm_out}"
