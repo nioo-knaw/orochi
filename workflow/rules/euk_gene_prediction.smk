@@ -48,9 +48,10 @@ rule augustify:
         "../envs/augustus.yaml"
     params:
         param_file=os.path.abspath("resources/augustify_params.txt"),
-        threads=config['threads'],
         script=os.path.abspath("workflow/scripts/augustify.py")
+    threads:
+        config['threads']
     shell:
-        "python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {params.threads}"
+        "python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {threads}"
 
 
