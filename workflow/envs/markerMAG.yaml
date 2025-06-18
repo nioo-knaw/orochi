@@ -1,0 +1,7 @@
+name: orochi_markermag
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - MarkerMAG
+  - usearch

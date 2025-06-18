@@ -1,0 +1,7 @@
+name: orochi_antismash
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - antismash=7.1.0
+  - bcbio-gff=0.7.0
