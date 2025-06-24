@@ -169,26 +169,31 @@ checkpoint dastool:
 
 checkpoint dereplicate_bins:
     input:
-        bins_dir=expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
-            sample_pool=sorted(set(samples["sample_pool"]))
-        )
-        # bins_dir=lambda wildcards: [checkpoints.dastool.get(sample_pool=sample_pool).output.bin_dir for sample_pool in samples["sample_pool"]]
+        bins_dir = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
+                  sample_pool=sorted(set(samples["sample_pool"]))
+                  )
     output:
-        dereplicated_bins=directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
+        dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
     params:
-        drep_output=f"{outdir}/results/06_binning/drep",
-        bin_dirs=lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))])
+        drep_output = f"{outdir}/results/06_binning/drep",
+        bin_dirs = lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))])
     threads:
         config['threads']
     log:
-        debug_log=f"{outdir}/results/06_binning/drep/drep_rule.log"
+        debug_log = f"{outdir}/results/06_binning/drep/drep_rule.log"
     conda:
         "../envs/drep.yaml"
     shell:
         """
-        echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
-        dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {threads}
+        if [ $(echo "{input.bins_dir}" | tr ' ' '\n' | wc -l) -gt 1 ]; then
+            echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
+            dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {threads}
+        else
+            mkdir -p {output.dereplicated_bins}
+            cp {input.bins_dir}/*.fa {output.dereplicated_bins}/
+        fi
         """
+
 
 rule checkm2:
     input:
