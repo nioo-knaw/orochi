@@ -18,7 +18,9 @@ rule downstream_test:
         f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_proteins.faa",
         f"{outdir}/results/04_gene_prediction/whokaryote/{{sample_pool}}/eukaryotes.fasta",
         f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins.gff",
-        f"{outdir}/results/06_binning/checkm2/quality_report.tsv",
+        f"{outdir}/results/06_binning/checkm2/{{sample_pool}}/quality_report.tsv",
+        f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv",
+        f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv",
         f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome.txt",
         f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.summarise.txt"
 
