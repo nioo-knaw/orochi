@@ -167,51 +167,23 @@ checkpoint dastool:
         "DAS_Tool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {threads} --write_bins"
 
 
-checkpoint dereplicate_bins:
-    input:
-        bins_dir = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
-                  sample_pool=sorted(set(samples["sample_pool"]))
-                  )
-    output:
-        dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
-    params:
-        drep_output = f"{outdir}/results/06_binning/drep",
-        bin_dirs = lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))])
-    threads:
-        config['threads']
-    log:
-        debug_log = f"{outdir}/results/06_binning/drep/drep_rule.log"
-    conda:
-        "../envs/drep.yaml"
-    shell:
-        """
-        if [ $(echo "{input.bins_dir}" | tr ' ' '\n' | wc -l) -gt 1 ]; then
-            echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
-            dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {threads}
-        else
-            mkdir -p {output.dereplicated_bins}
-            cp {input.bins_dir}/*.fa {output.dereplicated_bins}/
-        fi
-        """
-
-
 rule checkm2:
     input:
-        drep_dir=f"{outdir}/results/06_binning/drep/dereplicated_genomes"
+        dastool_dir=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins"
     output:
-        checkm_output=f"{outdir}/results/06_binning/checkm2/quality_report.tsv",
-        diamond_output=f"{outdir}/results/06_binning/checkm2/diamond_output/DIAMOND_RESULTS.tsv",
-        protein_files=directory(f"{outdir}/results/06_binning/checkm2/protein_files")
+        checkm_output=f"{outdir}/results/06_binning/checkm2/{{sample_pool}}/quality_report.tsv",
+        diamond_output=f"{outdir}/results/06_binning/checkm2/{{sample_pool}}/diamond_output/DIAMOND_RESULTS.tsv",
+        protein_files=directory(f"{outdir}/results/06_binning/checkm2/{{sample_pool}}/protein_files")
     params:
-        output_dir=f"{outdir}/results/06_binning/checkm2",
+        output_dir=f"{outdir}/results/06_binning/checkm2/{{sample_pool}}",
         db_path=config['checkm_db']
     threads:
         config['threads']
-    log: f"{outdir}/logs/checkm2.log"
+    log: f"{outdir}/logs/{{sample_pool}}_checkm2.log"
     conda:
         "../envs/checkm2.yaml"
     shell:
-        "checkm2 predict --threads {threads} -x fa --input {input.drep_dir} --output-directory {params.output_dir} --force --database_path {params.db_path} 2> {log}"
+        "checkm2 predict --threads {threads} -x fa --input {input.dastool_dir} --output-directory {params.output_dir} --force --database_path {params.db_path} 2> {log}"
 
 rule BAT:
     input:
@@ -240,3 +212,92 @@ rule BAT:
         CAT_pack add_names -i {output.bat_class} -o {output.bat_names} -t {params.tax_path} --only_official --exclude_scores
         CAT_pack summarise -i {output.bat_names} -o {output.bat_summary}
         """
+
+rule checkm2_to_drep_format:
+    input:
+        checkm2_output=f"{outdir}/results/06_binning/checkm2/{{sample_pool}}/quality_report.tsv"
+    output:
+        genome_info=f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv"
+    params:
+        input_separator="\t",
+        output_separator=",",
+        genome_extension=".fa"
+    run:
+        # Read TSV file
+        try:
+            df = pd.read_csv(input.checkm2_output, sep=params.input_separator)
+        except pd.errors.EmptyDataError:
+            raise ValueError(f"Input file {input.checkm2_output} is empty")
+
+        # Verify required columns exist
+        required_cols = ['Name', 'Completeness', 'Contamination']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            raise ValueError(f"Missing required columns: {missing_cols}")
+
+        # Add extension to genome names
+        df['Name'] = df['Name'] + params.genome_extension
+
+        # Rename columns for clarity
+        column_mapping = {
+            'Name': 'genome',
+            'Completeness': 'completeness',
+            'Contamination': 'contamination'
+        }
+        df = df.rename(columns=column_mapping)
+
+        # Ensure only required columns are present and in correct order
+        df = df[['genome', 'completeness', 'contamination']]
+
+        # Save to CSV
+        df.to_csv(output.genome_info, sep=params.output_separator, index=False)
+
+
+rule combine_genome_info:
+    input:
+        genome_info_files=expand(f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv",
+            sample_pool=sorted(set(samples["sample_pool"])))
+    output:
+        combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
+    run:
+        # Read and combine all genome info files
+        dfs = []
+        for file in input.genome_info_files:
+            df = pd.read_csv(file,sep=",")  # Using comma as it's the output separator from previous rule
+            dfs.append(df)
+
+        # Concatenate all dataframes
+        combined_df = pd.concat(dfs,ignore_index=True)
+
+        # Save combined dataframe
+        combined_df.to_csv(output.combined_info,sep=",",index=False)
+
+
+checkpoint dereplicate_bins:
+    input:
+        bins_dir = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
+                  sample_pool=sorted(set(samples["sample_pool"]))
+                  ),
+        combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
+    output:
+        dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
+    params:
+        drep_output = f"{outdir}/results/06_binning/drep",
+        bin_dirs = lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))])
+    threads:
+        config['threads']
+    log:
+        debug_log = f"{outdir}/results/06_binning/drep/drep_rule.log"
+    conda:
+        "../envs/drep.yaml"
+    shell:
+        """
+        if [ $(echo "{input.bins_dir}" | tr ' ' '\n' | wc -l) -gt 1 ]; then
+            echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
+            dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {threads} --genomeInfo {input.combined_info}
+        else
+            mkdir -p {output.dereplicated_bins}
+            cp {input.bins_dir}/*.fa {output.dereplicated_bins}/
+        fi
+        """
+
