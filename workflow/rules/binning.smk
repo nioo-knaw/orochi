@@ -198,7 +198,7 @@ rule BAT:
         bat_names=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt",
         bat_summary=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.summarise.txt"
     params:
-        output_dir=f"{outdir}/results/06_binning/BAT/{{sample_pool}}",
+        output_dir=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/",
         db_path=config['CAT_database'],
         tax_path=config['CAT_taxonomy'],
         prefix=f"{{sample_pool}}"
@@ -213,7 +213,7 @@ rule BAT:
         """ 
         mkdir -p {params.output_dir}
         CAT_pack bins -b {input.dastool_dir} -d {params.db_path} -t {params.tax_path} -p {input.proteins} \
-         -a {input.alignment} -n {threads} -o {params.output_dir}{params.prefix} 2> {log}
+         -a {input.alignment} -s .fa -n {threads} -o {params.output_dir}{params.prefix} 2> {log}
         CAT_pack add_names -i {output.bat_class} -o {output.bat_names} -t {params.tax_path} --only_official --exclude_scores
         CAT_pack summarise -i {output.bat_names} -o {output.bat_summary}
         """
