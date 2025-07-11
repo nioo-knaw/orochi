@@ -15,12 +15,15 @@ rule phyloflash:
 
     params:
         db=config["phyloflash_db"],
-        threads=config["threads"],
         phylo_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/"
+    threads:
+        config['threads']
+    resources:
+        mem_mb=config['max_mem']
 
-    shell: # We have to zip the phyloflash output and move it becaues it will be stored in the WD otherwise.
+    shell: # We have to zip the phyloflash output and move it because it will be stored in the WD otherwise.
         "phyloFlash.pl -dbhome {params.db} -lib {wildcards.sample_pool} -zip \
-         -CPUs {params.threads} -read1 {input.forward_reads} -read2 {input.reverse_reads}; mv {wildcards.sample_pool}.phyloFlash.* {params.phylo_dir}"
+         -CPUs {threads} -read1 {input.forward_reads} -read2 {input.reverse_reads}; mv {wildcards.sample_pool}.phyloFlash.* {params.phylo_dir}"
 
 rule unzip_phyloflash:
     input:
@@ -52,11 +55,14 @@ rule rename_reads:
     conda:
         "../envs/markerMAG.yaml"
     params:
-        threads=config["threads"],
         renamed_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/"
+    threads:
+        config["threads"]
+    resources:
+        mem_mb=config['max_mem']
     shell:
         "MarkerMAG rename_reads -r1 {input.forward_reads} -r2 {input.reverse_reads} -p {wildcards.sample_pool} -fq \
-        -t {params.threads}; mv {wildcards.sample_pool}_R*.fastq {params.renamed_dir}"
+        -t {threads}; mv {wildcards.sample_pool}_R*.fastq {params.renamed_dir}"
 
 rule fastq_2_fasta:
     input:
@@ -67,12 +73,14 @@ rule fastq_2_fasta:
         fasta_reverse=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_R2.fasta"
     conda:
         "../envs/seqkit.yaml"
-    params:
-        threads=config["threads"]
+    threads:
+        config["threads"]
+    resources:
+        mem_mb=config['max_mem']
     shell:
         """
-        seqkit fq2fa {input.forward_reads} -o {output.fasta_forward} --threads {params.threads}
-        seqkit fq2fa {input.reverse_reads} -o {output.fasta_reverse} --threads {params.threads}
+        seqkit fq2fa {input.forward_reads} -o {output.fasta_forward} --threads {threads}
+        seqkit fq2fa {input.reverse_reads} -o {output.fasta_reverse} --threads {threads}
         """
 
 
@@ -87,8 +95,10 @@ rule markermag_link:
         markerMAG_dir=directory(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag")
     conda:
         "../envs/markerMAG.yaml"
-    params:
-        threads=config["threads"]
+    threads:
+        config["threads"]
+    resources:
+        mem_mb=config['max_mem']
     shell:
         "MarkerMAG link -p {wildcards.sample_pool} -r1 {input.forward_reads} -r2 {input.reverse_reads} \
-        -marker {input.phyloflash} -mag {input.mag_fasta} -o {output.markerMAG_dir} -x fa -t {params.threads} -force"
+        -marker {input.phyloflash} -mag {input.mag_fasta} -o {output.markerMAG_dir} -x fa -t {threads} -force"
