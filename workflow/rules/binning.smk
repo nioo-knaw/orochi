@@ -196,7 +196,7 @@ rule BAT:
     output:
         bat_class=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.txt",
         bat_names=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt",
-        bat_summary=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.summarise.txt"
+        # bat_summary=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.summarise.txt"
     params:
         output_dir=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/",
         db_path=config['CAT_database'],
@@ -215,7 +215,6 @@ rule BAT:
         CAT_pack bins -b {input.dastool_dir} -d {params.db_path} -t {params.tax_path} -p {input.proteins} \
          -a {input.alignment} -s .fa -n {threads} -o {params.output_dir}{params.prefix} 2> {log}
         CAT_pack add_names -i {output.bat_class} -o {output.bat_names} -t {params.tax_path} --only_official --exclude_scores
-        CAT_pack summarise -i {output.bat_names} -o {output.bat_summary}
         """
 
 rule checkm2_to_drep_format:
@@ -280,7 +279,7 @@ rule combine_genome_info:
 
 checkpoint dereplicate_bins:
     input:
-        bins_dir = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
+        bins_dir = lambda wildcards: expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
                   sample_pool=sorted(set(samples["sample_pool"]))
                   ),
         combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
@@ -288,7 +287,7 @@ checkpoint dereplicate_bins:
         dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
     params:
         drep_output = f"{outdir}/results/06_binning/drep",
-        bin_dirs = lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))])
+        bin_dirs = lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in input.bins_dir])
     threads:
         config['threads']
     resources:
