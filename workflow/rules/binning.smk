@@ -277,33 +277,45 @@ rule combine_genome_info:
         combined_df.to_csv(output.combined_info,sep=",",index=False)
 
 
+rule prepare_drep_input:
+    input:
+        bins_dir=expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
+            sample_pool=sorted(set(samples["sample_pool"]))),
+    output:
+        input_file = f"{outdir}/results/06_binning/drep/input_bins.txt"
+    run:
+        import glob
+        with open(output.input_file, 'w') as f:
+            for dir in sorted(set(input.bins_dir)):
+                bins = glob.glob(f"{dir}/*.fa")
+                for bin_path in bins:
+                    f.write(f"{bin_path}\n")
+
+
 checkpoint dereplicate_bins:
     input:
-        bins_dir = lambda wildcards: expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
-                  sample_pool=sorted(set(samples["sample_pool"]))
-                  ),
+        input_file = f"{outdir}/results/06_binning/drep/input_bins.txt",
         combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
     output:
         dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
     params:
         drep_output = f"{outdir}/results/06_binning/drep",
-        bin_dirs = lambda wildcards, input: ' '.join([f"{dir}/*.fa" for dir in input.bins_dir])
+        # bin_dirs = lambda _, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))]),
     threads:
         config['threads']
     resources:
         mem_mb=config['max_mem']
-    log:
-        debug_log = f"{outdir}/results/06_binning/drep/drep_rule.log"
+    # log:
+    #     debug_log = f"{outdir}/results/06_binning/drep/drep_rule.log"
     conda:
         "../envs/drep.yaml"
     shell:
         """
-        if [ $(echo "{input.bins_dir}" | tr ' ' '\n' | wc -l) -gt 1 ]; then
-            echo "bin_dirs: {params.bin_dirs}" >> {log.debug_log}
-            dRep dereplicate {params.drep_output} -g {params.bin_dirs} -p {threads} --genomeInfo {input.combined_info}
+        if [ $(echo "{input.input_file}" | tr ' ' '\n' | wc -l) -gt 1 ]; then
+            dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info}
         else
             mkdir -p {output.dereplicated_bins}
-            cp {input.bins_dir}/*.fa {output.dereplicated_bins}/
+            cp $(cat {input.input_file}) {output.dereplicated_bins}/
         fi
         """
 
