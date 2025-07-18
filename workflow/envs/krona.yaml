@@ -1,0 +1,6 @@
+name: orochi_krona
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - krona==2.8.1
