@@ -7,6 +7,7 @@ rule phyloflash:
 
     output:
         phyloflash_out=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.phyloFlash.tar.gz",
+        phyloflash_done=touch(f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/phyloflash.done")
         # phyloflash_report=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}_phyloFlash.report.csv",
         # phyloflash_fasta=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.all.final.fasta"
 
@@ -89,10 +90,12 @@ rule markermag_link:
         forward_reads=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_R1.fasta",
         reverse_reads=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_R2.fasta",
         phyloflash=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.all.final.fasta",
-        mag_fasta=f"{outdir}/results/06_binning/drep/dereplicated_genomes"
+        mag_fasta=f"{outdir}/results/06_binning/drep/dereplicated_genomes",
+        drep_done=f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done"
     output:
         markerMAG_link=f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome.txt",
-        markerMAG_dir=directory(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag")
+        markerMAG_dir=directory(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag"),
+        markermag_done=touch(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/markermag.done")
     conda:
         "../envs/markerMAG.yaml"
     threads:

@@ -49,8 +49,8 @@ checkpoint metabat2:
 
         depth=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
     output:
-        bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins")
-        # completed=f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_metabat2.done"
+        bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins"),
+        done = touch(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_metabat2.done"),
     params:
         bin_prefix=f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin"
     threads:
@@ -86,7 +86,8 @@ checkpoint maxbin2:
         assembly=f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta",
         coverage=f"{outdir}/results/06_binning/coverage/fairy/maxbin2/coverage_{{sample_pool}}_maxbin.tsv"
     output:
-        bin_dir=directory(f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins")
+        bin_dir=directory(f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins"),
+        done = touch(f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_maxbin2.done"),
         # summary=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.summary",
         # marker_counts=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.marker",
         # marker_genes=f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_bins/{{sample_pool}}_bin.marker_of_each_bin.tar.gz",
@@ -153,6 +154,7 @@ checkpoint dastool:
         # dastool_output=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}"),
         # quality_reports=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_summary.tsv",
         bin_dir=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins"),
+        done = touch(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool.done"),
         # c2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contigs2bin.tsv"
 
     params:
@@ -169,7 +171,8 @@ checkpoint dastool:
 
 rule checkm2:
     input:
-        dastool_dir=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins"
+        dastool_dir=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
+        dastool_done= f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool.done",
     output:
         checkm_output=f"{outdir}/results/06_binning/checkm2/{{sample_pool}}/quality_report.tsv",
         diamond_output=f"{outdir}/results/06_binning/checkm2/{{sample_pool}}/diamond_output/DIAMOND_RESULTS.tsv",
@@ -192,10 +195,12 @@ rule BAT:
         # drep_dir=f"{outdir}/results/06_binning/drep/dereplicated_genomes",
         dastool_dir=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
         proteins= {rules.prodigal.output.faa},
-        alignment= f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.alignment.diamond"
+        alignment= f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.alignment.diamond",
+        dastool_done = f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool.done",
     output:
         bat_class=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.txt",
         bat_names=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt",
+        done= touch(f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}_BAT.done"),
         # bat_summary=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.summarise.txt"
     params:
         output_dir=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/",
@@ -280,7 +285,7 @@ rule combine_genome_info:
 rule prepare_drep_input:
     input:
         bins_dir=expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
-            sample_pool=sorted(set(samples["sample_pool"]))),
+            sample_pool=sorted(set(samples["sample_pool"])))
     output:
         input_file = f"{outdir}/results/06_binning/drep/input_bins.txt"
     run:
@@ -297,7 +302,8 @@ checkpoint dereplicate_bins:
         input_file = f"{outdir}/results/06_binning/drep/input_bins.txt",
         combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
     output:
-        dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes")
+        dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes"),
+        done = touch(f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done")
     params:
         drep_output = f"{outdir}/results/06_binning/drep",
         # bin_dirs = lambda _, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))]),
