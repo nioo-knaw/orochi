@@ -42,11 +42,11 @@ rule MetaPhlAn4:
         forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
     output:
-        file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
+        file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt",
     params:
-        mtphln_outdir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
-        bowtie = f"{{sample}}.bowtie2.bz2",
-        threads = config["threads"]
+        bowtie = lambda wildcards: f"{wildcards.sample}.bowtie2.bz2",
+        threads = config["threads"],
+        mtphln_outdir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/"
     conda:
         "../envs/metaphlan4.yaml"
     shell:
@@ -57,7 +57,7 @@ rule MetaPhlAn4:
 
 rule MetaPhlAn_secondary:
     input:
-        rules.MetaPhlAn4.params.mtphln_outdir
+        lambda wildcards: expand(f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt", sample=samples["sample"])
     output:
         merged_table = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
     params:
@@ -67,7 +67,7 @@ rule MetaPhlAn_secondary:
         "../envs/metaphlan4.yaml"
     shell:
         """
-        merge_metaphlan_tables.py {input}/*.txt > {output.merged_table}
+        merge_metaphlan_tables.py {input} > {output.merged_table}
         """
         
        # Rscript {params.scripts_dir}/MetaPhlAn_calculate_diversity.R -f {output.merged_table} -o {params.mtphln_dir}/beta_diversity
@@ -86,4 +86,4 @@ rule eggnog:
     output:
         f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations"
     shell:
-        "emapper.py -i {input.proteins} --cpu {params.threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs"
+        "emapper.py -i {input.proteins} --cpu {params.threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs --override"
