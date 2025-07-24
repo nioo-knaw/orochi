@@ -37,9 +37,9 @@ while [ "$1" != "" ]; do
     shift
 done
 
-for i in $folder\/*.$extension
+for i in "$folder"/*."$extension"
 do
-binname=$(echo $(basename $i) | sed "s/\\.$extension//g")
-grep ">" $i | perl -pe "s/\n/\t$binname\n/g" | perl -pe "s/>//g"
+binname=$(basename "$i" | sed "s/\\.$extension//g")
+grep ">" "$i" | awk '{print $1}' | perl -pe "s/\n/\t$binname\n/g" | perl -pe "s/>//g" #added awk {print $1} to avoid issues with fasta headers containing spaces
 done
 
