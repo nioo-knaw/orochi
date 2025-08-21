@@ -22,7 +22,8 @@ rule downstream_test:
         f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv",
         f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv",
         f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome.txt",
-        f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
+        f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}_BAT.done"
+        # f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
 
 
     output:

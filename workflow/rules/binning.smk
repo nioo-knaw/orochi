@@ -194,7 +194,7 @@ rule BAT:
     input:
         # drep_dir=f"{outdir}/results/06_binning/drep/dereplicated_genomes",
         dastool_dir=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
-        proteins= {rules.prodigal.output.faa},
+        proteins= f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_proteins.faa",
         alignment= f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.alignment.diamond",
         dastool_done = f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool.done",
     output:
