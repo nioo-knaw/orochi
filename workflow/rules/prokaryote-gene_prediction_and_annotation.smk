@@ -46,15 +46,13 @@ rule CAT:
 
 rule MetaPhlAn4:
     input:
-#        forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
-#        rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
-         forward = rules.filter_host.output.filterF,
-         rev = rules.filter_host.output.filterR
+        forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+        rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
     output:
-        file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt"
+        file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt",
     params:
-        mtphln_outdir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
-        bowtie = f"{{sample}}.bowtie2.bz2"
+        bowtie = lambda wildcards: f"{wildcards.sample}.bowtie2.bz2",
+        mtphln_outdir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/"
     threads:
         config["threads"]
     resources:
@@ -69,10 +67,9 @@ rule MetaPhlAn4:
 
 rule MetaPhlAn_secondary:
     input:
-#         f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/"
-         expand(f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"])
+        lambda wildcards: expand(f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt", sample=samples["sample"])
     output:
-        merged_table = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.tsv"
+        merged_table = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
     params:
         mtphln_dir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
 #       scripts_dir= "./workflow/scripts/"
@@ -80,7 +77,7 @@ rule MetaPhlAn_secondary:
         "../envs/metaphlan4.yaml"
     shell:
         """
-        merge_metaphlan_tables.py {input}/*.txt > {output.merged_table}
+        merge_metaphlan_tables.py {input} > {output.merged_table}
         """
         
        # Rscript {params.scripts_dir}/MetaPhlAn_calculate_diversity.R -f {output.merged_table} -o {params.mtphln_dir}/beta_diversity
@@ -102,5 +99,5 @@ rule eggnog:
     resources:
         mem_mb = 500000  # Set a high memory limit for eggNOG (500GB), but not max_mb, to still allow for parallelization
     shell:
-        "emapper.py -i {input.proteins} --cpu {threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs"
+        "emapper.py -i {input.proteins} --cpu {threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs --override"
     # @Todo: Perhaps specify the temp dir for eggnog to avoid issues with large files?
