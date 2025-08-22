@@ -99,7 +99,9 @@ rule markermag_link:
     conda:
         "../envs/markerMAG.yaml"
     threads:
-        config["threads"]
+        64
+        # This is a maximum number of threads, MarkerMAG will use less if not available.
+        # With more threads the file number limit will be reached (>1024 open files).
     resources:
         mem_mb=config['max_mem']
     shell:
