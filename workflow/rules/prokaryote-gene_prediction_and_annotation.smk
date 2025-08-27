@@ -54,7 +54,7 @@ rule MetaPhlAn4:
         bowtie = lambda wildcards: f"{wildcards.sample}.bowtie2.bz2",
         mtphln_outdir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/"
     threads:
-        config["threads"]
+        64
     resources:
         mem_mb = 500000  # Still allows for parallelization, but sets a high memory limit for MetaPhlAn (500GB)
     conda:
