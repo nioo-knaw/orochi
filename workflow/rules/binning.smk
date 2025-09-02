@@ -218,7 +218,7 @@ rule BAT:
         """ 
         mkdir -p {params.output_dir}
         CAT_pack bins -b {input.dastool_dir} -d {params.db_path} -t {params.tax_path} -p {input.proteins} \
-         -a {input.alignment} -s .fa -n {threads} -o {params.output_dir}{params.prefix} 2> {log}
+         -a {input.alignment} -s .fa -n {threads} -o {params.output_dir}{params.prefix} --force 2> {log}
         CAT_pack add_names -i {output.bat_class} -o {output.bat_names} -t {params.tax_path} --only_official --exclude_scores
         """
 
