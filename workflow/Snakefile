@@ -32,7 +32,7 @@ include: "rules/euk_gene_prediction.smk"
 include: "rules/binning.smk"
 include: "rules/mag_linkage.smk"
 include: "rules/test_rule.smk"
-
+include: "rules/plots.smk"
 
 # # Load report
 #for rpt, rule in list(listfiles('workflow/rules/report/{part}.smk')):
