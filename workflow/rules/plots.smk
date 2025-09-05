@@ -14,3 +14,26 @@ rule krona:
 		ktImportText {params.out_temp} -o {output}
 		"""
 
+rule bin_plots:
+	input:
+		checkm = f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv",
+		bat = f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
+		#bat = rules.BAT.output.bat_names
+	output:
+		tempfile = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_4scatterplot.tsv"),
+		scatterplot = f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.png"
+	params:
+		tempfile = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_phyluminfo.tsv")
+	threads:
+		config['threads']
+	resources:
+		mem_mb=config['max_mem']
+	log: f"{outdir}/logs/{{sample_pool}}_bins_scatterplot.log"
+	conda:
+		"../envs/python_clustering.yaml"
+	shell:
+		"""
+		awk -v col=phylum 'NR==1{{for(i=1;i<=NF;i++){{if($i==col){{c=i;break}}}} print $c}} NR>1{{print $c}}' {input.bat} > {params.tempfile}
+		paste -d',' {input.checkm} {params.tempfile} > {output.tempfile}
+		python3 workflow/scripts/bin_scatterplot.py -i {output.tempfile} -o {output.scatterplot}
+		"""
