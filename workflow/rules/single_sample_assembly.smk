@@ -7,13 +7,22 @@ rule spades:
         f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/{{sample}}_contigs.fasta",
     params:
         outdir = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}",
-        kmers = config['kmers']
+        kmers = config['kmers'],
+        nanopore = lambda wc: (
+            f"--nanopore {samples.loc[wc.sample, 'nanopore']}"
+            if config.get('use_nanopore', False)
+            and hasattr(samples, 'columns')
+            and 'nanopore' in samples.columns
+            and str(samples.loc[wc.sample, 'nanopore']).strip().lower() not in ('', 'nan', 'none')
+            else ""
+        )
     threads: int(workflow.cores * 0.8)
     resources:
         mem_mb = config['max_mem']
     conda:
         "../envs/single_assembly.yaml"
-    shell: "spades.py --meta -m 1200 -1 {input.forward} -2 {input.rev} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/"
+    shell: "spades.py --meta -m {resources.mem_mb} -1 {input.forward} -2 {input.rev} {params.nanopore} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/"
+
 
 rule rename_spades:
     input:

@@ -45,7 +45,11 @@ bbmap_D: 20
 
 ## ASSEMBLY OPTIONS
 # assembly_method: The assembly method to use. Options: single_assembly (spades), coassembly (megahit).
-assembly_method: coassembly
+assembly_method: single_assembly
+
+# use_nanopore: Whether to use nanopore data for hybrid assembly with spades.
+# Options: True or False. This option is only available with single_assembly.
+use_nanopore: False
 
 # normalize_reads: Whether to use read normalisation: Yes or No
 normalize_reads: "Yes"
