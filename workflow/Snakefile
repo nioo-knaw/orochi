@@ -29,6 +29,7 @@ include: "rules/single_sample_assembly.smk"
 include: "rules/size_filter.smk"
 include: "rules/prokaryote-gene_prediction_and_annotation.smk"
 include: "rules/euk_gene_prediction.smk"
+include: "rules/BGC_prediction.smk"
 include: "rules/binning.smk"
 include: "rules/mag_linkage.smk"
 include: "rules/test_rule.smk"
@@ -63,7 +64,7 @@ rule all:
     input:
         target,
         # expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
-        f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
+        # f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt" @Todo: enable after testing
     # input: expand(output,
     #               sample=config["data"],
     #               treatment=config["treatment"],

@@ -2,7 +2,7 @@
 
 rule antismash:
     input:
-        gff=f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins.gff"
+        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_genes.gff"
 
     output:
         html=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/antismash.html",
