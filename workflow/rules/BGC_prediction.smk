@@ -2,7 +2,8 @@
 
 rule antismash:
     input:
-        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_genes.gff"
+        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_genes.gff",
+        contigs=f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta"
 
     output:
         html=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/antismash.html",
@@ -15,7 +16,7 @@ rule antismash:
         database_dir=config['antismash_db']
 
     shell:
-        "antismash -c {params.threads} --genefinding-gff3 {input.gff} --output-dir {params.outdir} \
+        "antismash {input.contigs} -c {params.threads} --genefinding-gff3 {input.gff} --output-dir {params.outdir} \
         --taxon bacteria --output-basename bacterial --cc-mibig --cb-general --cb-knownclusters --databases {params.database_dir}"
 
 rule fungismash:

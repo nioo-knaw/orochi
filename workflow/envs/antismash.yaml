@@ -3,5 +3,5 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - antismash=7.1.0
-  - bcbio-gff=0.7.0
+  - antismash=8.0.4
+#  - bcbio-gff=0.7.0
