@@ -55,3 +55,19 @@ rule augustify:
         "python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {threads}"
 
 
+# This rule filters the prodigal gff file so that only prokaryotic genes on contigs above the size threshold are kept
+# This step takes place after whokaryote, and is meant to be used as antismash input
+rule filter_prokaryote_gff:
+    input:
+        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_genes.gff",
+        headers_prok=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/prokaryote_contig_headers.txt"
+    output:
+        f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_prokaryote_{minsize}.gff"
+    conda:
+        "../envs/size_filter.yaml"
+    params:
+        size=config['min_contig_length'],
+        outdir=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}",
+        script=os.path.abspath("workflow/scripts/filter_annotations.py")
+    shell:
+        "python {params.script} --gff {input.gff} --outdir {params.outdir} --minsize {params.size} --headerfile {input.gff} --sample_name {wildcards.sample}"
