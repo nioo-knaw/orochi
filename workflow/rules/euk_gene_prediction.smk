@@ -70,4 +70,4 @@ rule filter_prokaryote_gff:
         outdir=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}",
         script=os.path.abspath("workflow/scripts/filter_annotations.py")
     shell:
-        "python {params.script} --gff {input.gff} --outdir {params.outdir} --minsize {params.size} --headerfile {input.gff} --sample_name {wildcards.sample}"
+        "python {params.script} --gff {input.gff} --headerfile {input.headers_prok} --outdir {params.outdir} --minsize {params.size} --sample_name {wildcards.sample}"

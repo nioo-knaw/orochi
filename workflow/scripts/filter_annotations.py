@@ -1,4 +1,6 @@
 # Functions to filter annotations so only contigs that are prokaryotic are kept
+import sys
+import os
 
 
 def filter_gff(gff, headerfile, outdir, size, sample_name):
@@ -27,10 +29,10 @@ def filter_gff(gff, headerfile, outdir, size, sample_name):
 if __name__ == "__main__":
     # Parse arguments from Snakemake
     gff = sys.argv[2]
-    outdir = sys.argv[4]
-    size = int(sys.argv[6])
-    header_file = sys.argv[8]
+    header_file = sys.argv[4]
+    outdir = sys.argv[6]
+    size = int(sys.argv[8])
     sample_name = sys.argv[10]
 
-    size_filter(gff, outdir, size, header_file, sample_name)
+    filter_gff(gff, header_file, outdir, size, sample_name)
 
