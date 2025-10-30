@@ -25,7 +25,7 @@ rule downstream_test:
         f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome.txt",
         f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}_BAT.done",
         f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_krona.html",
-        f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.png",
+        f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html",
         f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/index.html",
         f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/index.html",
         # f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
