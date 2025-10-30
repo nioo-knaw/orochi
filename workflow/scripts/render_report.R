@@ -3,7 +3,7 @@ library(rmarkdown)
 # get paths from snakemake
 rmd_file <- file.path(snakemake@scriptdir, "OROCHIPlots.Rmd")
 
-config_path <- normalizePath(snakemake@input[["config"]])
+config_path <- normalizePath(args[1])
 render(
   input = rmd_file,
   output_file = snakemake@output[[1]],

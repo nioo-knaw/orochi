@@ -59,7 +59,7 @@ rule bin_plots:
 rule report2:
     input:
         metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
-        config = "config/AllSimReads_configfile.yaml" ### MAKE IT AUTOMATIC
+        #config = "config/AllSimReads_configfile.yaml" ### MAKE IT AUTOMATIC
         #binplots = rules.bin_plots.output.scatterplot
     output:
         f"{outdir}/results/08_plots/Orochi_report.html"
@@ -70,5 +70,5 @@ rule report2:
     log: f"{outdir}/logs/report.log"
     conda:
         "../envs/html.yaml"
-    script:
-        "../scripts/render_report.R"
+    shell:
+        "Rscript ../scripts/render_report.R {configfile}"
