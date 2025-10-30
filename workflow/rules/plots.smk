@@ -40,26 +40,12 @@ rule bin_plots:
 		touch {output.checkpoint}
 		"""
 
-rule bin_plots_aggregate:
-    input:
-        rule.bin_plots.output.checkpoint
-    output:
-        f"{outdir}/results/.binPlots.done"
-    threads:
-        config['threads']
-    resources:
-        mem_mb=config['max_mem']
-    log:
-        f"{outdir}/logs/bin_plots_aggregate.log"
-    shell:
-        "touch {output}"
+SAMPLES_POOLS = glob_wildcards(f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv").sample_pool
 
 rule report:
     input:
         metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
-        #config = "config/AllSimReads_configfile.yaml" ### MAKE IT AUTOMATIC
-        expand(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html")
-            #sample_pool=SAMPLES_POOLS
+        binplots = expand(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html", sample_pool=SAMPLES_POOLS)
     output:
         f"{outdir}/results/08_plots/Orochi_report.html"
     params:
