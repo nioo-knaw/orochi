@@ -42,7 +42,7 @@ rule bin_plots:
 
 rule bin_plots_aggregate:
     input:
-        directory(f"{outdir}/results/08_plots/.binplots_checkpoint/")
+        rule.bin_plots.output.checkpoint
     output:
         f"{outdir}/results/.binPlots.done"
     threads:
@@ -58,7 +58,8 @@ rule report:
     input:
         metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
         #config = "config/AllSimReads_configfile.yaml" ### MAKE IT AUTOMATIC
-        binplots = f"{outdir}/results/.binPlots.done"
+        expand(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html")
+            #sample_pool=SAMPLES_POOLS
     output:
         f"{outdir}/results/08_plots/Orochi_report.html"
     params:
