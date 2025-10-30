@@ -22,7 +22,7 @@ rule bin_plots:
 	output:
 		tempfile = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_4scatterplot.tsv"),
 		scatterplot = f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html",
-		#checkpoint = f"{outdir}/results/.binPlots.done"
+		checkpoint = f"{outdir}/results/08_plots/.binplots_checkpoint/{{sample_pool}}.binPlots.done"
 	params:
 		tempfile = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_phyluminfo.tsv")
 	threads:
@@ -37,12 +37,12 @@ rule bin_plots:
 		awk -v col=phylum 'NR==1{{for(i=1;i<=NF;i++){{if($i==col){{c=i;break}}}} print $c}} NR>1{{print $c}}' {input.bat} > {params.tempfile}
 		paste -d',' {input.checkm} {params.tempfile} > {output.tempfile}
 		python3 workflow/scripts/bin_scatterplot.py -i {output.tempfile} -o {output.scatterplot}
-		#touch {output.checkpoint}
+		touch {output.checkpoint}
 		"""
 
 rule bin_plots_aggregate:
     input:
-        expand(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html", sample_pool=SAMPLE_POOLS)
+        directory(f"{outdir}/results/08_plots/.binplots_checkpoint/")
     output:
         f"{outdir}/results/.binPlots.done"
     threads:
