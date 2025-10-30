@@ -63,6 +63,8 @@ rule report2:
         #binplots = rules.bin_plots.output.scatterplot
     output:
         f"{outdir}/results/08_plots/Orochi_report.html"
+    params:
+        configfile= workflow.configfiles[0] if workflow.configfiles else "config/configfile.yaml"
     threads:
         config['threads']
     resources:
@@ -71,4 +73,4 @@ rule report2:
     conda:
         "../envs/html.yaml"
     shell:
-        "Rscript ../scripts/render_report.R {configfile}"
+        "Rscript ../scripts/render_report.R {params.configfile}"
