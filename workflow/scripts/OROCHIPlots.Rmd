@@ -1,0 +1,271 @@
+---
+title: "OROCHI Report"
+output: 
+  html_document:
+    theme: flatly
+    highlight: tango # Code highlighting 
+#params: !r NULL
+params:
+  metaphlan_secondary: NULL
+  config_file: NULL
+author: OROCHI team
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#source("scripts/Report_functions.R")
+library(here)
+source(here("workflow", "scripts", "Report_functions.R"))
+```
+
+<!-- CSS to position the logo -->
+<style>
+#logo {
+  position: absolute;  /* float above content */
+  top: 10px;           /* distance from top */
+  right: 10px;         /* distance from right */
+  width: 150px;        /* adjust logo size */
+  height: auto;        /* maintain aspect ratio */
+  z-index: 1000;       /* stay on top of content */
+}
+</style>
+```{r logo, results='asis', echo=FALSE}
+cat(sprintf('<img id="logo" src="%s" alt="Orochi">', logo_file))
+```
+
+```{r footer, results='asis', echo=FALSE}
+cat('
+<div id="footer">
+  <img src="', NIOO, '" alt="NIOO" style="height:40px; vertical-align:middle; margin-right:10px;">
+  <img src="', WUR, '" alt="WUR" style="height:40px; vertical-align:middle; margin-right:10px;">
+  <span style="font-size:14px; color:#555;">
+    &nbsp;|&nbsp;
+    <a href="goto:https://github.com/nioo-knaw/orochi">https://github.com/nioo-knaw/orochi</a> &nbsp;|&nbsp;
+    Contact:
+    <a href="mailto:l.ariasgiraldo@nioo.knaw.nl">l.ariasgiraldo@nioo.knaw.nl</a>
+    ,
+    <a href="mailto:lotte.pronk@wur.nl">lotte.pronk@wur.nl</a>
+  </span>
+</div>
+', sep='')
+```
+
+```{=html}
+<style>
+#footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  background-color: #f8f8f8;
+  padding: 8px 0;
+  border-top: 1px solid #ddd;
+  z-index: 9999;
+}
+#footer img {
+  height: 40px;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+</style>
+```
+
+All the figures and tables contained in this report are available with publication-ready quality in the output directory of the OROCHI user.
+
+For each of the sections shown in this report, these are the data used:
+
+* Read-based: Quality-controlled shotgun sequencing reads
+* Contig-based: Assemblies
+* Bin-based: Refined and de-replicated bins
+
+
+## {.tabset}
+### Read-based
+*All read-based analysis plots were made using MicrobiotaProcess. For more information, consult their documentation.
+
+#### Quality report (from fastp)
+```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
+quality_files <- list.files(file.path(outdir, "results/01_trimmed_reads/quality_reports"), pattern = "\\.html$", 
+                            full.names = TRUE, recursive = TRUE)
+
+# Start a two-column container and lopp through files
+cat('<div style="column-count:2; column-gap:40px;">\n')
+
+for (f in quality_files) {
+  sample_name <- tools::file_path_sans_ext(basename(f))
+  cat(sprintf('<p><a href="%s" target="_blank">%s</a></p>\n', f, sample_name))
+}
+
+# Close container
+cat('</div>\n')
+```
+
+#### Alpha diversity
+A) Observed and Shannon indexes for all samples, regardless of treatment
+B) Boxplot and violin plot of Observed and Shannon indexes per treatment
+@Todo: add pannel labeling
+
+```{r Fig1, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+plot1_alpha_diversity()
+```
+
+#### Taxonomic abundance
+
+Average read counts per treatment plotted per taxonomic level
+
+```{r Fig2, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 20, fig.align = "center"}
+
+# Function to turn a ggplot into base64-encoded <img>
+plot_to_base64 <- function(p, width = 864, height = 576) {
+  tf <- tempfile(fileext = ".png")
+  ggsave(tf, plot = p, width = width/72, height = height/72, dpi = 500)  # inches = pixels/72
+  encoded <- base64enc::dataURI(file = tf, mime = "image/png")
+  sprintf('<img src="%s" width="%d" height="%d">', encoded, width, height)
+}
+
+plots_one_bar <- lapply(taxa_levels, plot2_average_taxonomic_abundance)
+
+plot_html_one_bar <- vapply(plots_one_bar, plot_to_base64, character(1))
+
+# Suppose these are your labels for each plot/page
+page_labels <- c("Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+# Your DT
+datatable(
+  data.frame(Plot = plot_html_one_bar),
+  escape = FALSE,
+  rownames = FALSE,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",  # keep full numbers, we will customize them
+    # customize buttons
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         // only get the numeric page buttons
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var pageIndex = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(pageIndex) && labels[pageIndex]) {
+             $(this).html(labels[pageIndex]);
+           }
+         });
+       }"
+    )
+  )
+)
+
+#datatable(
+#  data.frame(Plot = plot_html_one_bar),
+#  escape = FALSE,   # <-- VERY important, so HTML isn't shown as text
+#  rownames = FALSE,
+#  options = list(dom = "tp", scrollY = 600, pageLength = 1)
+#)
+
+```
+
+For all the samples, using a heatmap maybe be a better option to plot all this information in a more understandable way.
+Columns correspond to samples, rows correspond to t
+
+```{r Fig3, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+
+plots_heatmap <- lapply(taxa_levels, plot3_taxonomic_abundance_heatmap)
+
+plot_html <- vapply(plots_heatmap, plot_to_base64, character(1))
+
+datatable(
+  data.frame(Plot = plot_html),
+  escape = FALSE,
+  rownames = FALSE,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",  # keep full numbers, we will customize them
+    # customize buttons
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         // only get the numeric page buttons
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var pageIndex = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(pageIndex) && labels[pageIndex]) {
+             $(this).html(labels[pageIndex]);
+           }
+         });
+       }"
+    )
+  )
+)
+```
+
+```{r Fig3.1, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+
+#plots_heatmap <- lapply(taxa_levels, plot3_average_taxonomic_abundance_heatmap)
+
+#plot_html <- vapply(plots_heatmap, plot_to_base64, character(1))
+
+#datatable(
+#  data.frame(Plot = plot_html),
+#  escape = FALSE,   # <-- VERY important, so HTML isn't shown as text
+#  rownames = FALSE,
+#  options = list(dom = "tp", scrollY = 600, pageLength = 1)
+#)
+
+```
+
+#### Beta diversity
+
+```{r Fig4, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, out.width = "648px", unit = "in", out.height = "576px", fig.width = 6, fig.height = 5, fig.align = "center"}
+safe_call("plot4_significance_between_pools")
+```
+
+
+```{r Fig5, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+plot5_pcoa()
+```
+
+#### Clustering
+```{r Fig6, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+plot6_clustering()
+```
+
+```{=html}
+<div style="height:56px;"></div>
+```
+### Bin-based
+
+#### CheckM results
+
+```{r Bin Quality, results='asis', warning=FALSE, message=FALSE, echo=FALSE}
+library(htmltools)
+
+# Vector of Plotly HTML file paths
+scatter_files <- list.files(file.path(outdir, "results/08_plots"), pattern = "_bins_scatterplot\\.html$", 
+                            full.names = TRUE, recursive = TRUE)
+
+# Build a list of HTML sections (title + embedded plot)
+plot_sections <- lapply(scatter_files, function(pf) {
+  tagList(
+    h3(basename(pf)),
+    includeHTML(pf),
+    hr()  # adds a horizontal divider between plots
+  )
+})
+
+# Combine and render them all
+browsable(tagList(plot_sections))
+```
+#### MAG linkage
+
+```{r Fig7MAG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 7, fig.align = "center"}
+plot7_maglinkage()
+```
+
+```{=html}
+<div style="height:60px;"></div>
+```

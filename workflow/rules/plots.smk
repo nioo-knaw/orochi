@@ -3,7 +3,7 @@ rule krona:
 	output: 
 		f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_krona.html"
 	params:
-		out_temp = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_contigs4krona_sep.txt")
+		out_temp = f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_contigs4krona_sep.txt"
 	conda:
 		"../envs/krona.yaml"
 	threads:
@@ -21,7 +21,7 @@ rule bin_plots:
 		#bat = rules.BAT.output.bat_names
 	output:
 		tempfile = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_4scatterplot.tsv"),
-		scatterplot = f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.png"
+		scatterplot = f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html"
 	params:
 		tempfile = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_phyluminfo.tsv")
 	threads:
@@ -37,3 +37,38 @@ rule bin_plots:
 		paste -d',' {input.checkm} {params.tempfile} > {output.tempfile}
 		python3 workflow/scripts/bin_scatterplot.py -i {output.tempfile} -o {output.scatterplot}
 		"""
+
+#rule report:
+#	input: 
+#		main = "workflow/scripts/OROCHIPlots.Rmd",
+#		metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
+#		#emapper_annot = 
+#	output: f"{outdir}/results/08_plots/Orochi_report.html"
+#	threads:
+#		config['threads']
+#	resources:
+#		mem_mb=config['max_mem']
+#	log: f"{outdir}/logs/report.log"
+#	conda:
+#		"../envs/html.yaml"
+#	shell:
+#		"""
+#		Rscript -e 'rmarkdown::render("{input.main}", output_file="{output}")'
+#		"""
+
+rule report2:
+    input:
+        metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
+        config = "config/AllSimReads_configfile.yaml" ### MAKE IT AUTOMATIC
+        #binplots = rules.bin_plots.output.scatterplot
+    output:
+        f"{outdir}/results/08_plots/Orochi_report.html"
+    threads:
+        config['threads']
+    resources:
+        mem_mb=config['max_mem']
+    log: f"{outdir}/logs/report.log"
+    conda:
+        "../envs/html.yaml"
+    script:
+        "../scripts/render_report.R"

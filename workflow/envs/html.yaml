@@ -1,0 +1,6 @@
+name: orochi_html
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - pandoc == 3.8

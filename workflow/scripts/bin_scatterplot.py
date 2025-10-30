@@ -1,43 +1,61 @@
 import argparse
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.express as px
 
-# set up argument parser
 parser = argparse.ArgumentParser(description="Read input file for bin scatterplot")
-parser.add_argument(
-    "-input", 
-    type=str, 
-    required=True, 
-    help="Path to the input file (TSV) resulting from Orochi 'binning' module execution"
-)
-parser.add_argument(
-    "-output",
-    type=str,
-    required=True,
-    help="Path to save the output scatterplot"
-)
+parser.add_argument("-input", type=str, required=True, help="Path to the input TSV file")
+parser.add_argument("-output", type=str, required=True, help="Path to save the output HTML plot")
 args = parser.parse_args()
 
+# Read tab-separated file
 df = pd.read_csv(args.input, sep=",")
-fig = plt.subplots(figsize=(8,6))
 
-plt.figure(figsize=(8,6))
-scatter = plt.scatter(
-    df["completeness"],
-    df["contamination"],
-    c=pd.factorize(df["phylum"])[0],  # color
-    cmap="tab20",
-    alpha=0.8,
-    edgecolors="k"
+# Create interactive scatter plot
+fig = px.scatter(
+    df,
+    x="completeness",
+    y="contamination",
+    color="phylum",
+    hover_data=df.columns,
+    title="Bin Quality (Completeness vs Contamination)",
+    labels={
+        "completeness": "Completeness (%)",
+        "contamination": "Contamination (%)"
+    },
+    color_discrete_sequence=px.colors.qualitative.Set2
 )
 
-plt.xlabel("Completeness (%)")
-plt.ylabel("Contamination (%)")
-plt.title("Bin Quality (Completeness vs Contamination)")
+# --- Add black borders around points ---
+fig.update_traces(
+    marker=dict(
+        line=dict(width=0.8, color='black'),
+        opacity=0.85,
+        size=10
+    )
+)
 
-# Legend: one color per taxonomy group
-handles, labels = scatter.legend_elements(prop="colors")
-plt.legend(handles, df["phylum"].unique(), title="Phylum", bbox_to_anchor=(1.05, 1))
+# --- Clean scientific styling ---
+fig.update_layout(
+    template="simple_white",
+    plot_bgcolor="white",
+    paper_bgcolor="white",
+    width=800,
+    height=600,
+    legend_title_text="Phylum",
+    title_font=dict(size=20, family="Arial", color="black"),
+    font=dict(size=14, family="Arial", color="black"),
+    xaxis=dict(
+        range=[0, 100],
+        showline=True, linecolor="black",
+        showgrid=True, gridcolor="lightgrey", zeroline=False
+    ),
+    yaxis=dict(
+        range=[0, 100],
+        showline=True, linecolor="black",
+        showgrid=True, gridcolor="lightgrey", zeroline=False
+    )
+)
 
-plt.tight_layout()
-plt.savefig(args.output, dpi=500)
+# Save as interactive HTML file
+fig.write_html(args.output)
+print(f"✅ Interactive plot saved to {args.output}")

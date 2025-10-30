@@ -19,6 +19,7 @@ tail -n +2 "$1" | while IFS=$'\t' read -r contig classification reason lineage s
 
   # Output in Krona format: count \t taxonomy path
   if [[ ${#taxonomy[@]} -gt 0 ]]; then
-    echo -e "1\t${taxonomy[*]}" | sed 's/ /;/g'
+   # echo -e "1\t${taxonomy[*]}" | sed 's/ /;/g'
+   echo -e "1\t${taxonomy[*]}" | sed $'s/ /\t/g'
   fi
 done
