@@ -77,7 +77,7 @@ mpse3 %<>%
   )
 
 # Filter out samples with missing or invalid treatment1 before plotting ## MAKE IT AS FOR treatment2 AS WELL
-mpse3_filtered <- mpse3 %>%
+mpse3 <- mpse3 %>%
 mp_filter(!is.na(treatment1) & treatment1 != "")
 
 # Observed and Shannon (per sample)
