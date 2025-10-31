@@ -3,4 +3,18 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - r-base = 4.3.*
+  - r-rmarkdown
+  - r-yaml
+  - r-stringr
+  - r-stringi
+  - r-ggplot2
+  - r-dplyr
+  - r-tidyr
+  - r-htmltools
+  - r-vegan
+  - r-ggside
+  - r-ggplotify
+  - r-ggtree
+  - r-microbiotaprocess
   - pandoc == 3.8

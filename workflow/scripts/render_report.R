@@ -1,3 +1,4 @@
+.libPaths(.libPaths()[.libPaths() != Sys.getenv("R_LIBS_USER")])
 library(rmarkdown)
 
 args <- commandArgs(trailingOnly = TRUE)
