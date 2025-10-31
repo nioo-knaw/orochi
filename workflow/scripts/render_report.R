@@ -11,7 +11,13 @@ if (length(args) < 3) {
 config_path <- normalizePath(args[1])
 metaphlan_secondary <- normalizePath(args[2])
 output_path <- normalizePath(args[3], mustWork = FALSE)
-rmd_file <- file.path(dirname(normalizePath(sys.argv()[1])), "OROCHIPlots.Rmd")
+
+# Get script directory
+args_full <- commandArgs(trailingOnly = FALSE)
+script_path <- sub("--file=", "", args_full[grep("--file=", args_full)])
+script_dir <- if (length(script_path) > 0) dirname(normalizePath(script_path)) else getwd()
+
+rmd_file <- file.path(script_dir, "OROCHIPlots.Rmd")
 
 render(
   input = rmd_file,
