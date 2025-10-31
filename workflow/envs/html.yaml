@@ -15,6 +15,13 @@ dependencies:
   - r-vegan
   - r-ggside
   - r-ggplotify
-  - r-ggtree
-  - r-microbiotaprocess
+  - r-here
+  - r-gghalves
+  - r-ggh4x
+  - r-forcats
+  - r-ggalluvial
+  - r-DT
+ # - r-ggtree
+ # - r-microbiotaprocess
+  - bioconductor-microbiotaprocess
   - pandoc == 3.8

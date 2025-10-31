@@ -2,10 +2,10 @@
 # READ BASED --------------------------------------------------------------
 
 # Loading required packages --------------------------------------------------------
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+#if (!require("BiocManager", quietly = TRUE))
+ # install.packages("BiocManager", repos = "https://cloud.r-project.org")
 
-BiocManager::install("MicrobiotaProcess")
+#BiocManager::install("MicrobiotaProcess")
 
 library(MicrobiotaProcess)
 library(ggplot2)
