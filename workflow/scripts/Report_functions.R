@@ -2,10 +2,6 @@
 # READ BASED --------------------------------------------------------------
 
 # Loading required packages --------------------------------------------------------
-#if (!require("BiocManager", quietly = TRUE))
- # install.packages("BiocManager", repos = "https://cloud.r-project.org")
-
-#BiocManager::install("MicrobiotaProcess")
 
 library(MicrobiotaProcess)
 library(ggplot2)
@@ -62,7 +58,6 @@ mpse <- mp_import_metaphlan(profile = metaphlan_secondary)
 # Including TREATMENT information (in my case, treatment1)
 sample_groups <- read.table(samples, header = TRUE)
 colnames(sample_groups)[1] <- "Sample"
-#colnames(sample_groups)[2] <- "Treatment1" ### Make it so they can choose which treatment column to use?
 sample_groups <- sample_groups[,c(1,2)]
 mpse3 <- mpse %>%
   left_join(sample_groups, by = "Sample")
@@ -80,6 +75,10 @@ mpse3 %<>%
     .group=treatment1,
     force = TRUE
   )
+
+# Filter out samples with missing or invalid treatment1 before plotting ## MAKE IT AS FOR treatment2 AS WELL
+mpse3_filtered <- mpse3 %>%
+mp_filter(!is.na(treatment1) & treatment1 != "")
 
 # Observed and Shannon (per sample)
 mpse3 %<>% mp_cal_alpha(.abundance=Abundance, force=TRUE) 
