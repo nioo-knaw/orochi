@@ -58,4 +58,4 @@ rule report:
     conda:
         "../envs/html.yaml"
     shell:
-        "Rscript ../scripts/render_report.R {params.configfile}"
+        "Rscript workflow/scripts/render_report.R {params.configfile}"
