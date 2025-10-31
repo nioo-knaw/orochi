@@ -10,8 +10,8 @@ if (length(args) < 3) {
 
 config_path <- normalizePath(args[1])
 metaphlan_secondary <- normalizePath(args[2])
-output_path <- normalizePath(args[3])
-rmd_file <- file.path(dirname(normalizePath(sys.frame(1)$ofile)), "OROCHIPlots.Rmd")
+output_path <- normalizePath(args[3], mustWork = FALSE)
+rmd_file <- file.path(dirname(normalizePath(sys.argv()[1])), "OROCHIPlots.Rmd")
 
 render(
   input = rmd_file,
