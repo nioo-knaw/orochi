@@ -13,7 +13,6 @@ author: OROCHI team
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-#source("scripts/Report_functions.R")
 library(here)
 source(here("workflow", "scripts", "Report_functions.R"))
 ```
@@ -85,6 +84,8 @@ For each of the sections shown in this report, these are the data used:
 *All read-based analysis plots were made using MicrobiotaProcess. For more information, consult their documentation.
 
 #### Quality report (from fastp)
+Quality reports were produced at the beginning of the metagenomics analysis, when Orochi used fastp to trim the low-quality reads and remove sequences that should be excluded from further analysis (e.g. polyG tails). Below you can find the link corresponding to each sample.
+> Note: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
 ```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
 quality_files <- list.files(file.path(outdir, "results/01_trimmed_reads/quality_reports"), pattern = "\\.html$", 
                             full.names = TRUE, recursive = TRUE)
@@ -104,7 +105,6 @@ cat('</div>\n')
 #### Alpha diversity
 A) Observed and Shannon indexes for all samples, regardless of treatment
 B) Boxplot and violin plot of Observed and Shannon indexes per treatment
-@Todo: add pannel labeling
 
 ```{r Fig1, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
 plot1_alpha_diversity()
@@ -112,7 +112,8 @@ plot1_alpha_diversity()
 
 #### Taxonomic abundance
 
-Average read counts per treatment plotted per taxonomic level
+Average read counts per treatment plotted per taxonomic level. You can naviagte each level by clicking the buttons underneath.
+> Remember: You already have all these plots (per taxonomic level), there is no need to download them again. Simply look for them in OUTDIR/results/09_plots/1-Reads/
 
 ```{r Fig2, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 20, fig.align = "center"}
 
@@ -158,17 +159,11 @@ datatable(
   )
 )
 
-#datatable(
-#  data.frame(Plot = plot_html_one_bar),
-#  escape = FALSE,   # <-- VERY important, so HTML isn't shown as text
-#  rownames = FALSE,
-#  options = list(dom = "tp", scrollY = 600, pageLength = 1)
-#)
 
 ```
 
-For all the samples, using a heatmap maybe be a better option to plot all this information in a more understandable way.
-Columns correspond to samples, rows correspond to t
+For all the samples, using a heatmap maybe be a better option to plot all this information in a more understandable way, where samples can also be seen.
+Columns correspond to samples, rows correspond to the labels found in the currently displayed taxonomic level. You can naviagte each level by clicking the buttons underneath.
 
 ```{r Fig3, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
 
@@ -203,33 +198,21 @@ datatable(
 )
 ```
 
-```{r Fig3.1, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
-
-#plots_heatmap <- lapply(taxa_levels, plot3_average_taxonomic_abundance_heatmap)
-
-#plot_html <- vapply(plots_heatmap, plot_to_base64, character(1))
-
-#datatable(
-#  data.frame(Plot = plot_html),
-#  escape = FALSE,   # <-- VERY important, so HTML isn't shown as text
-#  rownames = FALSE,
-#  options = list(dom = "tp", scrollY = 600, pageLength = 1)
-#)
-
-```
-
 #### Beta diversity
 
+{Description from MicrobiotaProcess}
 ```{r Fig4, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, out.width = "648px", unit = "in", out.height = "576px", fig.width = 6, fig.height = 5, fig.align = "center"}
 safe_call("plot4_significance_between_pools")
 ```
 
-
+PCoA ___. Colors correspond to treatments, and boxplots on the right and top side indicate the distribution of each treatment along each coordinate. 95% confidence interval is also plotted.
 ```{r Fig5, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
 plot5_pcoa()
 ```
 
 #### Clustering
+Dendrogram showing grouping of the whole dataset based on hierarchical cluster analysis, colored based on the treatments found in the metadata fed by the user.
+
 ```{r Fig6, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
 plot6_clustering()
 ```
@@ -239,7 +222,12 @@ plot6_clustering()
 ```
 ### Bin-based
 
-#### CheckM results
+#### Bin quality
+
+Interactive plots showing the completeness and contamination of each bin based on CheckM results.
+The threshold that defines whether a bin is good quality or not is dependant on the type of sample processed.
+In general, we suggest to look for a minimum of 70% completeness and a maximum of 10% contamination.
+You can find more data about your bins in OUTDIR/results/... ###########
 
 ```{r Bin Quality, results='asis', warning=FALSE, message=FALSE, echo=FALSE}
 library(htmltools)
@@ -261,6 +249,10 @@ plot_sections <- lapply(scatter_files, function(pf) {
 browsable(tagList(plot_sections))
 ```
 #### MAG linkage
+
+(From left to right) Relation between 16S sequences, contigs from the assembly (indicated at the top of the plot), and refined bins.
+The size of the fragment indicates ____, and the color of the 
+You can find more about this process in {WEBSITE FROM MARKERMAG AND PHYLOFLASH?}
 
 ```{r Fig7MAG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 7, fig.align = "center"}
 plot7_maglinkage()
