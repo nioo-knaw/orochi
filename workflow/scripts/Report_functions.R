@@ -67,7 +67,7 @@ mpse3 %<>%
 
 # Filter out samples with missing or invalid treatment1 before plotting ## MAKE IT AS FOR treatment2 AS WELL
 mpse3 <- mpse3 %>%
-mp_filter(!is.na(treatment1) & treatment1 != "")
+filter(!is.na(treatment1) & treatment1 != "")
 
 # Observed and Shannon (per sample)
 mpse3 %<>% mp_cal_alpha(.abundance=Abundance, force=TRUE) 
