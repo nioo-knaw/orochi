@@ -4,6 +4,7 @@ output:
   html_document:
     theme: flatly
     highlight: tango # Code highlighting 
+    css: styles.css
 #params: !r NULL
 params:
   metaphlan_secondary: NULL
@@ -84,8 +85,13 @@ For each of the sections shown in this report, these are the data used:
 *All read-based analysis plots were made using MicrobiotaProcess. For more information, consult their documentation.
 
 #### Quality report (from fastp)
+
 Quality reports were produced at the beginning of the metagenomics analysis, when Orochi used fastp to trim the low-quality reads and remove sequences that should be excluded from further analysis (e.g. polyG tails). Below you can find the link corresponding to each sample.
-> Note: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
+
+::: note
+NOTE: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
+:::
+
 ```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
 quality_files <- list.files(file.path(outdir, "results/01_trimmed_reads/quality_reports"), pattern = "\\.html$", 
                             full.names = TRUE, recursive = TRUE)
@@ -113,7 +119,11 @@ plot1_alpha_diversity()
 #### Taxonomic abundance
 
 Average read counts per treatment plotted per taxonomic level. You can naviagte each level by clicking the buttons underneath.
-> Remember: You already have all these plots (per taxonomic level), there is no need to download them again. Simply look for them in OUTDIR/results/09_plots/1-Reads/
+
+::: note
+Remember: You already have all these plots (per taxonomic level), there is no need to download them again. Simply look for them in `{OUTDIR}/results/09_plots/1-Reads/`
+:::
+
 
 ```{r Fig2, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 20, fig.align = "center"}
 
@@ -163,7 +173,7 @@ datatable(
 ```
 
 For all the samples, using a heatmap maybe be a better option to plot all this information in a more understandable way, where samples can also be seen.
-Columns correspond to samples, rows correspond to the labels found in the currently displayed taxonomic level. You can naviagte each level by clicking the buttons underneath.
+Columns correspond to samples, rows correspond to the labels found in the currently displayed taxonomic level. You can navigate each level by clicking the buttons underneath.
 
 ```{r Fig3, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
 
@@ -200,12 +210,12 @@ datatable(
 
 #### Beta diversity
 
-{Description from MicrobiotaProcess}
+Bray-Curtis dissimilarity indices are used to calculate pairwise distances between all samples (even the ones that belong to the same treatment), and significance is calculated (Wilcoxon test)
 ```{r Fig4, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, out.width = "648px", unit = "in", out.height = "576px", fig.width = 6, fig.height = 5, fig.align = "center"}
 safe_call("plot4_significance_between_pools")
 ```
 
-PCoA ___. Colors correspond to treatments, and boxplots on the right and top side indicate the distribution of each treatment along each coordinate. 95% confidence interval is also plotted.
+PCoA of all samples. Colors correspond to treatment, and boxplots on the right and top side indicate the distribution of the samples of each treatment along each coordinate. 95% confidence intervals are also plotted.
 ```{r Fig5, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
 plot5_pcoa()
 ```
@@ -227,7 +237,7 @@ plot6_clustering()
 Interactive plots showing the completeness and contamination of each bin based on CheckM results.
 The threshold that defines whether a bin is good quality or not is dependant on the type of sample processed.
 In general, we suggest to look for a minimum of 70% completeness and a maximum of 10% contamination.
-You can find more data about your bins in OUTDIR/results/... ###########
+You can find more data about your bins in `{OUTDIR}/results/06_binning`.
 
 ```{r Bin Quality, results='asis', warning=FALSE, message=FALSE, echo=FALSE}
 library(htmltools)
@@ -250,9 +260,9 @@ browsable(tagList(plot_sections))
 ```
 #### MAG linkage
 
-(From left to right) Relation between 16S sequences, contigs from the assembly (indicated at the top of the plot), and refined bins.
-The size of the fragment indicates ____, and the color of the 
-You can find more about this process in {WEBSITE FROM MARKERMAG AND PHYLOFLASH?}
+(From left to right) Relation between 16S sequences, contigs from each assembly (indicated at the top of the plot), and refined bins from your analysis. Phyloflash and MarkerMAG are used to extract and assemble 16S rRNA gene sequences from your data and link them to the more appropriate contigs and bins.
+The size of the fragment indicates the strength of the linkage - an approximation derived from the number of reads that matched -, and the color of the The width of the connections corresponds to the strength or number of linkages between elements. Color intensity in the flow indicates different linkage groups within the same round and the different shades of grey (if present) indicate which round of MarkerMAG estimation that linkage comes from.
+You can find more about this process in [MarkerMAG Official GitHub page](https://github.com/songweizhi/MarkerMAG).
 
 ```{r Fig7MAG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 7, fig.align = "center"}
 plot7_maglinkage()
