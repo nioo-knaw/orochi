@@ -47,13 +47,13 @@ rule report:
     input:
         metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
         binplots = expand(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html", sample_pool=SAMPLES_POOLS)
-		html_fastp = lambda wildcards: glob.glob(f"{outdir}/results/01_trimmed_reads/quality_reports/*.html")
+        html_fastp = lambda wildcards: glob.glob(f"{outdir}/results/01_trimmed_reads/quality_reports/*.html")
     output:
         f"{outdir}/results/08_plots/Orochi_report.html"
     params:
         configfile= workflow.configfiles[0] if workflow.configfiles else "config/configfile.yaml",
-		outdir_html = f"{outdir}/results/08_plots/rsc/"
-	threads:
+        outdir_html = f"{outdir}/results/08_plots/rsc/"
+    threads:
         config['threads']
     resources:
         mem_mb=config['max_mem']
@@ -62,5 +62,5 @@ rule report:
         "../envs/html.yaml"
     shell:
         "mkdir {params.outdir_html}"
-		"cp {input.html_fastp} {params.outdir_html}"
-		"Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}"
+        "cp {input.html_fastp} {params.outdir_html}"
+        "Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}"
