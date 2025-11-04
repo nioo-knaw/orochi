@@ -93,7 +93,7 @@ NOTE: If you click on your samples and cannot visualize any of them, it means yo
 :::
 
 ```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
-quality_files <- list.files(file.path(outdir, "results/01_trimmed_reads/quality_reports"), pattern = "\\.html$", 
+quality_files <- list.files(file.path(outdir, "results/08_plots/rsc"), pattern = "\\.html$", 
                             full.names = TRUE, recursive = TRUE)
 
 # Start a two-column container and lopp through files

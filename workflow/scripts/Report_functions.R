@@ -34,7 +34,7 @@ dir.create(file.path(outdir, plotsdir), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(outdir, plotsdirbins), recursive = TRUE, showWarnings = FALSE)
 
 # To save the other htmls in one same location for easier visualization later
-dir.create(file.path(outdir, "results/08_plots/rsc"), recursive = TRUE, showWarnings = FALSE)
+#dir.create(file.path(outdir, "results/08_plots/rsc"), recursive = TRUE, showWarnings = FALSE)
 rsc_path <- file.path(outdir, "results/08_plots/rsc")
 
 # Making object -----------------------------------------------------------
@@ -447,7 +447,6 @@ safe_call <- function(fun_name, ...) {
 logo_file <- paste0(getwd(), "/Orochi_logo.png")
 #NIOO <- paste0(getwd(), "/NIOO.gif")
 WUR <- paste0(getwd(), "/WUR.png")
-
 NIOO <- "NIOO.gif"
 
 
