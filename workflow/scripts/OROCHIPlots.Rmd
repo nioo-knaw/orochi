@@ -85,15 +85,15 @@ For each of the sections shown in this report, these are the data used:
 ### Read-based
 *All read-based analysis plots were made using MicrobiotaProcess. For more information, consult their documentation.
 
+```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
 #### Quality report (from fastp)
 
-Quality reports were produced at the beginning of the metagenomics analysis, when Orochi used fastp to trim the low-quality reads and remove sequences that should be excluded from further analysis (e.g. polyG tails). Below you can find the link corresponding to each sample.
+#Quality reports were produced at the beginning of the metagenomics analysis, when Orochi used fastp to trim the low-quality reads and remove sequences that should be excluded from further analysis (e.g. polyG tails). Below you can find the link corresponding to each sample.
 
-::: note
-NOTE: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
-:::
+#::: note
+#NOTE: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
+#:::
 
-```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
 quality_files <- list.files("rsc", pattern = "\\.html$", full.names = TRUE)
 #quality_files <- list.files(file.path(outdir, "results/08_plots/rsc"), pattern = "\\.html$", 
  #                           full.names = TRUE, recursive = TRUE)

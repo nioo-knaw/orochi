@@ -62,7 +62,7 @@ rule report:
         "../envs/html.yaml"
     shell:
         """
-        mkdir {params.outdir_html}
+        mkdir -p {params.outdir_html}
         cp {input.html_fastp} {params.outdir_html}
         Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}
         """
