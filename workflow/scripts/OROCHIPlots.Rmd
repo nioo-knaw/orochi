@@ -14,6 +14,7 @@ author: OROCHI team
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = getwd())
 library(here)
 source(here("workflow", "scripts", "Report_functions.R"))
 ```
@@ -93,12 +94,11 @@ NOTE: If you click on your samples and cannot visualize any of them, it means yo
 :::
 
 ```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
-knitr::opts_knit$set(root.dir = getwd())
 quality_files <- list.files("rsc", pattern = "\\.html$", full.names = TRUE)
 #quality_files <- list.files(file.path(outdir, "results/08_plots/rsc"), pattern = "\\.html$", 
  #                           full.names = TRUE, recursive = TRUE)
 
-# Start a two-column container and lopp through files
+# Start a two-column container and loop through files
 cat('<div style="column-count:2; column-gap:40px;">\n')
 
 for (f in quality_files) {
