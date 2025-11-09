@@ -85,29 +85,35 @@ For each of the sections shown in this report, these are the data used:
 ### Read-based
 *All read-based analysis plots were made using MicrobiotaProcess. For more information, consult their documentation.
 
-```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
 #### Quality report (from fastp)
 
-#Quality reports were produced at the beginning of the metagenomics analysis, when Orochi used fastp to trim the low-quality reads and remove sequences that should be excluded from further analysis (e.g. polyG tails). Below you can find the link corresponding to each sample.
+Quality reports were produced at the beginning of the metagenomics analysis, when Orochi used fastp to trim the low-quality reads and remove sequences that should be excluded from further analysis (e.g. polyG tails). Below you can find the link corresponding to each sample.
 
-#::: note
-#NOTE: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
-#:::
+::: note
+NOTE: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
+:::
 
-quality_files <- list.files("rsc", pattern = "\\.html$", full.names = TRUE)
-#quality_files <- list.files(file.path(outdir, "results/08_plots/rsc"), pattern = "\\.html$", 
- #                           full.names = TRUE, recursive = TRUE)
+```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
 
-# Start a two-column container and loop through files
-cat('<div style="column-count:2; column-gap:40px;">\n')
 
-for (f in quality_files) {
+quality_files <- list.files(file.path(outdir,"results/08_plots/rsc"), pattern = "\\.html$", full.names = TRUE)
+quality_files_rel <- file.path("rsc", basename(quality_files))
+
+cat('<div style="column-count:2; column-gap:40px; text-align:center;">\n')
+for (f in quality_files_rel) {
   sample_name <- tools::file_path_sans_ext(basename(f))
   cat(sprintf('<p><a href="%s" target="_blank">%s</a></p>\n', f, sample_name))
 }
-
-# Close container
 cat('</div>\n')
+
+
+# 
+# for (f in quality_files) {
+#   sample_name <- tools::file_path_sans_ext(basename(f))
+#   cat(sprintf('<p><a href="%s" target="_blank">%s</a></p>\n', f, sample_name))
+# }
+# # Close container
+# cat('</div>\n')
 ```
 
 #### Alpha diversity
@@ -234,6 +240,10 @@ plot6_clustering()
 ```
 ### Bin-based
 
+```{r Fig7BinSummary, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
+plot8_binsummary()
+```
+
 #### Bin quality
 
 Interactive plots showing the completeness and contamination of each bin based on CheckM results.
@@ -251,7 +261,7 @@ scatter_files <- list.files(file.path(outdir, "results/08_plots"), pattern = "_b
 # Build a list of HTML sections (title + embedded plot)
 plot_sections <- lapply(scatter_files, function(pf) {
   tagList(
-    h3(basename(pf)),
+    #h3(basename(pf)),
     includeHTML(pf),
     hr()  # adds a horizontal divider between plots
   )
@@ -266,7 +276,7 @@ browsable(tagList(plot_sections))
 The size of the fragment indicates the strength of the linkage - an approximation derived from the number of reads that matched -, and the color of the The width of the connections corresponds to the strength or number of linkages between elements. Color intensity in the flow indicates different linkage groups within the same round and the different shades of grey (if present) indicate which round of MarkerMAG estimation that linkage comes from.
 You can find more about this process in [MarkerMAG Official GitHub page](https://github.com/songweizhi/MarkerMAG).
 
-```{r Fig7MAG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 7, fig.align = "center"}
+```{r Fig8MAG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 7, fig.align = "center"}
 plot7_maglinkage()
 ```
 

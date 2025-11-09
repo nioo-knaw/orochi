@@ -363,6 +363,53 @@ library(ggnewscale)
 
 base_dir <- file.path(outdir, "results/07_maglinkage")
 
+# Summary of bins per assembly
+bin_summary_files <- list.files(file.path(outdir, "results/06_binning/checkm2"), pattern = "quality_report\\.tsv$", 
+                                full.names = TRUE, recursive = TRUE)
+treatments <- basename(dirname(bin_summary_files))
+n_bins <- sapply(bin_summary_files, function(file) length(readLines(file)) - 1)
+
+bin_counts <- data.frame(
+  treatment = treatments,
+  n_bins = n_bins,
+  stringsAsFactors = FALSE
+)
+
+# Compute cumulative positions for stacked bar
+bin_counts <- bin_counts %>%
+  mutate(
+    end = cumsum(n_bins),
+    start = lag(end, default = 0),
+    mid = (start + end) / 2
+  )
+
+# Create the plot
+bin <- ggplot(bin_counts) +
+  geom_rect(aes(xmin = start, xmax = end, ymin = 0, ymax = 6, fill = treatment)) +
+  geom_text(aes(x = mid, y = 3, label = n_bins), color = "black", size = 5, fontface = "bold") +
+  scale_fill_brewer(palette = "Oranges") +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_x_continuous(expand = c(0, 0)) +
+  coord_fixed(ratio = 0.1) +
+  labs(
+    x = NULL, y = NULL,
+    title = "Total number of bins per treatment (assembly)"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    panel.grid = element_blank(),
+    legend.position = "bottom"
+  )
+#ggsave(filename = file.path(outdir, plotsdirbins, paste0(assembly,"_MAGlinkage.tiff")), plot = plot, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
+
+plot8_binsummary <- function() {
+  print(bin)
+}
+
+
+# MAG-Linkage
 contig_files <- list.files(base_dir, pattern = "_linkages_by_contig\\.txt$", 
                            full.names = TRUE, recursive = TRUE)
 
