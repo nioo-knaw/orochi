@@ -3,7 +3,7 @@ rule krona:
 	output: 
 		f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_krona.html"
 	params:
-		out_temp = f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_contigs4krona_sep.txt"
+		out_temp = f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_contigs4krona_sep.txt"
 	conda:
 		"../envs/krona.yaml"
 	threads:
@@ -20,11 +20,11 @@ rule bin_plots:
 		bat = f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
 		#bat = rules.BAT.output.bat_names
 	output:
-		tempfile = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_4scatterplot.tsv"),
-		scatterplot = f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html",
-		checkpoint = f"{outdir}/results/08_plots/.binplots_checkpoint/{{sample_pool}}.binPlots.done"
+		tempfile = temp(f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_4scatterplot.tsv"),
+		scatterplot = f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html",
+		checkpoint = f"{outdir}/results/09_plots/.binplots_checkpoint/{{sample_pool}}.binPlots.done"
 	params:
-		tempfile = temp(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_phyluminfo.tsv")
+		tempfile = temp(f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_phyluminfo.tsv")
 	threads:
 		config['threads']
 	resources:
@@ -46,13 +46,13 @@ import glob
 rule report:
     input:
         metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
-        binplots = expand(f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html", sample_pool=SAMPLES_POOLS),
+        binplots = expand(f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html", sample_pool=SAMPLES_POOLS),
         html_fastp = lambda wildcards: glob.glob(f"{outdir}/results/01_trimmed_reads/quality_reports/*.html")
     output:
         f"{outdir}/results/08_plots/Orochi_report.html"
     params:
         configfile= workflow.configfiles[0] if workflow.configfiles else "config/configfile.yaml",
-        outdir_html = f"{outdir}/results/08_plots/rsc/"
+        outdir_html = f"{outdir}/results/09_plots/rsc/"
     threads:
         config['threads']
     resources:
