@@ -4,4 +4,5 @@ channels:
   - bioconda
 dependencies:
   - antismash=8.0.4
+  - meme=4.11.2
 #  - bcbio-gff=0.7.0
