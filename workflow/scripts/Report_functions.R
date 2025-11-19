@@ -293,21 +293,6 @@ plot4_significance_between_pools <- function() {
 
 mpse3 %<>% mp_cal_pcoa(.abundance=hellinger, distmethod="bray", .dim = 2)
 
-# We also can perform adonis or anosim to check whether it is significant to the dissimilarities of groups.
-#mpse3 %<>% mp_adonis(.abundance=hellinger, .formula=~group, distmethod="bray", permutations=9999, action="add") 
-#mpse3 %>% mp_extract_internal_attr(name=adonis)
-
-#pcoa1 <- mpse3 %>%
-#  mp_plot_ord(
-#    .ord = pcoa, 
-#    .group = group, 
-#    .color = group, 
-#    .size = 1.2,
-#    .alpha = 1,
-#    ellipse = TRUE,
-#    show.legend = FALSE # don't display the legend of stat_ellipse
-#  )
-
 pcoa2 <- mpse3 %>% 
   mp_plot_ord(
     .ord = pcoa, 
