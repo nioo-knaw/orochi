@@ -1,7 +1,7 @@
 rule krona:
 	input: rules.CAT.output.names
 	output: 
-		f"{outdir}/results/08_plots/{{sample_pool}}/{{sample_pool}}_krona.html"
+		f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_krona.html"
 	params:
 		out_temp = f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_contigs4krona_sep.txt"
 	conda:
@@ -49,7 +49,7 @@ rule report:
         binplots = expand(f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html", sample_pool=SAMPLES_POOLS),
         html_fastp = lambda wildcards: glob.glob(f"{outdir}/results/01_trimmed_reads/quality_reports/*.html")
     output:
-        f"{outdir}/results/08_plots/Orochi_report.html"
+        f"{outdir}/results/09_plots/Orochi_report.html"
     params:
         configfile= workflow.configfiles[0] if workflow.configfiles else "config/configfile.yaml",
         outdir_html = f"{outdir}/results/09_plots/rsc/"
