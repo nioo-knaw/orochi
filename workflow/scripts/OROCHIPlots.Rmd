@@ -257,7 +257,7 @@ You can find more data about your bins in `{OUTDIR}/results/06_binning`.
 library(htmltools)
 
 # Vector of Plotly HTML file paths
-scatter_files <- list.files(file.path(outdir, "results/08_plots"), pattern = "_bins_scatterplot\\.html$", 
+scatter_files <- list.files(file.path(outdir, "results/09_plots"), pattern = "_bins_scatterplot\\.html$", 
                             full.names = TRUE, recursive = TRUE)
 
 # Build a list of HTML sections (title + embedded plot)
