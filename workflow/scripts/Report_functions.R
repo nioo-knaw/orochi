@@ -15,7 +15,7 @@ library(ggtree) #(Not available for this version of R)
 
 library(yaml)
 
-# report2 options
+# report options
 metaphlan_secondary <- params$metaphlan_secondary
 config_file <- params$config_file
 
@@ -28,14 +28,14 @@ samples <- config$samples
 outdir <- config$outdir
 
 
-plotsdir <- "results/08_plots/PLOTS/1-Reads"
-plotsdirbins <- "results/08_plots/PLOTS/3-Bins"
+plotsdir <- "results/09_plots/PLOTS/1-Reads"
+plotsdirbins <- "results/09_plots/PLOTS/3-Bins"
 dir.create(file.path(outdir, plotsdir), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(outdir, plotsdirbins), recursive = TRUE, showWarnings = FALSE)
 
 # To save the other htmls in one same location for easier visualization later
 #dir.create(file.path(outdir, "results/08_plots/rsc"), recursive = TRUE, showWarnings = FALSE)
-rsc_path <- file.path(outdir, "results/08_plots/rsc")
+rsc_path <- file.path(outdir, "results/09_plots/rsc")
 
 # Making object -----------------------------------------------------------
 #(https://github.com/YuLab-SMU/MicrobiotaProcess/issues/58)
@@ -415,8 +415,7 @@ contig_files <- list.files(base_dir, pattern = "_linkages_by_contig\\.txt$",
 
 all_plots <- list()
 
-for (i in seq_along(contig_files)) {
-  contig_file <- contig_files[i]
+for (contig_file in contig_files) {
   assembly <- stringr::str_match(contig_file, ".*/([A-Za-z0-9_-]+)/markermag/")[,2]
   genome_file <- file.path(dirname(contig_file), paste0(assembly, "_linkages_by_genome.txt"))
   if (!file.exists(genome_file)) next
@@ -464,15 +463,15 @@ for (i in seq_along(contig_files)) {
       legend.background = element_rect(fill = "transparent", color = NA)
     )
   ggplot2::ggsave(filename = file.path(outdir, plotsdirbins, paste0(assembly,"_MAGlinkage.tiff")), plot = plot, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
-  all_plots[[i]] <- plot
+  all_plots[[assembly]] <- plot
 }
 
-plot7_maglinkage <- function() {
-  for(i in seq_along(all_plots)) {
-    print(all_plots[[i]])
+plot7_maglinkage <- function(assembly) {
+  if (!assembly %in% names(all_plots)) {
+    stop("Invalid assembly! Available: ", paste(names(all_plots), collapse = ", "))
   }
+  all_plots[[assembly]]
 }
-
 
 # For the report ----------------------------------------------------------
 
@@ -492,7 +491,6 @@ safe_call <- function(fun_name, ...) {
 }
 
 logo_file <- paste0(getwd(), "/Orochi_logo.png")
-#NIOO <- paste0(getwd(), "/NIOO.gif")
 WUR <- paste0(getwd(), "/WUR.png")
 NIOO <- "NIOO.gif"
 

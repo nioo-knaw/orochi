@@ -270,6 +270,61 @@ plot_sections <- lapply(scatter_files, function(pf) {
 # Combine and render them all
 browsable(tagList(plot_sections))
 ```
+
+```{r Bin Quality_pages, results='asis', warning=FALSE, message=FALSE, echo=FALSE}
+library(DT)
+library(htmltools)
+
+# Locate the Plotly HTML files
+scatter_files <- list.files(file.path(outdir, "results/08_plots"),
+                            pattern = "_bins_scatterplot\\.html$",
+                            full.names = TRUE, recursive = TRUE)
+
+# Labels for pagination buttons
+page_labels <- tools::file_path_sans_ext(basename(scatter_files))
+
+# Helper to extract only the inner widget (no <html>, <head>, etc.)
+extract_plotly_inner <- function(file) {
+  txt <- readLines(file, warn = FALSE)
+  start <- grep("<body>", txt, ignore.case = TRUE)
+  end <- grep("</body>", txt, ignore.case = TRUE)
+  if (length(start) == 0 || length(end) == 0) return(paste(txt, collapse = "\n"))
+  inner <- txt[(start + 1):(end - 1)]
+  paste(inner, collapse = "\n")
+}
+
+# Read all plots and keep only the widget HTML
+plot_htmls <- vapply(scatter_files, extract_plotly_inner, character(1))
+
+# Add a Plotly.js loader so widgets can render properly
+plotly_loader <- '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
+
+# Build datatable, inserting the loader above the first plot (safe, loaded once)
+datatable(
+  data.frame(Plot = c(paste0(plotly_loader, plot_htmls[1]), plot_htmls[-1])),
+  escape = FALSE,
+  rownames = FALSE,
+  options = list(
+    dom = "tp",
+    scrollY = 800,
+    pageLength = 1,
+    pagingType = "full_numbers",
+    drawCallback = DT::JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var pageIndex = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(pageIndex) && labels[pageIndex]) {
+             $(this).html(labels[pageIndex]);
+           }
+         });
+       }"
+    )
+  )
+)
+```
+
 #### MAG linkage
 
 (From left to right) Relation between 16S sequences, contigs from each assembly (indicated at the top of the plot), and refined bins from your analysis. Phyloflash and MarkerMAG are used to extract and assemble 16S rRNA gene sequences from your data and link them to the more appropriate contigs and bins.
@@ -277,7 +332,35 @@ The size of the fragment indicates the strength of the linkage - an approximatio
 You can find more about this process in [MarkerMAG Official GitHub page](https://github.com/songweizhi/MarkerMAG).
 
 ```{r Fig8MAG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 7, fig.align = "center"}
-plot7_maglinkage()
+mag_plots_list <- lapply(names(all_plots), plot7_maglinkage)
+mag_html <- vapply(mag_plots_list, plot_to_base64, character(1))
+
+# Page labels = assembly names
+page_labels <- names(all_plots)
+
+datatable(
+  data.frame(Plot = mag_html),
+  escape = FALSE,
+  rownames = FALSE,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
+           }
+         });
+       }"
+    )
+  )
+)
 ```
 
 ```{=html}
