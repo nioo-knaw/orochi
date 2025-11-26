@@ -107,3 +107,22 @@ rule markermag_link:
     shell:
         "MarkerMAG link -p {wildcards.sample_pool} -r1 {input.forward_reads} -r2 {input.reverse_reads} \
         -marker {input.phyloflash} -mag {input.mag_fasta} -o {output.markerMAG_dir} -x fa -t {threads} -force"
+
+
+rule add_taxonomy_maglinkage:
+    input:
+        markermag_link=f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome.txt",
+        phyloflash_classification=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.phyloFlash.extractedSSUclassifications.csv"
+    output:
+        tax_linked=f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome_taxonomy.txt"
+    conda:
+        "../envs/python_simple.yaml"
+    threads:
+        config['threads']
+    resources:
+        mem_mb=config['max_mem']
+    shell:
+        """
+        python3 workflow/scripts/add_taxonomy_maglinkage.py -m {input.markermag_link} -p {input.phyloflash_classification} -o {output.tax_linked}
+        """
+
