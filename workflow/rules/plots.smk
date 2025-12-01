@@ -47,12 +47,16 @@ rule report:
     input:
         metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
         binplots = expand(f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_bins_scatterplot.html", sample_pool=SAMPLES_POOLS),
+		antismash_bac = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/index.html", sample_pool=SAMPLES_POOLS),
+		antismash_fun = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/index.html", sample_pool=SAMPLES_POOLS),
         html_fastp = lambda wildcards: glob.glob(f"{outdir}/results/01_trimmed_reads/quality_reports/*.html")
     output:
         f"{outdir}/results/09_plots/Orochi_report.html"
     params:
         configfile= workflow.configfiles[0] if workflow.configfiles else "config/configfile.yaml",
-        outdir_html = f"{outdir}/results/09_plots/rsc/"
+        outdir_html = f"{outdir}/results/09_plots/rsc/",
+		rep_antismash_bac = f"{outdir}/results/09_plots/rsc/antismash_bac/",
+		rep_antismash_fun = f"{outdir}/results/09_plots/rsc/antismash_fun/",
     threads:
         config['threads']
     resources:
@@ -64,5 +68,7 @@ rule report:
         """
         mkdir -p {params.outdir_html}
         cp {input.html_fastp} {params.outdir_html}
+		cp {input.antismash_bac}/* {params.rep_antismash_bac}
+		cp {input.antismash_fun}/* {params.rep_antismash_fun}
         Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}
         """
