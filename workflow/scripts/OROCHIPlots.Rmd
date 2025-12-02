@@ -93,10 +93,10 @@ Quality reports were produced at the beginning of the metagenomics analysis, whe
 NOTE: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
 :::
 
-```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
+```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
 
 
-quality_files <- list.files(file.path(outdir,"results/08_plots/rsc"), pattern = "\\.html$", full.names = TRUE)
+quality_files <- list.files(file.path(outdir,"results/09_plots/rsc"), pattern = "\\.html$", full.names = TRUE)
 quality_files_rel <- file.path("rsc", basename(quality_files))
 
 cat('<div style="column-count:2; column-gap:40px; text-align:center;">\n')
@@ -240,6 +240,13 @@ plot6_clustering()
 ```{=html}
 <div style="height:56px;"></div>
 ```
+
+### Contig-based
+
+```{=html}
+<div style="height:56px;"></div>
+```
+
 ### Bin-based
 
 ```{r Fig7BinSummary, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
@@ -278,7 +285,7 @@ library(DT)
 library(htmltools)
 
 # Locate the Plotly HTML files
-scatter_files <- list.files(file.path(outdir, "results/08_plots"),
+scatter_files <- list.files(file.path(outdir, "results/09_plots"),
                             pattern = "_bins_scatterplot\\.html$",
                             full.names = TRUE, recursive = TRUE)
 
