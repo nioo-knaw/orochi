@@ -3,14 +3,14 @@ title: "OROCHI Report"
 output: 
   html_document:
     theme: flatly
-    highlight: tango # Code highlighting 
+    highlight: tango
     css: styles.css
-#params: !r NULL
 params:
   metaphlan_secondary: NULL
   config_file: NULL
 author: OROCHI team
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -105,15 +105,6 @@ for (f in quality_files_rel) {
   cat(sprintf('<p><a href="%s" target="_blank">%s</a></p>\n', f, sample_name))
 }
 cat('</div>\n')
-
-
-# 
-# for (f in quality_files) {
-#   sample_name <- tools::file_path_sans_ext(basename(f))
-#   cat(sprintf('<p><a href="%s" target="_blank">%s</a></p>\n', f, sample_name))
-# }
-# # Close container
-# cat('</div>\n')
 ```
 
 #### Alpha diversity
@@ -242,6 +233,38 @@ plot6_clustering()
 ```
 
 ### Contig-based
+
+#### antiSMASH results
+
+```{r antiSMASH output, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
+
+
+ASbac_files <- quality_files <- list.files(
+  file.path(outdir, "results/09_plots/rsc"),
+  pattern = "index\\.html$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+ASbac_files_rel <- sub(".*rsc/", "rsc/", ASbac_files)
+
+
+cat('<div style="column-count:2; column-gap:40px; text-align:center;">\n')
+for (f in ASbac_files_rel) {
+  # Split the path: rsc / ASSEMBLY / ORGANISM_antismash / index.html
+  parts <- strsplit(f, "/")[[1]]
+  assembly <- parts[2]
+  tooltype <- parts[3]sample_name <- tools::file_path_sans_ext(basename(f))
+  
+  btn_class <- if (grepl("antismash_bac", tooltype)) {
+    "btn-bac"
+  } else {
+    "btn-fun"
+  }
+  
+  cat(sprintf('<p><a href="%s" target="_blank" class="link-button %s">%s</a></p>\n', f, btn_class, sample_name))
+}
+cat('</div>\n')
+```
 
 ```{=html}
 <div style="height:56px;"></div>

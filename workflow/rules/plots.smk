@@ -42,6 +42,7 @@ rule bin_plots:
 
 SAMPLES_POOLS = glob_wildcards(f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv").sample_pool
 import glob
+import json
 
 rule report:
     input:
@@ -55,10 +56,22 @@ rule report:
     params:
         configfile= workflow.configfiles[0] if workflow.configfiles else "config/configfile.yaml",
         outdir_html = f"{outdir}/results/09_plots/rsc/",
-        #in_antismash_bac = f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/",
-        #in_antismash_fun = f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/",
-        rep_antismash_bac = f"{outdir}/results/09_plots/rsc/antismash_bac/",
-        rep_antismash_fun = f"{outdir}/results/09_plots/rsc/antismash_fun/"
+        antismash_bac = json.dumps([
+            {
+                "src": f"{outdir}/results/08_BGC/antismash/{sp}/bacterial",
+                "dst": f"{outdir}/results/09_plots/rsc/{sp}/antismash_bac/"
+            }
+            for sp in SAMPLES_POOLS
+        ]),
+        antismash_fun = json.dumps([
+            {
+                "src": f"{outdir}/results/08_BGC/antismash/{sp}/fungal",
+                "dst": f"{outdir}/results/09_plots/rsc/{sp}/antismash_fun/"
+            }
+            for sp in SAMPLES_POOLS
+        ]),
+        rep_antismash_bac = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_bac/", sample_pool=SAMPLES_POOLS),
+        rep_antismash_fun = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_fun/", sample_pool=SAMPLES_POOLS)
     threads:
         config['threads']
     resources:
@@ -72,7 +85,18 @@ rule report:
         cp {input.html_fastp} {params.outdir_html}
         mkdir -p {params.rep_antismash_bac}
         mkdir -p {params.rep_antismash_fun}
-        cp -r {input.antismash_bac}/* {params.rep_antismash_bac}
-        cp -r {input.antismash_fun}/* {params.rep_antismash_fun}
+        echo '{params.antismash_bac}' | jq -c '.[]' | while read pair; do
+            src=$(echo "$pair" | jq -r '.src')
+            dst=$(echo "$pair" | jq -r '.dst')
+            mkdir -p "$dst"
+            cp -r "$src"/* "$dst"
+        done
+        echo '{params.antismash_fun}' | jq -c '.[]' | while read pair; do
+            src=$(echo "$pair" | jq -r '.src')
+            dst=$(echo "$pair" | jq -r '.dst')
+            mkdir -p "$dst"
+            cp -r "$src"/* "$dst"
+        done
+        #cp -r {input.antismash_fun}/* {params.rep_antismash_fun}
         Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}
         """
