@@ -282,7 +282,7 @@ cat('<div style="
 ">\n')
 
 cat('<p><span style="color:#1f77b4; padding:10px 0; display:inline-block;">Bacterial</span></p>\n')
-cat('<p><span style="color:#d62728; padding:10px 0; display:inline-block;">Fungal</span></p>\n')
+cat('<p><span style="color:#03b48d; padding:10px 0; display:inline-block;">Fungal</span></p>\n')
 
 cat('</div>\n')
 
