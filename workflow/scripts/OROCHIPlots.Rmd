@@ -248,22 +248,79 @@ ASbac_files <- quality_files <- list.files(
 ASbac_files_rel <- sub(".*rsc/", "rsc/", ASbac_files)
 
 
-cat('<div style="column-count:2; column-gap:40px; text-align:center;">\n')
+# group by assembly
+groups <- list()
+
 for (f in ASbac_files_rel) {
-  # Split the path: rsc / ASSEMBLY / ORGANISM_antismash / index.html
   parts <- strsplit(f, "/")[[1]]
-  assembly <- parts[2]
-  tooltype <- parts[3]sample_name <- tools::file_path_sans_ext(basename(f))
-  
-  btn_class <- if (grepl("antismash_bac", tooltype)) {
-    "btn-bac"
-  } else {
-    "btn-fun"
+  assembly <- parts[2]           # A, B, ...
+  tooltype <- parts[3]           # antismash_bac or antismash_fun
+
+  if (!assembly %in% names(groups)) {
+    groups[[assembly]] <- list()
   }
-  
-  cat(sprintf('<p><a href="%s" target="_blank" class="link-button %s">%s</a></p>\n', f, btn_class, sample_name))
+  groups[[assembly]][[tooltype]] <- f
 }
+
+cat('<div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start;text-align:center;">\n')
+
+#Legend column
+cat('<div style="
+  display:flex; 
+  flex-direction:column; 
+  gap:10px; 
+  align-items:center; 
+  flex:0 0 auto; 
+  min-width:140px;
+  font-weight:bold;
+  font-size:16px;
+">\n')
+
+cat('<p><span style="color:#1f77b4; padding:10px 0; display:inline-block;">Bacterial</span></p>\n')
+cat('<p><span style="color:#d62728; padding:10px 0; display:inline-block;">Fungal</span></p>\n')
+
 cat('</div>\n')
+
+for (assembly in names(groups)) {
+
+  cat('<div style="display:flex; flex-direction:column; gap:10px; align-items:center; flex:0 0 auto; min-width:140px;">\n')
+  if (!is.null(groups[[assembly]][["antismash_bac"]])) {
+    cat(sprintf(
+      '<p><a href="%s" target="_blank" class="link-button btn-bac">%s</a></p>\n',
+      groups[[assembly]][["antismash_bac"]], assembly
+    ))
+  }
+  if (!is.null(groups[[assembly]][["antismash_fun"]])) {
+    cat(sprintf(
+      '<p><a href="%s" target="_blank" class="link-button btn-fun">%s</a></p>\n',
+      groups[[assembly]][["antismash_fun"]], assembly
+    ))
+  }
+
+  cat('</div>\n')
+}
+
+cat('</div>\n')
+  
+
+
+
+#cat('<div style="column-count:2; column-gap:40px; text-align:center;">\n')
+#for (f in ASbac_files_rel) {
+  # Split the path: rsc / ASSEMBLY / ORGANISM_antismash / index.html
+#  parts <- strsplit(f, "/")[[1]]
+#  assembly <- parts[2]
+#  tooltype <- parts[3]
+  
+#  btn_class <- if (grepl("antismash_bac", tooltype)) {
+#    "btn-bac"
+#  } else {
+#    "btn-fun"
+#  }
+  
+#  cat(sprintf('<p><a href="%s" target="_blank" class="link-button %s">%s</a></p>\n', f, btn_class, assembly))
+#}
+#cat('</div>\n')
 ```
 
 ```{=html}
