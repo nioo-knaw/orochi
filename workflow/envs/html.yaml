@@ -21,6 +21,8 @@ dependencies:
   - r-forcats
   - r-ggalluvial
   - r-DT
+  - r-readr
+  - r-plotly
  # - r-ggtree
  # - r-microbiotaprocess
   - bioconductor-microbiotaprocess
