@@ -458,6 +458,139 @@ plot7_maglinkage <- function(assembly) {
   all_plots[[assembly]]
 }
 
+# Bin scatterplot (it used to be an HTML generated with Python)
+# Load libraries
+library(readr)
+library(plotly)
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(htmlwidgets)
+
+bat_base <- file.path(outdir,"/results/06_binning/BAT")
+treatments <- list.dirs(bat_base, full.names = FALSE, recursive = FALSE)
+base_dir <- file.path(outdir,"/results/06_binning")
+
+all_bin_plots_html <- list()
+all_bin_plots_png <- list()
+all_bin_plots_html_paths <- list()
+
+for (tr in treatments) {
+  
+  # Construct paths
+  bins_path <- file.path(base_dir, "drep/checkm2_genomeinfo", paste0(tr, "_genomeinfo.tsv"))
+  tax_path  <- file.path(base_dir, "BAT", tr, paste0(tr, ".bin2classification.names.txt"))
+  
+  # Load files
+  bins <- readr::read_csv(bins_path)
+  tax  <- read.delim(tax_path, sep = "\t")
+  
+  # Example: print names to check
+  message("Loaded treatment: ", tr)
+  message("  bins: ", bins_path)
+  message("  tax:  ", tax_path)
+  
+  tax <- tax %>%
+    mutate(
+      taxonomy_concat = pmap_chr(
+        select(., superkingdom, phylum, class, order, family, genus, species),
+        ~ {
+          values <- list(...)
+          col_names <- c("kingdom", "phylum", "class", "order", "family", "genus", "species")
+          
+          out <- map2_chr(values, col_names, function(val, col) {
+            # Skip "no support" or empty values
+            if (is.na(val) || val == "no support") return("")  
+            
+            prefix <- substr(col, 1, 1)
+            paste0(prefix, "_", val)
+          })
+          
+          # Remove empty strings before collapsing
+          out <- out[out != ""]
+          
+          paste(out, collapse = ";")
+        }
+      )
+    )
+  binstax <- cbind(bins,tax$taxonomy_concat)
+  colnames(binstax)[4] <- "taxonomy_concat"
+  
+  # Static plot
+  p_gg <- ggplot(binstax, aes(x = completeness, y = contamination, color = taxonomy_concat)) +
+    geom_point(alpha = 0.7, size = 3) +
+    scale_color_brewer(palette = "Set3") +
+    theme_minimal() +
+    labs(
+      title = paste0("Bin Quality (Completeness vs Contamination) - Pool ", tr),
+      x = "Completeness (%)",
+      y = "Contamination (%)",
+      color = "Taxonomy"
+    ) +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      axis.line = element_line(linewidth = 0.8, color = "black"),
+      legend.text = element_text(size = 8)
+    )
+  ggplot2::ggsave(filename = file.path(outdir, plotsdirbins, paste0(tr,"_BinsQuality.tiff")), plot = p_gg, dpi = 500, width = 12, height = 6, units = "in", compression = "lzw")
+  all_bin_plots_png[[tr]] <- p_gg
+  
+  
+  # HTML plotly object
+  fig <- plot_ly(
+    data = binstax,
+    x = ~completeness,
+    y = ~contamination,
+    type = 'scatter',
+    mode = 'markers',
+    color = ~taxonomy_concat,
+    colors = "Set3",
+    customdata = ~taxonomy_concat,
+    hovertemplate = paste(
+      "<b>Completeness:</b> %{x}%<br>",
+      "<b>Contamination:</b> %{y}%<br>",
+      "<b>Taxonomy:</b> %{customdata}<br>",
+      "<extra></extra>"),
+    marker = list(
+      size = 14,
+      opacity = 0.85,
+      line = list(width = 0.8, color = 'black')
+    )
+  ) %>%
+    layout(
+      title = list(text = paste0("Bin Quality (Completeness vs Contamination) - Pool ", tr), font = list(size=20, family="Arial", color="black")),
+      xaxis = list(title = "Completeness (%)", range = c(0,101), showline = TRUE, linecolor = "black", showgrid = TRUE, gridcolor = "lightgrey", zeroline = FALSE),
+      yaxis = list(title = "Contamination (%)", range = c(0,100), showline = TRUE, linecolor = "black", showgrid = TRUE, gridcolor = "lightgrey", zeroline = FALSE),
+      paper_bgcolor = "white",
+      plot_bgcolor = "white",
+      font = list(size=14, family="Arial", color="black"),
+      legend = list(title = list(text="Taxonomy"))
+    )
+  html_file <- file.path(outdir, plotsdirbins, paste0(tr,"_BinsQuality.html"))
+  saveWidget(fig, html_file, selfcontained = TRUE)
+  all_bin_plots_html[[tr]] <- fig
+  all_bin_plots_html_paths[[tr]] <- html_file
+}
+
+plot9_binscatterplot <- function(tr) {
+  if (!tr %in% names(all_bin_plots_png)) {
+    stop("Invalid treatment! Available: ", paste(names(all_bin_plots_png), collapse = ", "))
+  }
+  all_bin_plots_png[[tr]]
+}
+
+plot9_binscatterplot_link <- function(tr) {
+  if (!tr %in% names(all_bin_plots_html_paths)) {
+    stop("Invalid treatment! Available: ", paste(names(all_bin_plots_html_paths), collapse = ", "))
+  }
+  html_file <- all_bin_plots_html_paths[[tr]]
+  paste0("[View Plotly plot](", html_file, ")")
+}
+
+
+
+
+
 # For the report ----------------------------------------------------------
 
 library(DT)

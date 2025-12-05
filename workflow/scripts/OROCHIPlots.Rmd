@@ -325,72 +325,32 @@ The threshold that defines whether a bin is good quality or not is dependant on 
 In general, we suggest to look for a minimum of 70% completeness and a maximum of 10% contamination.
 You can find more data about your bins in `{OUTDIR}/results/06_binning`.
 
-```{r Bin Quality, results='asis', warning=FALSE, message=FALSE, echo=FALSE}
-library(htmltools)
+```{r Bin Quality, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
+bin_plots_list <- lapply(names(all_bin_plots_png), plot9_binscatterplot)
+bin_plots_png <- vapply(bin_plots_list, plot_to_base64, character(1))
+#mag_html <- vapply(mag_plots_list, plot_to_base64, character(1))
 
-# Vector of Plotly HTML file paths
-scatter_files <- list.files(file.path(outdir, "results/09_plots"), pattern = "_bins_scatterplot\\.html$", 
-                            full.names = TRUE, recursive = TRUE)
+# Page labels = assembly names
+page_labels <- names(all_bin_plots_png)
 
-# Build a list of HTML sections (title + embedded plot)
-plot_sections <- lapply(scatter_files, function(pf) {
-  tagList(
-    #h3(basename(pf)),
-    includeHTML(pf),
-    hr()  # adds a horizontal divider between plots
-  )
-})
-
-# Combine and render them all
-browsable(tagList(plot_sections))
-```
-
-```{r Bin Quality_pages, results='asis', warning=FALSE, message=FALSE, echo=FALSE}
-library(DT)
-library(htmltools)
-
-# Locate the Plotly HTML files
-scatter_files <- list.files(file.path(outdir, "results/09_plots"),
-                            pattern = "_bins_scatterplot\\.html$",
-                            full.names = TRUE, recursive = TRUE)
-
-# Labels for pagination buttons
-page_labels <- tools::file_path_sans_ext(basename(scatter_files))
-
-# Helper to extract only the inner widget (no <html>, <head>, etc.)
-extract_plotly_inner <- function(file) {
-  txt <- readLines(file, warn = FALSE)
-  start <- grep("<body>", txt, ignore.case = TRUE)
-  end <- grep("</body>", txt, ignore.case = TRUE)
-  if (length(start) == 0 || length(end) == 0) return(paste(txt, collapse = "\n"))
-  inner <- txt[(start + 1):(end - 1)]
-  paste(inner, collapse = "\n")
-}
-
-# Read all plots and keep only the widget HTML
-plot_htmls <- vapply(scatter_files, extract_plotly_inner, character(1))
-
-# Add a Plotly.js loader so widgets can render properly
-plotly_loader <- '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
-
-# Build datatable, inserting the loader above the first plot (safe, loaded once)
 datatable(
-  data.frame(Plot = c(paste0(plotly_loader, plot_htmls[1]), plot_htmls[-1])),
+  data.frame(Plot = bin_plots_png),
   escape = FALSE,
   rownames = FALSE,
+  colnames = NULL,
   options = list(
     dom = "tp",
-    scrollY = 800,
+    scrollY = 600,
     pageLength = 1,
     pagingType = "full_numbers",
-    drawCallback = DT::JS(
+    drawCallback = JS(
       "function(settings) {
          var labels = ", jsonlite::toJSON(page_labels), ";
          var api = this.api();
          $(api.table().container()).find('a.paginate_button').each(function() {
-           var pageIndex = parseInt($(this).text(), 10) - 1;
-           if (!isNaN(pageIndex) && labels[pageIndex]) {
-             $(this).html(labels[pageIndex]);
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
            }
          });
        }"
