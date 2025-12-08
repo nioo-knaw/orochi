@@ -11,7 +11,6 @@ params:
 author: OROCHI team
 ---
 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = getwd())
@@ -320,15 +319,41 @@ plot8_binsummary()
 
 #### Bin quality
 
-Interactive plots showing the completeness and contamination of each bin based on CheckM results.
+Scatterplots per pool showing the completeness and contamination of each bin based on CheckM results. Color corresponds to the full taxonomy assigned to the bin.
 The threshold that defines whether a bin is good quality or not is dependant on the type of sample processed.
 In general, we suggest to look for a minimum of 70% completeness and a maximum of 10% contamination.
 You can find more data about your bins in `{OUTDIR}/results/06_binning`.
 
-```{r Bin Quality, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
+```{r Bin Quality, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.align = "center"}
 bin_plots_list <- lapply(names(all_bin_plots_png), plot9_binscatterplot)
-bin_plots_png <- vapply(bin_plots_list, plot_to_base64, character(1))
-#mag_html <- vapply(mag_plots_list, plot_to_base64, character(1))
+
+plot_to_base64_new <- function(p, link_html) {
+  tf <- tempfile(fileext = ".png")
+  ggsave(tf, plot = p, dpi = 500, width = 12, height = 6, units = "in")
+
+  encoded <- base64enc::dataURI(file = tf, mime = "image/png")
+
+  sprintf('
+    <div style="text-align:center;">
+      <img src="%s" style="width:100%%; height:auto; margin-bottom:10px;">
+      %s
+    </div>
+    ',
+    encoded,
+    link_html
+  )
+}
+
+interactive_links <- sprintf(
+  "<a href='%s' target='_blank' class='btn btn-primary btn-sm'>View interactive plot</a>",
+  all_bin_plots_html_paths
+)
+
+#bin_plots_png <- vapply(bin_plots_list, plot_to_base64_new, character(1))
+bin_plots_png <- mapply(function(p, button) plot_to_base64_new(p, button),
+  bin_plots_list,
+  interactive_links
+)
 
 # Page labels = assembly names
 page_labels <- names(all_bin_plots_png)
@@ -340,7 +365,7 @@ datatable(
   colnames = NULL,
   options = list(
     dom = "tp",
-    scrollY = 600,
+    scrollY = "auto",
     pageLength = 1,
     pagingType = "full_numbers",
     drawCallback = JS(
@@ -358,6 +383,7 @@ datatable(
   )
 )
 ```
+
 
 #### MAG linkage
 

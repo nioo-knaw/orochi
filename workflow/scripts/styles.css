@@ -27,3 +27,14 @@ h1, h2, h3, h4, h5, h6 {
 .btn-fun {
   background-color: #03b48d;
 }
+
+.dataTables_wrapper {
+  width: 100% !important;
+}
+
+td:nth-child(1) {
+  width: 90% !important;
+}
+td:nth-child(2) {
+  width: 10% !important;
+}
