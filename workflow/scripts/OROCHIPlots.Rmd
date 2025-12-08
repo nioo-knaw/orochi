@@ -346,7 +346,7 @@ plot_to_base64_new <- function(p, link_html) {
 
 interactive_links <- sprintf(
   "<a href='%s' target='_blank' class='btn btn-primary btn-sm'>View interactive plot</a>",
-  all_bin_plots_html_paths
+  all_bin_plots_html_paths_relative
 )
 
 #bin_plots_png <- vapply(bin_plots_list, plot_to_base64_new, character(1))
