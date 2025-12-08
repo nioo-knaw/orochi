@@ -36,6 +36,7 @@ dir.create(file.path(outdir, plotsdirbins), recursive = TRUE, showWarnings = FAL
 # To save the other htmls in one same location for easier visualization later
 #dir.create(file.path(outdir, "results/08_plots/rsc"), recursive = TRUE, showWarnings = FALSE)
 rsc_path <- file.path(outdir, "results/09_plots/rsc")
+dir.create(rsc_path, recursive = TRUE, showWarnings = FALSE)
 
 # Making object -----------------------------------------------------------
 #(https://github.com/YuLab-SMU/MicrobiotaProcess/issues/58)
@@ -474,6 +475,7 @@ base_dir <- file.path(outdir,"/results/06_binning")
 all_bin_plots_html <- list()
 all_bin_plots_png <- list()
 all_bin_plots_html_paths <- list()
+all_bin_plots_html_paths_relative <- list()
 
 for (tr in treatments) {
   
@@ -570,6 +572,11 @@ for (tr in treatments) {
   saveWidget(fig, html_file, selfcontained = TRUE)
   all_bin_plots_html[[tr]] <- fig
   all_bin_plots_html_paths[[tr]] <- html_file
+  # Saving it in another location as well for visualization later
+    # Most of the other HTMLs are simply pasted there beforehand, but this one is being created here
+  html_file <- file.path(rsc_path, tr, paste0(tr,"_BinsQuality.html"))
+  saveWidget(fig, html_file, selfcontained = TRUE)
+  all_bin_plots_html_paths_relative[[tr]] <- file.path("rsc", tr, basename(html_file))
 }
 
 plot9_binscatterplot <- function(tr) {
