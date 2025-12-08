@@ -97,6 +97,5 @@ rule report:
             mkdir -p "$dst"
             cp -r "$src"/* "$dst"
         done
-        #cp -r {input.antismash_fun}/* {params.rep_antismash_fun}
         Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}
         """
