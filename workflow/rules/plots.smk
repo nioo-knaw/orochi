@@ -62,13 +62,25 @@ rule report:
             src=$(echo "$pair" | jq -r '.src')
             dst=$(echo "$pair" | jq -r '.dst')
             mkdir -p "$dst"
-            cp -r "$src"/* "$dst"
+            find "$src" -type f \
+                \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.svg" -o -name "*.png" \) \
+                -print0 | while IFS= read -r -d '' file; do
+                    rel=${{file#"$src"/}}
+                    mkdir -p "$dst/$(dirname "$rel")"
+                    cp "$file" "$dst/$rel"
+                done
         done
         echo '{params.antismash_fun}' | jq -c '.[]' | while read pair; do
             src=$(echo "$pair" | jq -r '.src')
             dst=$(echo "$pair" | jq -r '.dst')
             mkdir -p "$dst"
-            cp -r "$src"/* "$dst"
+            find "$src" -type f \
+                \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.svg" -o -name "*.png" \) \
+                -print0 | while IFS= read -r -d '' file; do
+                    rel=${{file#"$src"/}}
+                    mkdir -p "$dst/$(dirname "$rel")"
+                    cp "$file" "$dst/$rel"
+                done
         done
         Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}
         """
