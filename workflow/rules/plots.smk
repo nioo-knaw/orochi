@@ -1,29 +1,29 @@
 rule krona:
-	input: rules.CAT.output.names
-	output: 
-		f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_krona.html"
-	params:
-		out_temp = f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_contigs4krona_sep.txt"
-	conda:
-		"../envs/krona.yaml"
-	threads:
-		config['threads']
-	shell:
-		"""
+    input: rules.CAT.output.names
+    output:
+        f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_krona.html"
+    params:
+        out_temp = f"{outdir}/results/09_plots/{{sample_pool}}/{{sample_pool}}_contigs4krona_sep.txt"
+    conda:
+        "../envs/krona.yaml"
+    threads:
+        config['threads']
+    shell:
+        """
 		bash workflow/scripts/convert2krona.sh {input} > {params.out_temp}
 		ktImportText {params.out_temp} -o {output}
 		"""
 
-SAMPLES_POOLS = glob_wildcards(f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv").sample_pool
+# SAMPLES_POOLS = glob_wildcards(f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv").sample_pool
 import glob
 import json
 
 rule report:
     input:
         metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
-        antismash_bac = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial", sample_pool=SAMPLES_POOLS),
-        antismash_fun = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal", sample_pool=SAMPLES_POOLS),
-        html_fastp = lambda wildcards: glob.glob(f"{outdir}/results/01_trimmed_reads/quality_reports/*.html")
+        antismash_bac = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/index.html", sample_pool=sorted(set(samples["sample_pool"]))),
+        antismash_fun = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/index.html", sample_pool=sorted(set(samples["sample_pool"]))),
+        html_fastp = expand(f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.html", sample=samples["sample"])
     output:
         f"{outdir}/results/09_plots/Orochi_report.html"
     params:
@@ -43,8 +43,8 @@ rule report:
             }
             for sp in SAMPLES_POOLS
         ]),
-        rep_antismash_bac = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_bac/", sample_pool=SAMPLES_POOLS),
-        rep_antismash_fun = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_fun/", sample_pool=SAMPLES_POOLS)
+        rep_antismash_bac = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_bac/", sample_pool=sorted(set(samples["sample_pool"]))),
+        rep_antismash_fun = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_fun/", sample_pool=sorted(set(samples["sample_pool"])))
     threads:
         config['threads']
     resources:
@@ -53,7 +53,7 @@ rule report:
     conda:
         "../envs/html.yaml"
     shell:
-        """
+        r"""
         mkdir -p {params.outdir_html}
         cp {input.html_fastp} {params.outdir_html}
         mkdir -p {params.rep_antismash_bac}
