@@ -34,14 +34,14 @@ rule report:
                 "src": f"{outdir}/results/08_BGC/antismash/{sp}/bacterial",
                 "dst": f"{outdir}/results/09_plots/rsc/{sp}/antismash_bac/"
             }
-            for sp in SAMPLES_POOLS
+            for sp in sorted(set(samples["sample_pool"]))
         ]),
         antismash_fun = json.dumps([
             {
                 "src": f"{outdir}/results/08_BGC/antismash/{sp}/fungal",
                 "dst": f"{outdir}/results/09_plots/rsc/{sp}/antismash_fun/"
             }
-            for sp in SAMPLES_POOLS
+            for sp in sorted(set(samples["sample_pool"]))
         ]),
         rep_antismash_bac = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_bac/", sample_pool=sorted(set(samples["sample_pool"]))),
         rep_antismash_fun = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_fun/", sample_pool=sorted(set(samples["sample_pool"])))
