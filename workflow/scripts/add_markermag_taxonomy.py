@@ -52,4 +52,4 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    link_markermag_taxonomy(args.m, args.p, args.o)
+    link_markermag_taxonomy(args.markermag, args.phyloflash, args.output)

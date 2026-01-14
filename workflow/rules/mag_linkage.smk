@@ -123,6 +123,6 @@ rule add_taxonomy_maglinkage:
         mem_mb=config['max_mem']
     shell:
         """
-        python3 workflow/scripts/add_taxonomy_maglinkage.py -m {input.markermag_link} -p {input.phyloflash_classification} -o {output.tax_linked}
+        python3 workflow/scripts/add_markermag_taxonomy.py -m {input.markermag_link} -p {input.phyloflash_classification} -o {output.tax_linked}
         """
 
