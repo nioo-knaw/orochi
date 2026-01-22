@@ -3,9 +3,8 @@ title: "OROCHI Report"
 output: 
   html_document:
     theme: flatly
-    highlight: tango # Code highlighting 
+    highlight: tango
     css: styles.css
-#params: !r NULL
 params:
   metaphlan_secondary: NULL
   config_file: NULL
@@ -93,10 +92,10 @@ Quality reports were produced at the beginning of the metagenomics analysis, whe
 NOTE: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
 :::
 
-```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, results='asis', comment=NA}
+```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
 
 
-quality_files <- list.files(file.path(outdir,"results/08_plots/rsc"), pattern = "\\.html$", full.names = TRUE)
+quality_files <- list.files(file.path(outdir,"results/09_plots/rsc"), pattern = "\\.html$", full.names = TRUE)
 quality_files_rel <- file.path("rsc", basename(quality_files))
 
 cat('<div style="column-count:2; column-gap:40px; text-align:center;">\n')
@@ -105,15 +104,6 @@ for (f in quality_files_rel) {
   cat(sprintf('<p><a href="%s" target="_blank">%s</a></p>\n', f, sample_name))
 }
 cat('</div>\n')
-
-
-# 
-# for (f in quality_files) {
-#   sample_name <- tools::file_path_sans_ext(basename(f))
-#   cat(sprintf('<p><a href="%s" target="_blank">%s</a></p>\n', f, sample_name))
-# }
-# # Close container
-# cat('</div>\n')
 ```
 
 #### Alpha diversity
@@ -155,6 +145,7 @@ datatable(
   data.frame(Plot = plot_html_one_bar),
   escape = FALSE,
   rownames = FALSE,
+  colnames = NULL,
   options = list(
     dom = "tp",
     scrollY = 600,
@@ -193,6 +184,7 @@ datatable(
   data.frame(Plot = plot_html),
   escape = FALSE,
   rownames = FALSE,
+  colnames = NULL,
   options = list(
     dom = "tp",
     scrollY = 600,
@@ -238,6 +230,87 @@ plot6_clustering()
 ```{=html}
 <div style="height:56px;"></div>
 ```
+
+### Contig-based
+
+#### antiSMASH results
+HTML reports showing BGCs per sample pool, as indicated by the name shown in each button. Buttons in the top row correspond to bacterial results (antiSMASH) and buttons in the bottom row correspond to fungal results (fungiSMASH). Make sure to download the `{OUTDIR}/results/09_plots/rsc/` directory so you can visualize all the elements of the HTMLs.
+
+::: note
+Remember: These are standalone HTMLs that you can also find in `{OUTDIR}/results/08_BGC/antismash/{pool_name}/{bacterial}` and `{OUTDIR}/results/08_BGC/antismash/{pool_name}/{fungal}`.
+:::
+
+```{r antiSMASH output, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
+
+
+ASbac_files <- quality_files <- list.files(
+  file.path(outdir, "results/09_plots/rsc"),
+  pattern = "index\\.html$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+ASbac_files_rel <- sub(".*rsc/", "rsc/", ASbac_files)
+
+
+# group by assembly
+groups <- list()
+
+for (f in ASbac_files_rel) {
+  parts <- strsplit(f, "/")[[1]]
+  assembly <- parts[2]           # A, B, ...
+  tooltype <- parts[3]           # antismash_bac or antismash_fun
+
+  if (!assembly %in% names(groups)) {
+    groups[[assembly]] <- list()
+  }
+  groups[[assembly]][[tooltype]] <- f
+}
+
+cat('<div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start;text-align:center;">\n')
+
+#Legend column
+cat('<div style="
+  display:flex; 
+  flex-direction:column; 
+  gap:10px; 
+  align-items:center; 
+  flex:0 0 auto; 
+  min-width:140px;
+  font-weight:bold;
+  font-size:16px;
+">\n')
+
+cat('<p><span style="color:#1f77b4; padding:10px 0; display:inline-block;">Bacterial</span></p>\n')
+cat('<p><span style="color:#03b48d; padding:10px 0; display:inline-block;">Fungal</span></p>\n')
+
+cat('</div>\n')
+
+for (assembly in names(groups)) {
+
+  cat('<div style="display:flex; flex-direction:column; gap:10px; align-items:center; flex:0 0 auto; min-width:140px;">\n')
+  if (!is.null(groups[[assembly]][["antismash_bac"]])) {
+    cat(sprintf(
+      '<p><a href="%s" target="_blank" class="link-button btn-bac">%s</a></p>\n',
+      groups[[assembly]][["antismash_bac"]], assembly
+    ))
+  }
+  if (!is.null(groups[[assembly]][["antismash_fun"]])) {
+    cat(sprintf(
+      '<p><a href="%s" target="_blank" class="link-button btn-fun">%s</a></p>\n',
+      groups[[assembly]][["antismash_fun"]], assembly
+    ))
+  }
+
+  cat('</div>\n')
+}
+
+cat('</div>\n')
+```
+
+```{=html}
+<div style="height:56px;"></div>
+```
+
 ### Bin-based
 
 ```{r Fig7BinSummary, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
@@ -246,77 +319,63 @@ plot8_binsummary()
 
 #### Bin quality
 
-Interactive plots showing the completeness and contamination of each bin based on CheckM results.
+Scatterplots per pool showing the completeness and contamination of each bin based on CheckM results. Color corresponds to the full taxonomy assigned to the bin.
 The threshold that defines whether a bin is good quality or not is dependant on the type of sample processed.
 In general, we suggest to look for a minimum of 70% completeness and a maximum of 10% contamination.
 You can find more data about your bins in `{OUTDIR}/results/06_binning`.
 
-```{r Bin Quality, results='asis', warning=FALSE, message=FALSE, echo=FALSE}
-library(htmltools)
+```{r Bin Quality, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.align = "center"}
+bin_plots_list <- lapply(names(all_bin_plots_png), plot9_binscatterplot)
 
-# Vector of Plotly HTML file paths
-scatter_files <- list.files(file.path(outdir, "results/08_plots"), pattern = "_bins_scatterplot\\.html$", 
-                            full.names = TRUE, recursive = TRUE)
+plot_to_base64_new <- function(p, link_html) {
+  tf <- tempfile(fileext = ".png")
+  ggsave(tf, plot = p, dpi = 500, width = 12, height = 6, units = "in")
 
-# Build a list of HTML sections (title + embedded plot)
-plot_sections <- lapply(scatter_files, function(pf) {
-  tagList(
-    #h3(basename(pf)),
-    includeHTML(pf),
-    hr()  # adds a horizontal divider between plots
+  encoded <- base64enc::dataURI(file = tf, mime = "image/png")
+
+  sprintf('
+    <div style="text-align:center;">
+      <img src="%s" style="width:100%%; height:auto; margin-bottom:10px;">
+      %s
+    </div>
+    ',
+    encoded,
+    link_html
   )
-})
-
-# Combine and render them all
-browsable(tagList(plot_sections))
-```
-
-```{r Bin Quality_pages, results='asis', warning=FALSE, message=FALSE, echo=FALSE}
-library(DT)
-library(htmltools)
-
-# Locate the Plotly HTML files
-scatter_files <- list.files(file.path(outdir, "results/08_plots"),
-                            pattern = "_bins_scatterplot\\.html$",
-                            full.names = TRUE, recursive = TRUE)
-
-# Labels for pagination buttons
-page_labels <- tools::file_path_sans_ext(basename(scatter_files))
-
-# Helper to extract only the inner widget (no <html>, <head>, etc.)
-extract_plotly_inner <- function(file) {
-  txt <- readLines(file, warn = FALSE)
-  start <- grep("<body>", txt, ignore.case = TRUE)
-  end <- grep("</body>", txt, ignore.case = TRUE)
-  if (length(start) == 0 || length(end) == 0) return(paste(txt, collapse = "\n"))
-  inner <- txt[(start + 1):(end - 1)]
-  paste(inner, collapse = "\n")
 }
 
-# Read all plots and keep only the widget HTML
-plot_htmls <- vapply(scatter_files, extract_plotly_inner, character(1))
+interactive_links <- sprintf(
+  "<a href='%s' target='_blank' class='btn btn-primary btn-sm'>View interactive plot</a>",
+  all_bin_plots_html_paths_relative
+)
 
-# Add a Plotly.js loader so widgets can render properly
-plotly_loader <- '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
+#bin_plots_png <- vapply(bin_plots_list, plot_to_base64_new, character(1))
+bin_plots_png <- mapply(function(p, button) plot_to_base64_new(p, button),
+  bin_plots_list,
+  interactive_links
+)
 
-# Build datatable, inserting the loader above the first plot (safe, loaded once)
+# Page labels = assembly names
+page_labels <- names(all_bin_plots_png)
+
 datatable(
-  data.frame(Plot = c(paste0(plotly_loader, plot_htmls[1]), plot_htmls[-1])),
+  data.frame(Plot = bin_plots_png),
   escape = FALSE,
   rownames = FALSE,
+  colnames = NULL,
   options = list(
     dom = "tp",
-    scrollY = 800,
+    scrollY = "auto",
     pageLength = 1,
     pagingType = "full_numbers",
-    drawCallback = DT::JS(
+    drawCallback = JS(
       "function(settings) {
          var labels = ", jsonlite::toJSON(page_labels), ";
          var api = this.api();
          $(api.table().container()).find('a.paginate_button').each(function() {
-           var pageIndex = parseInt($(this).text(), 10) - 1;
-           if (!isNaN(pageIndex) && labels[pageIndex]) {
-             $(this).html(labels[pageIndex]);
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
            }
          });
        }"
@@ -324,6 +383,7 @@ datatable(
   )
 )
 ```
+
 
 #### MAG linkage
 
@@ -342,6 +402,7 @@ datatable(
   data.frame(Plot = mag_html),
   escape = FALSE,
   rownames = FALSE,
+  colnames = NULL,
   options = list(
     dom = "tp",
     scrollY = 600,
