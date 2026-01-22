@@ -95,9 +95,78 @@ rule eggnog:
     conda:
         "../envs/eggnog.yaml"
     output:
-        f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations"
+        raw = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations",
+        adj = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations.adjusted"
     resources:
         mem_mb = 500000  # Set a high memory limit for eggNOG (500GB), but not max_mb, to still allow for parallelization
     shell:
         "emapper.py -i {input.proteins} --cpu {threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs --override"
+        "head -n -3  <(tail -n +5 {output.raw}) > {output.adj}"
     # @Todo: Perhaps specify the temp dir for eggnog to avoid issues with large files?
+
+# import pandas as pd
+
+# df = pd.read_csv(config["samples"], sep="\t")
+
+# SAMPLES = df["sample"].tolist()
+# POOLS = sorted(df["sample_pool"].unique())
+
+# sample_to_pool = dict(zip(df["sample"], df["sample_pool"]))
+# sample_to_fq1 = dict(zip(df["sample"], df["fq1"]))
+# sample_to_fq2 = dict(zip(df["sample"], df["fq2"]))
+
+# rule salmon_assemblies1:
+#     input:
+#         orfs = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna"
+#     output:
+#         index_file = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"
+#     threads:
+#         config["threads"]
+#     conda:
+#         "../envs/salmon.yaml"
+#     resources:
+#         mem_mb = 200000
+#     shell:
+#         """
+#         salmon index -t {input.orfs} -i {output.index_file} -k 31
+#         """
+
+# rule salmon_samples2:
+#     input:
+#         index = lambda wc: f"salmon_index/{sample_to_pool[wc.sample]}",
+#         forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+#         reverse = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
+#     output:
+#         directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/")
+#     threads:
+#         config["threads"]
+#     conda:
+#         "../envs/salmon.yaml"
+#     resources:
+#         mem_mb = 200000
+#     shell:
+#         """
+#         salmon quant -i {input.index} --libType IU -1 {input.forward} -2 {input.reverse} -p {threads} -o {output} --meta
+#         """
+
+# rule salmon_final3:
+#     input:
+#         quants=lambda wc: expand(
+#             f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/",
+#             sample=[s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool])
+#     output:
+#         quant = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
+#     params:
+#         sample_name = lambda wc: ",".join(
+#             [s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool]
+#         )
+#     threads:
+#         config["threads"]
+#     conda:
+#         "../envs/salmon.yaml"
+#     resources:
+#         mem_mb = 200000
+#     shell:
+#         """
+#         salmon quantmerge --quants {params.sample_name}/ --names {{params.sample_name}} --column TPM -o {output.quant}
+#         """
