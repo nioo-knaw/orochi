@@ -100,8 +100,10 @@ rule eggnog:
     resources:
         mem_mb = 500000  # Set a high memory limit for eggNOG (500GB), but not max_mb, to still allow for parallelization
     shell:
-        "emapper.py -i {input.proteins} --cpu {threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs --override"
-        "head -n -3  <(tail -n +5 {output.raw}) > {output.adj}"
+        """
+        emapper.py -i {input.proteins} --cpu {threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs --override
+        head -n -3  <(tail -n +5 {output.raw}) > {output.adj}
+        """
     # @Todo: Perhaps specify the temp dir for eggnog to avoid issues with large files?
 
 # import pandas as pd
