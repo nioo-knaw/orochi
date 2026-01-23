@@ -62,6 +62,7 @@ else:
 
 rule all:
     input:
+        f"{outdir}/results/09_plots/Orochi_report.html",
         target,
         # expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
         # f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt" @Todo: enable after testing
