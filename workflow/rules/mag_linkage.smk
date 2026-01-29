@@ -30,7 +30,8 @@ rule unzip_phyloflash:
     input:
         phyloflash_tar=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.phyloFlash.tar.gz"
     output:
-        phyloflash_output=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.all.final.fasta"
+        phyloflash_output=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.all.final.fasta",
+        phyloflash_classification=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.phyloFlash.extractedSSUclassifications.csv"
     params:
         phyloflash_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/"
     shell:
