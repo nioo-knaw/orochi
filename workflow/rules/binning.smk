@@ -155,7 +155,7 @@ checkpoint dastool:
         # quality_reports=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_summary.tsv",
         bin_dir=directory(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins"),
         done = touch(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool.done"),
-        # c2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contigs2bin.tsv"
+        c2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contigs2bin.tsv"
 
     params:
         dastool_output=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}",
@@ -323,5 +323,25 @@ checkpoint dereplicate_bins:
             mkdir -p {output.dereplicated_bins}
             cp $(cat {input.input_file}) {output.dereplicated_bins}/
         fi
+        """
+
+rule mag_depth:
+    input:
+        fairy_coverage = expand(f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
+                                sample_pool=sorted(set(samples["sample_pool"]))),
+        dastool_contigs2bin = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contigs2bin.tsv",
+                                    sample_pool=sorted(set(samples["sample_pool"]))),
+    output:
+        binned_coverage = f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
+        mag_depth = f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv",
+    params:
+        outdir = f"{outdir}/results/06_binning/mag_depth",
+    threads:
+        config['threads']
+    resources:
+        mem_mb=config['max_mem']
+    shell:
+        """
+        python3 workflow/scripts/mag_depth.py --coverage {input.fairy_coverage} --mapping {input.dastool_contigs2bin} -o {params.outdir}
         """
 
