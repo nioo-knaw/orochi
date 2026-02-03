@@ -306,6 +306,8 @@ checkpoint dereplicate_bins:
         done = touch(f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done")
     params:
         drep_output = f"{outdir}/results/06_binning/drep",
+        completeness_T = config['completeness_threshold'],
+        contamination_T = config['contamination_threshold']
         # bin_dirs = lambda _, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))]),
     threads:
         config['threads']
@@ -318,9 +320,9 @@ checkpoint dereplicate_bins:
     shell:
         """
         if [ $(wc -l < {input.input_file}) -gt 1 ]; then
-    #        dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info}
+    #        dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info} -comp {params.completeness_T} -con {params.contamination_T} --S_algorithm fastANI
     # Count of MAGs is low. skip primary clustering. completeness is more than 50%, contamination is less than 10%
-            dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info} -comp 50 -con 10 --S_algorithm fastANI --SkipMash
+            dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info} -comp {params.completeness_T} -con {params.contamination_T} --S_algorithm fastANI --SkipMash
         else
             mkdir -p {output.dereplicated_bins}
             cp $(cat {input.input_file}) {output.dereplicated_bins}/

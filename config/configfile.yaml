@@ -98,3 +98,11 @@ taxonomy_type: GTDB
 
 # CheckM2 database path. CheckM2 database v3 from https://zenodo.org/records/14897628
 checkm_db: "/lustre/BIF/nobackup/he068/Database/CheckM2_database_v3/uniref100.KO.1.dmnd"
+
+
+## BINNING
+#  completeness_threshold: Minimum completeness threshold for bins to be retained in the final bin set.
+completeness_threshold: 50
+
+#  contamination_threshold: Maximum contamination threshold for bins to be retained in the final bin set.
+contamination_threshold: 10
