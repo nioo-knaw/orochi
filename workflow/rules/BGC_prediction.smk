@@ -5,7 +5,7 @@ rule antismash:
     input:
         derep_ok = ancient(f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done"),
         contigs = lambda wc: f"{outdir}/results/06_binning/drep/dereplicated_genomes/{wc.genome}.fa",
-        # gff = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_prokaryote_{anti_minsize}.gff"
+        # gff = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_prokaryote_{minsize}.gff"
     output:
         done = touch(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/{{genome}}/.antismash.done")
     params:
@@ -44,7 +44,7 @@ rule antismash_all:
 
 rule fungismash:
     input:
-        gff=f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins_{anti_minsize}.gff",
+        gff=f"{outdir}/results/04_gene_prediction/augustify/{{sample_pool}}/{{sample_pool}}_eukproteins_{minsize}.gff",
         contigs=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample_pool}}/eukaryotes.fasta"
 
     output:

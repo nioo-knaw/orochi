@@ -62,7 +62,7 @@ rule filter_prokaryote_gff:
         gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_genes.gff",
         headers_prok=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/prokaryote_contig_headers.txt"
     output:
-        f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_prokaryote_{anti_minsize}.gff"
+        f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_prokaryote_{minsize}.gff"
     conda:
         "../envs/size_filter.yaml"
     params:
@@ -77,7 +77,7 @@ rule filter_eukaryote_gff:
         gff=f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukproteins.gff",
         headers_prok=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/eukaryote_contig_headers.txt"
     output:
-        f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukproteins_{anti_minsize}.gff",
+        f"{outdir}/results/04_gene_prediction/augustify/{{sample}}/{{sample}}_eukproteins_{minsize}.gff",
     conda:
         "../envs/size_filter.yaml"
     params:
