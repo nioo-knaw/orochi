@@ -33,7 +33,7 @@ rule downstream_test_pool:
         f"{outdir}/results/09_plots/Orochi_report.html",
         directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"),
         salmon_outputs=lambda wc: expand(
-            f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}",
+            directory(f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"),
             sample=POOL2SAMPLES[wc.sample_pool])
 
     output:
