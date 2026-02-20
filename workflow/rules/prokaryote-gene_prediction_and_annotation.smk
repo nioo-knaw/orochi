@@ -106,16 +106,16 @@ rule eggnog:
         """
     # @Todo: Perhaps specify the temp dir for eggnog to avoid issues with large files?
 
-import pandas as pd
+#import pandas as pd
 
-df = pd.read_csv(config["samples"], sep="\t")
+#df = pd.read_csv(config["samples"], sep="\t")
 
-SAMPLES = df["sample"].tolist()
-POOLS = sorted(df["sample_pool"].unique())
+#SAMPLES = df["sample"].tolist()
+#POOLS = sorted(df["sample_pool"].unique())
 
-sample_to_pool = dict(zip(df["sample"], df["sample_pool"]))
-sample_to_fq1 = dict(zip(df["sample"], df["fq1"]))
-sample_to_fq2 = dict(zip(df["sample"], df["fq2"]))
+#sample_to_pool = dict(zip(df["sample"], df["sample_pool"]))
+#sample_to_fq1 = dict(zip(df["sample"], df["fq1"]))
+#sample_to_fq2 = dict(zip(df["sample"], df["fq2"]))
 
 rule salmon_assemblies1:
     input:
@@ -140,7 +140,10 @@ rule salmon_samples2:
         forward=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
     output:
-        f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"
+        #f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"\
+        lambda wc: expand(
+            f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}",
+            sample=POOL2SAMPLES[wc.sample_pool])
     threads:
         config["threads"]
     conda:
