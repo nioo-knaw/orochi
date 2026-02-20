@@ -133,23 +133,23 @@ rule salmon_assemblies1:
         salmon index -t {input.orfs} -i {output.index_file} -k 31
         """
 
-# rule salmon_samples2:
-#     input:
-#         index = lambda wc: f"salmon_index/{sample_to_pool[wc.sample]}",
-#         forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
-#         reverse = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
-#     output:
-#         directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/")
-#     threads:
-#         config["threads"]
-#     conda:
-#         "../envs/salmon.yaml"
-#     resources:
-#         mem_mb = 200000
-#     shell:
-#         """
-#         salmon quant -i {input.index} --libType IU -1 {input.forward} -2 {input.reverse} -p {threads} -o {output} --meta
-#         """
+rule salmon_samples2:
+    input:
+        index = lambda wc: f"salmon_index/{sample_to_pool[wc.sample]}",
+        forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+        reverse = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
+    output:
+        directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/")
+    threads:
+        config["threads"]
+    conda:
+        "../envs/salmon.yaml"
+    resources:
+        mem_mb = 200000
+    shell:
+        """
+        salmon quant -i {input.index} --libType IU -1 {input.forward} -2 {input.reverse} -p {threads} -o {output} --meta
+        """
 
 # rule salmon_final3:
 #     input:
