@@ -19,6 +19,11 @@ POOL2SAMPLES = (
     .to_dict()
 )
 
+import pandas as pd
+df = pd.read_csv(config["samples"], sep="\t")
+SAMPLES = df["sample"].tolist()
+POOLS = sorted(df["sample_pool"].unique())
+
 outdir = config["outdir"]
 minsize = config["min_contig_length"]
 
