@@ -106,16 +106,16 @@ rule eggnog:
         """
     # @Todo: Perhaps specify the temp dir for eggnog to avoid issues with large files?
 
-#import pandas as pd
+import pandas as pd
 
-#df = pd.read_csv(config["samples"], sep="\t")
+df = pd.read_csv(config["samples"], sep="\t")
 
-#SAMPLES = df["sample"].tolist()
-#POOLS = sorted(df["sample_pool"].unique())
+SAMPLES = df["sample"].tolist()
+POOLS = sorted(df["sample_pool"].unique())
 
-#sample_to_pool = dict(zip(df["sample"], df["sample_pool"]))
-#sample_to_fq1 = dict(zip(df["sample"], df["fq1"]))
-#sample_to_fq2 = dict(zip(df["sample"], df["fq2"]))
+sample_to_pool = dict(zip(df["sample"], df["sample_pool"]))
+sample_to_fq1 = dict(zip(df["sample"], df["fq1"]))
+sample_to_fq2 = dict(zip(df["sample"], df["fq2"]))
 
 rule salmon_assemblies1:
     input:
@@ -160,9 +160,13 @@ rule salmon_final3:
     output:
         quant = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
     params:
-        sample_name = lambda wc: ",".join(
+        sample_dir = lambda wc: " ".join(
+            [f"{outdir}/results/05_prokaryote_annotation/salmon/{s}" 
+             for s in SAMPLES if sample_to_pool[s] == wc.sample_pool]
+        ),
+        sample_name = lambda wc: " ".join(
             [s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool]
-        )
+        ),
     threads:
         config["threads"]
     conda:
@@ -171,5 +175,5 @@ rule salmon_final3:
         mem_mb = 200000
     shell:
         """
-        salmon quantmerge --quants {params.sample_name}/ --names {{params.sample_name}} --column TPM -o {output.quant}
+        salmon quantmerge --quants {params.sample_dir}/ --names {params.sample_name} --column TPM -o {output.quant}
         """
