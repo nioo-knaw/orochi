@@ -234,21 +234,52 @@ def make_bin_coverage_from_binned_contig_coverage(binned_coverage_file, output_f
     bin_depth.reset_index().to_csv(output_file, sep="\t", index=False)
 
 
-print("Bin-level mean depths calculated and saved to bin_depths.tsv")
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--coverage', help='Path to the contig coverage table (TSV format)')
-    parser.add_argument('-m', '--mapping', help='Path to the contig-to-bin mapping files (TSV format)')
-    parser.add_argument('-o', '--outdir', help='Path to the output directory')
+    parser.add_argument(
+        "-c",
+        "--coverage",
+        nargs="+",
+        required=True,
+        help="One or more contig coverage tables (TSV).",
+    )
+    parser.add_argument(
+        "-m",
+        "--mapping",
+        nargs="+",
+        required=True,
+        help="One or more contig-to-bin mapping files (TSV).",
+    )
+    parser.add_argument(
+        "-o",
+        "--outdir",
+        required=True,
+        help="Output directory path.",
+    )
     args = parser.parse_args()
 
-    rename_and_concat_coverage_files(coverage_files=[args.coverage], output_file=args.outdir+"temp_renamed_concat_coverage.tsv")
-    rename_and_concat_contig2bin_files(contig2bin_files=[args.mapping], output_file=args.outdir+"temp_renamed_concat_contig2bin.tsv", write_header=True)
-    filter_coverage_by_binned_contigs(coverage_file=args.outdir+"temp_renamed_concat_coverage.tsv",
-                                     mapping_file=args.outdir+"temp_renamed_concat_contig2bin.tsv",
-                                     output_file=args.outdir+"binned_only_coverage.tsv")
-    make_bin_coverage_from_binned_contig_coverage(binned_coverage_file=args.outdir+"binned_only_coverage.tsv",
-                                                 output_file=args.outdir+"bin_depths.tsv")
+    os.makedirs(args.outdir, exist_ok=True)
 
-    os.remove(args.outdir+"temp_renamed_concat_coverage.tsv")
-    os.remove(args.outdir+"temp_renamed_concat_contig2bin.tsv")
+    tmp_cov = os.path.join(args.outdir, "temp_renamed_concat_coverage.tsv")
+    tmp_map = os.path.join(args.outdir, "temp_renamed_concat_contig2bin.tsv")
+    binned_cov = os.path.join(args.outdir, "binned_only_coverage.tsv")
+    mag_depth_out = os.path.join(args.outdir, "mag_depth.tsv")
+
+    rename_and_concat_coverage_files(coverage_files=args.coverage, output_file=tmp_cov)
+    rename_and_concat_contig2bin_files(contig2bin_files=args.mapping, output_file=tmp_map, write_header=True)
+
+    filter_coverage_by_binned_contigs(
+        coverage_file=tmp_cov,
+        mapping_file=tmp_map,
+        output_file=binned_cov,
+    )
+
+    make_bin_coverage_from_binned_contig_coverage(
+        binned_coverage_file=binned_cov,
+        output_file=mag_depth_out,
+    )
+
+    os.remove(tmp_cov)
+    os.remove(tmp_map)
+
+    print(f"Bin-level mean depths calculated and saved to: {mag_depth_out}")
