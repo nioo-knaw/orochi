@@ -117,21 +117,21 @@ sample_to_pool = dict(zip(df["sample"], df["sample_pool"]))
 sample_to_fq1 = dict(zip(df["sample"], df["fq1"]))
 sample_to_fq2 = dict(zip(df["sample"], df["fq2"]))
 
-# rule salmon_assemblies1:
-#     input:
-#         orfs = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna"
-#     output:
-#         index_file = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"
-#     threads:
-#         config["threads"]
-#     conda:
-#         "../envs/salmon.yaml"
-#     resources:
-#         mem_mb = 200000
-#     shell:
-#         """
-#         salmon index -t {input.orfs} -i {output.index_file} -k 31
-#         """
+rule salmon_assemblies1:
+    input:
+        orfs = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna"
+    output:
+        index_file = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"
+    threads:
+        config["threads"]
+    conda:
+        "../envs/salmon.yaml"
+    resources:
+        mem_mb = 200000
+    shell:
+        """
+        salmon index -t {input.orfs} -i {output.index_file} -k 31
+        """
 
 # rule salmon_samples2:
 #     input:
