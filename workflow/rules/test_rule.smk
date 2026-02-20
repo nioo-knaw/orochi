@@ -32,22 +32,22 @@ rule downstream_test_pool:
         # f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
         f"{outdir}/results/09_plots/Orochi_report.html",
         directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"),
-        salmon_outputs=lambda wc: expand(
-            directory(f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"),
-            sample=POOL2SAMPLES[wc.sample_pool]),
-        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
+        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
+        salmon_outputs = lambda wc: directory(expand(
+            f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}",
+            sample=POOL2SAMPLES[wc.sample_pool]))
 
     output:
-        test_file1=f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt"
+        test_file1=f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt",
     run:
-        shell("echo {input}")
+        shell("echo {input}"),
         shell("touch {output.test_file1}")
 
-rule downstream_test_sample:
-    input: 
-        f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"
-    output:
-        test_file=f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
-    run:
-        shell("echo {input}")
-        shell("touch {output.test_file}")
+#rule downstream_test_sample:
+#    input: 
+#        f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"
+#    output:
+#        test_file=f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
+#    run:
+#        shell("echo {input}")
+#        shell("touch {output.test_file}")
