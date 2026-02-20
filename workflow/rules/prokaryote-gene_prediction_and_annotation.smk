@@ -152,24 +152,24 @@ rule salmon_samples2:
         salmon quant -i {input.index} --libType IU -1 {input.forward} -2 {input.rev} -p {threads} -o {output} --meta
         """
 
-# rule salmon_final3:
-#     input:
-#         quants=lambda wc: expand(
-#             f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/",
-#             sample=[s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool])
-#     output:
-#         quant = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
-#     params:
-#         sample_name = lambda wc: ",".join(
-#             [s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool]
-#         )
-#     threads:
-#         config["threads"]
-#     conda:
-#         "../envs/salmon.yaml"
-#     resources:
-#         mem_mb = 200000
-#     shell:
-#         """
-#         salmon quantmerge --quants {params.sample_name}/ --names {{params.sample_name}} --column TPM -o {output.quant}
-#         """
+rule salmon_final3:
+    input:
+        quants=lambda wc: expand(
+            f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/",
+            sample=[s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool])
+    output:
+        quant = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
+    params:
+        sample_name = lambda wc: ",".join(
+            [s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool]
+        )
+    threads:
+        config["threads"]
+    conda:
+        "../envs/salmon.yaml"
+    resources:
+        mem_mb = 200000
+    shell:
+        """
+        salmon quantmerge --quants {params.sample_name}/ --names {{params.sample_name}} --column TPM -o {output.quant}
+        """
