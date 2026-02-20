@@ -9,8 +9,9 @@ samples = (
     pd.read_csv(config["samples"], sep="\t", dtype={"sample": str})
     .set_index("sample", drop=False)
     .sort_index()
-
 )
+
+SAMPLE2POOL = samples["sample_pool"].to_dict()
 
 outdir = config["outdir"]
 minsize = config["min_contig_length"]
@@ -24,8 +25,6 @@ minsize = config["min_contig_length"]
 include: "rules/common.smk"
 include: "rules/preprocessing.smk"
 include: "rules/mash_clustering.smk"
-include: "rules/coassembly.smk"
-include: "rules/single_sample_assembly.smk"
 include: "rules/size_filter.smk"
 include: "rules/prokaryote-gene_prediction_and_annotation.smk"
 include: "rules/euk_gene_prediction.smk"
@@ -51,6 +50,7 @@ target = None
 
 
 if config['assembly_method'] == "coassembly":
+    include: "rules/coassembly.smk",
     target = expand(f"{config['outdir']}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt",
         sample_pool=samples["sample_pool"].unique()
     ) + expand(
@@ -58,6 +58,7 @@ if config['assembly_method'] == "coassembly":
         sample=samples["sample"]
     )
 elif config['assembly_method'] == "single_assembly":
+    include: "rules/single_sample_assembly.smk",
     target = expand(f"{config['outdir']}/results/05_test/{{sample}}/{{sample}}_test.txt",
                     sample=samples["sample"])
 else:

@@ -135,9 +135,10 @@ rule salmon_assemblies1:
 
 rule salmon_samples2:
     input:
-        index = lambda wc: f"salmon_index/{sample_to_pool[wc.sample]}",
-        forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
-        rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
+        index=lambda wc:
+            f"salmon_index/{SAMPLE2POOL[wc.sample]}",
+        forward=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
+        rev=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
     output:
         f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}"
     threads:
