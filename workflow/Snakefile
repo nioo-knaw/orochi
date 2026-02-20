@@ -83,7 +83,8 @@ rule all:
     input:
         f"{outdir}/results/09_plots/Orochi_report.html",
         target,
-        salmon_targets
+        salmon_targets,
+        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
         # expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
         # f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt" @Todo: enable after testing
     # input: expand(output,
