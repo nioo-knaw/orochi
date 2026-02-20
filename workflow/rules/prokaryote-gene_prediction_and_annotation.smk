@@ -137,7 +137,7 @@ rule salmon_samples2:
     input:
         index = lambda wc: f"salmon_index/{sample_to_pool[wc.sample]}",
         forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
-        reverse = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
+        rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
     output:
         directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/")
     threads:
@@ -148,7 +148,7 @@ rule salmon_samples2:
         mem_mb = 200000
     shell:
         """
-        salmon quant -i {input.index} --libType IU -1 {input.forward} -2 {input.reverse} -p {threads} -o {output} --meta
+        salmon quant -i {input.index} --libType IU -1 {input.forward} -2 {input.rev} -p {threads} -o {output} --meta
         """
 
 # rule salmon_final3:
