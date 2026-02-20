@@ -1,6 +1,6 @@
 # Rule to test the unfinished pipeline
 
-rule downstream_test:
+rule downstream_test_pool:
     input:
         f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_metabat2.done",
         f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_maxbin2.done",
@@ -31,16 +31,19 @@ rule downstream_test:
         f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/index.html",
         # f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
         f"{outdir}/results/09_plots/Orochi_report.html",
-        directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"),
-        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}"
-
+        directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index")
 
     output:
-#        test_file=f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
         test_file1=f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt"
     run:
         shell("echo {input}")
-#        shell("touch {output.test_file} && touch {output.test_file1}")
         shell("touch {output.test_file1}")
 
-        # shell("touch {output.test_file}")
+rule downstream_test_sample:
+    input: 
+        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}"
+    output:
+        test_file=f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
+    run:
+        shell("echo {input}")
+        shell("touch {output.test_file}")
