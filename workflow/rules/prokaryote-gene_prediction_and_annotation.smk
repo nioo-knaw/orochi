@@ -121,7 +121,7 @@ rule salmon_assemblies1:
     input:
         orfs = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna"
     output:
-        index_file = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"
+        index_file = directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index")
     threads:
         config["threads"]
     conda:
