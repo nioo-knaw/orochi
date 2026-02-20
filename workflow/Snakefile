@@ -80,8 +80,8 @@ salmon_targets = [
 ]
 
 salmon_final_targets = expand(
-    f"{outdir}/results/05_prokaryote_annotation/salmon/{pool}/{pool}_ORF_TPM.tsv",
-    pool=POOLS
+    f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
+    sample_pool=samples["sample_pool"].unique()
 )
 
 rule all:
