@@ -41,7 +41,7 @@ rule downstream_test_pool:
 
 rule downstream_test_sample:
     input: 
-        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}"
+        f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"
     output:
         test_file=f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
     run:
