@@ -140,10 +140,8 @@ rule salmon_samples2:
         forward=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
     output:
-        #f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"\
-        lambda wc: expand(
-            f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}",
-            sample=POOL2SAMPLES[wc.sample_pool])
+        f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}"\
+
     threads:
         config["threads"]
     conda:
