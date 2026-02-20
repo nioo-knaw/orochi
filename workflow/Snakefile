@@ -52,8 +52,11 @@ target = None
 
 if config['assembly_method'] == "coassembly":
     target = expand(f"{config['outdir']}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt",
-                    sample_pool=samples["sample_pool"].unique())
-                    #, sample_name=samples["sample"])
+        sample_pool=samples["sample_pool"].unique()
+    ) + expand(
+        f"{config['outdir']}/results/05_test/{{sample}}/{{sample}}_test.txt",
+        sample=samples["sample"]
+    )
 elif config['assembly_method'] == "single_assembly":
     target = expand(f"{config['outdir']}/results/05_test/{{sample}}/{{sample}}_test.txt",
                     sample=samples["sample"])
