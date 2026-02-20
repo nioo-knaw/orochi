@@ -34,7 +34,7 @@ rule downstream_test_pool:
         directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"),
         f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
         salmon_outputs = lambda wc: directory(expand(
-            f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{{sample}}",
+            f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}",
             sample=POOL2SAMPLES[wc.sample_pool]))
 
     output:

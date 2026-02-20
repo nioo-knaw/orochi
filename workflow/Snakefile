@@ -75,7 +75,7 @@ else:
     raise ValueError("Unsupported assembly type")
 
 salmon_targets = [
-    directory(f"{outdir}/results/05_prokaryote_annotation/salmon/ORF_{s}")
+    directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{s}")
     for s in samples.index
 ]
 
