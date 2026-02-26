@@ -329,7 +329,7 @@ rule mag_depth:
     input:
         fairy_coverage = expand(f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
                                 sample_pool=sorted(set(samples["sample_pool"]))),
-        dastool_contigs2bin = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv",
+        dastool_contig2bin = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv",
                                     sample_pool=sorted(set(samples["sample_pool"]))),
     output:
         binned_coverage = f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
