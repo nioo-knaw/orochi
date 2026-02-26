@@ -21,9 +21,10 @@ rule fastp:
             "fastp -i {input.fq1} -I {input.fq2} -o {output.cleanF} -O {output.cleanR} \
                         -h {output.report_html} -j {output.report_json} -R {params.report_name} -w {threads} -y -l 30 -r --trim_poly_g --n_base_limit 0 2> {log}"
 
+
 rule concat_host_phix:
         input:
-            host = config["host_genome"],
+            host = lambda wildcards: config["host_genome"] if config['host_removal'] == "True" else [],
             phix = "resources/contaminants_refs/GCF_000819615.1_ViralProj14015_genomic.fna"
         output:
             concat = temp(f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna")
