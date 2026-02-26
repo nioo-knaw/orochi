@@ -29,8 +29,10 @@ outdir <- config$outdir
 
 
 plotsdir <- "results/09_plots/PLOTS/1-Reads"
+plotsdircontigs <- "results/09_plots/PLOTS/2-Contigs"
 plotsdirbins <- "results/09_plots/PLOTS/3-Bins"
 dir.create(file.path(outdir, plotsdir), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(outdir, plotsdircontigs), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(outdir, plotsdirbins), recursive = TRUE, showWarnings = FALSE)
 
 # To save the other htmls in one same location for easier visualization later
@@ -338,12 +340,192 @@ plot6_clustering <- function() {
   p
 }
 
-
-# BINS --------------------------------------------------------------------
-
+# CONTIGS --------------------------------------------------------------------
 library(dplyr)
 library(tidyr)
 library(stringr)
+library(ggplot2)
+library(httr)
+
+base_dir_05 <- file.path(outdir, "results/05_prokaryote_annotation")
+treatments <- list.dirs(file.path(base_path, "eggnog"),
+                        full.names = FALSE,
+                        recursive = FALSE)
+
+# To get nice names for the KEGG pathways in my data
+kegg_map <- read.delim(url("https://rest.kegg.jp/list/pathway/ko"), header = FALSE, stringsAsFactors = FALSE)
+colnames(kegg_map) <- c("KEGG_Pathway", "Pathway_name")
+
+# Getting all the pathways to then exclude some
+resp <- GET("https://rest.kegg.jp/list/pathway")
+txt <- content(resp, "text")
+lines <- strsplit(txt, "\n")[[1]]
+
+df <- data.frame(
+  pathway_id = str_extract(lines, "map\\d+"),
+  pathway_name = str_extract(lines, "(?<=\\t).*"),
+  stringsAsFactors = FALSE
+)
+
+df <- df %>%
+  mutate(category = case_when(
+    str_detect(pathway_id, "^map05") ~ "5",
+    str_detect(pathway_id, "^map06") ~ "6",
+    str_detect(pathway_id, "^map07") ~ "7",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(category))
+
+# To get reference for COG
+cog_map <- read.delim(url("https://ftp.ncbi.nlm.nih.gov/pub/COG/COG2024/data/cog-24.fun.tab"), header = FALSE, stringsAsFactors = FALSE)
+cog_map <- cog_map[,c(1,4)]
+cog_map <- cog_map[cog_map$V4 != "",]
+colnames(cog_map) <- c("COG_category", "Description")
+write.csv(cog_map, file.path(outdir,plotsdircontigs,"COG_Categories_reference.csv"), row.names = FALSE)
+##### THIS ONE CAN BE USED TO PRODUCE THE REFERENCE TABLE THAT WILL BE ADDED IN THE REPORT
+
+merged_list <- list()
+kegg_plots_list <- list()
+cog_plots_list <- list()
+for (trt in treatments) {
+  
+  salmon_file <- file.path(base_path, "salmon", trt, paste0(trt, "_ORF_TPM.tsv"))
+  eggnog_file <- file.path(base_path, "eggnog", trt, paste0(trt, ".emapper.annotations.adjusted"))
+  
+  # Check files exist (prevents crashing)
+  if (file.exists(salmon_file) & file.exists(eggnog_file)) {
+    
+    salmon_counts <- read.delim(salmon_file, header = TRUE, stringsAsFactors = FALSE)
+    eggnog_out   <- read.delim(eggnog_file, header = TRUE, stringsAsFactors = FALSE)
+    
+    merged_list[[trt]] <- eggnog_out %>%
+      inner_join(salmon_counts, by = c("X.query" = "Name"))
+    
+    kegg_counting <- merged_list[[trt]] %>%
+      select(X.query, KEGG_Pathway, all_of(names(merged_list[[trt]])[(which(names(merged_list[[trt]]) == "PFAMs") + 1):ncol(merged_list[[trt]])])) %>%
+      filter(KEGG_Pathway != "-") %>%  # remove genes with no KEGG annotation
+      mutate(
+        KEGG_Pathway = sapply(
+          str_split(KEGG_Pathway, ","),
+          function(x) paste(x[str_starts(x, "ko")], collapse = ",")
+        )
+      ) %>%
+      filter(KEGG_Pathway != "") %>%
+      mutate(KEGG_Pathway = word(KEGG_Pathway, 1, sep = ","))
+    
+    # Incorporating nice names
+    kegg_counting_named <- kegg_counting %>%
+      left_join(kegg_map, by = "KEGG_Pathway") %>%
+      mutate(Pathway_name = ifelse(is.na(Pathway_name), KEGG_Pathway, Pathway_name)) # fallback if missing
+    
+    # To get a table with the pathways corresponding to the categories that should be deleted (5-7) as well
+    # Removing from my own data the rows that contain a pathway listed in the 5to7 table
+    kegg_counting_named_filtered <- kegg_counting_named[!kegg_counting_named$Pathway_name %in% df$pathway_name,]
+    
+    # Keeping only the further used columns
+    kegg_counting_named_adj <- kegg_counting_named_filtered[,3:length(kegg_counting_named_filtered)]
+    
+    # Average per Pathway for all samples
+    kegg_counting_averaged <- kegg_counting_named_adj %>%
+      group_by(Pathway_name) %>%
+      summarise(across(-last_col(), \(x) mean(x, na.rm = TRUE)))
+    
+    colnames(kegg_counting_averaged)[1] <- "KEGG Pathway name"
+    write.csv(kegg_counting_averaged, file.path(outdir, plotsdircontigs, paste0(trt, "_KEGG_functions.csv")), row.names = FALSE)
+    
+    ## FOR PLOTTING
+    # Keep top 30 for plot
+    # First, a column where the sum of all columns is stored to be able to know which ones are the most abundant ones
+    kegg_counting_averaged$sum <- rowSums(kegg_counting_averaged[, sapply(kegg_counting_averaged, is.numeric)])
+    top_n <- 30
+    kegg_count_top <- kegg_counting_averaged %>%
+      slice_max(order_by = sum, n = top_n)
+    kegg_count_top <- kegg_count_top[,-length(kegg_count_top)]
+    
+    kegg_count_top_long <- pivot_longer(kegg_count_top, cols = colnames(kegg_count_top[,2:length(kegg_count_top)]), names_to = "Sample", values_to = "Count")
+    colnames(kegg_count_top_long)[1] <- "Pathway_name"
+    
+    # Filtering the ones with a count of zero so they do not show up in the plot
+    kegg_count_top_long_filt <- kegg_count_top_long |> 
+      dplyr::filter(Count > 0)
+    
+    # Plot
+    k1 <- ggplot(kegg_count_top_long_filt, aes(x = Sample, y = reorder(Pathway_name, Count))) +
+      geom_point(aes(size = Count, color = Count)) +
+      scale_color_gradient(low = "lightblue", high = "darkblue") +
+      theme_minimal() +
+      labs(
+        x = "",
+        y = "KEGG Pathway",
+        title = paste0("KEGG Pathway Dotplot (Top 30) - Assembly ", trt),
+        color = "TPM",
+        size = "TPM"
+      )
+    
+    ggplot2::ggsave(filename = file.path(outdir,plotsdircontigs,paste0(trt,".KEGG_top30.tiff")), plot = k1, width = 8, height = 8, units = "in", dpi = 500, compression = "lzw")
+    kegg_plots_list[[trt]] <- k1
+    
+    
+    # Now, COG
+    cog_counting <- merged_list[[trt]] %>%
+      select(X.query, COG_category, all_of(names(merged_list[[trt]])[(which(names(merged_list[[trt]]) == "PFAMs") + 1):ncol(merged_list[[trt]])])) %>%
+      filter(COG_category != "") # remove genes with no COG annotation
+    
+    # Average per Pathway for all samples
+    cog_counting$X.query <- NULL
+    cog_counting <- cog_counting[cog_counting$COG_category != "-",]
+    cog_counting_averaged <- cog_counting %>%
+      group_by(COG_category) %>%
+      summarise(across(-last_col(), \(x) mean(x, na.rm = TRUE)))
+    
+    colnames(cog_counting_averaged)[1] <- "COG Category"
+    write.csv(cog_counting_averaged, file.path(outdir, plotsdircontigs, paste0(trt, "_COG_functions.csv")), row.names = FALSE)
+    
+    ## For the COG plot
+    # Keep top 30 for plot
+    # First, a column where the sum of all columns is stored to be able to know which ones are the most abundant ones
+    cog_counting_averaged$sum <- rowSums(cog_counting_averaged[, sapply(cog_counting_averaged, is.numeric)])
+    top_n <- 30
+    cog_count_top <- cog_counting_averaged %>%
+      slice_max(order_by = sum, n = top_n)
+    cog_count_top <- cog_count_top[,-length(cog_count_top)]
+    
+    cog_count_top_long <- pivot_longer(cog_count_top, cols = colnames(cog_count_top[,2:length(kegg_count_top)]), names_to = "Sample", values_to = "Count")
+    colnames(cog_count_top_long)[1] <- "COG_Category"
+    
+    # Filtering the ones with a count of zero so they do not show up in the plot
+    cog_count_top_long_filt <- cog_count_top_long |> 
+      dplyr::filter(Count > 0)
+    
+    # Plot
+    c1 <- ggplot(cog_count_top_long_filt, aes(x = Sample, y = reorder(COG_Category, Count))) +
+      geom_point(aes(size = Count, color = Count)) +
+      scale_color_gradient(low = "#EEE0E5", high = "magenta4") +
+      theme_minimal() +
+      labs(
+        x = "",
+        y = "COG Category",
+        title = paste0("COG Category Dotplot (Top 30) - Assembly ", trt),
+        color = "TPM",
+        size = "TPM"
+      )
+    
+    ggplot2::ggsave(filename = file.path(outdir,plotsdircontigs,paste0(trt,".COG_top30.tiff")), plot = c1, width = 6, height = 8, units = "in", dpi = 500, compression = "lzw")
+    cog_plots_list[[trt]] <- c1
+  }
+}
+
+
+plot1_top30_kegg <- function() {
+  kegg_plots_list[[trt]]
+}
+
+plot2_top30_cog <- function() {
+  cog_plots_list[[trt]]
+}
+
+# BINS --------------------------------------------------------------------
+
 library(ggalluvial)
 library(ggnewscale)
 

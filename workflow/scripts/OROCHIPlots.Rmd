@@ -233,6 +233,15 @@ plot6_clustering()
 
 ### Contig-based
 
+#### Functional annotation
+```{r FigKEGG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
+plot1_top30_kegg()
+```
+
+```{r FigCOG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
+plot2_top30_cog()
+```
+
 #### antiSMASH results
 HTML reports showing BGCs per sample pool, as indicated by the name shown in each button. Buttons in the top row correspond to bacterial results (antiSMASH) and buttons in the bottom row correspond to fungal results (fungiSMASH). Make sure to download the `{OUTDIR}/results/09_plots/rsc/` directory so you can visualize all the elements of the HTMLs.
 
