@@ -1,0 +1,7 @@
+name: orochi_drep
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - drep
+  - gsl=2.7.0

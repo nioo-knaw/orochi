@@ -1,0 +1,6 @@
+name: orochi_phyloflash
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - phyloflash

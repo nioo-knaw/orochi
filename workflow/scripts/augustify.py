@@ -60,6 +60,9 @@ parser.add_argument('-t', '--threads', required=False, type=int, default=1,
                     help='Number of threads for running augustus. The number ' +
                          'of threads should not be greater than the number of ' +
                          'species parameter sets.')
+parser.add_argument('-o', '--outdir', required=False, type=str, default='.',
+                    help='Output directory for logs (and optionally other outputs). '
+                         'Default: current working directory.')
 args = parser.parse_args()
 
 if ((args.metagenomic_classification_outfile) and (args.species)):
@@ -109,18 +112,18 @@ def create_random_string():
     letters = string.ascii_lowercase
     randomString = ''.join(random.choice(letters) for i in range(8))
     tmp = "tmp_" + randomString + "/"
-    log = "augustify_log_" + randomString
+    log = "augustify_log_" + randomString + ".log"
     # if directory or log_file exists, create a new random string
     while (os.path.exists(tmp) or os.path.exists(log)):
         randomString = ''.join(random.choice(letters) for i in range(8))
         tmp = "tmp" + randomString + "/"
-        log = "augustify_log_" + randomString
+        log = "augustify_log_" + randomString + ".log"
     return (randomString)
 
 
 def create_log_file_name(randomString):
     """ Function that creates a log file with a random name """
-    log = "augustify_log_" + randomString
+    log = "augustify_log_" + randomString + ".log"
     return (log)
 
 
@@ -417,13 +420,19 @@ def augustify_seq(hindex, header, seqs, tmp, params):
 ### Create log file and tmp directory for saving files that can be removed afterwards ###
 rString = create_random_string()
 log = create_log_file_name(rString)
+
+outdir = os.path.abspath(args.outdir)
+os.makedirs(outdir, exist_ok=True)
+log_path = os.path.join(outdir, log)
+
 logger = logging.getLogger("")
 logger.setLevel(logging.INFO)
-fh = logging.FileHandler(log)
+fh = logging.FileHandler(log_path)
 fh.setLevel(logging.INFO)
 formatter = logging.Formatter("%(message)s")
 fh.setFormatter(formatter)
 logger.addHandler(fh)
+
 tmp = create_tmp_dir(rString)
 
 ### Check whether provided threads are available
