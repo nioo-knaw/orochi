@@ -48,11 +48,12 @@ rule augustify:
         "../envs/augustus.yaml"
     params:
         param_file=os.path.abspath("resources/augustify_params.txt"),
-        script=os.path.abspath("workflow/scripts/augustify.py")
+        script=os.path.abspath("workflow/scripts/augustify.py"),
+        outdir=f"{outdir}/logs/augustify/{{sample}}",
     threads:
         config['threads']
     shell:
-        "python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {threads}"
+        "python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {threads} --outdir {params.outdir}"
 
 
 # This rule filters the prodigal gff file so that only prokaryotic genes on contigs above the size threshold are kept
