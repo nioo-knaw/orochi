@@ -348,7 +348,7 @@ library(ggplot2)
 library(httr)
 
 base_dir_05 <- file.path(outdir, "results/05_prokaryote_annotation")
-treatments <- list.dirs(file.path(base_path, "eggnog"),
+treatments <- list.dirs(file.path(base_dir_05, "eggnog"),
                         full.names = FALSE,
                         recursive = FALSE)
 
