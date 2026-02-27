@@ -32,7 +32,7 @@ rule whokaryote:
 
     params:
         outdir=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}",
-        minsize=config['min_contig_length']
+        minsize=config['min_contig_antismash']
 
     shell:
         "whokaryote.py --contigs {input.contigs} --outdir {params.outdir} --prodigal_file {input.prodigal_gff} --minsize {params.minsize} --f"
