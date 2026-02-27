@@ -516,11 +516,11 @@ for (trt in treatments) {
 }
 
 
-plot1_top30_kegg <- function() {
+plot1_top30_kegg <- function(trt) {
   kegg_plots_list[[trt]]
 }
 
-plot2_top30_cog <- function() {
+plot2_top30_cog <- function(trt) {
   cog_plots_list[[trt]]
 }
 

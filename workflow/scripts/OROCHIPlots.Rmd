@@ -234,12 +234,74 @@ plot6_clustering()
 ### Contig-based
 
 #### Functional annotation
-```{r FigKEGG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
-plot1_top30_kegg()
+```{r FigKEGG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 9, fig.align = "center"}
+
+kegg_plots_report <- lapply(names(kegg_plots_list), plot1_top30_kegg)
+kegg_html <- vapply(kegg_plots_report, plot_to_base64, character(1))
+
+# Page labels = assembly names
+page_labels <- names(kegg_plots_list)
+
+datatable(
+  data.frame(Plot = kegg_html),
+  escape = FALSE,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
+           }
+         });
+       }"
+    )
+  )
+)
 ```
 
-```{r FigCOG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
-plot2_top30_cog()
+
+```{r FigCOG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 9, fig.align = "center"}
+#plot2_top30_cog()
+
+cog_plots_report <- lapply(names(cog_plots_list), plot2_top30_cog)
+cog_html <- vapply(cog_plots_report, plot_to_base64, character(1))
+
+# Page labels = assembly names
+page_labels <- names(cog_plots_list)
+
+datatable(
+  data.frame(Plot = cog_html),
+  escape = FALSE,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
+           }
+         });
+       }"
+    )
+  )
+)
 ```
 
 #### antiSMASH results
