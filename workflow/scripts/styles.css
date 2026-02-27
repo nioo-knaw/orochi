@@ -30,6 +30,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .dataTables_wrapper {
   width: 100% !important;
+  background-color: white !important;
 }
 
 td:nth-child(1) {
@@ -37,4 +38,16 @@ td:nth-child(1) {
 }
 td:nth-child(2) {
   width: 10% !important;
+}
+
+table.dataTable {
+  background-color: white !important;
+}
+
+table.dataTable tbody tr {
+  background-color: white !important;
+}
+
+table.dataTable tbody td {
+  background-color: white !important;
 }
