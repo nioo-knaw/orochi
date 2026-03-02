@@ -233,6 +233,54 @@ plot6_clustering()
 
 ### Contig-based
 
+#### Taxonomic annotation
+```{r Krona plots, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
+krona_files <- list.files(
+  rsc_path,
+  pattern = "_krona\\.html$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+
+krona_files_rel <- sub(".*rsc/", "rsc/", krona_files)
+
+cat('<div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start; text-align:center;">\n')
+
+cat('<div style="
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:center;
+  flex:0 0 auto;
+  min-width:140px;
+  font-weight:bold;
+  font-size:16px;
+">\n')
+
+cat('<p><span style="padding:10px 0; display:inline-block;">Krona</span></p>\n')
+
+cat('</div>\n')
+
+for (f in krona_files_rel) {
+
+  parts <- strsplit(f, "/")[[1]]
+  assembly <- parts[2]
+
+  cat('<div style="display:flex; flex-direction:column; gap:10px; align-items:center; flex:0 0 auto; min-width:140px;">\n')
+
+  cat(sprintf(
+    '<p><a href="%s" target="_blank" class="link-button">%s</a></p>\n',
+    f, assembly
+  ))
+
+  cat('</div>\n')
+}
+
+cat('</div>\n')
+
+```
+
+
 #### Functional annotation
 ```{r FigKEGG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 9, fig.align = "center"}
 
@@ -315,12 +363,6 @@ plot_table <- datatable(
     )
   )
 )
-
-# TRIAL REFERENCE TABLE
-#reference_df <- data.frame(
-#  COG = c("A", "B", "C"),
-#  Description = c("RNA processing", "Chromatin structure", "Energy production")
-#)
 
 reference_table <- datatable(
   cog_map,
