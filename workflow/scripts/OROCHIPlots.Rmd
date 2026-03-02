@@ -270,7 +270,8 @@ datatable(
 
 
 ```{r FigCOG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 9, fig.align = "center"}
-#plot2_top30_cog()
+library(DT)
+library(htmltools)
 
 cog_plots_report <- lapply(names(cog_plots_list), plot2_top30_cog)
 cog_html <- vapply(cog_plots_report, plot_to_base64, character(1))
@@ -302,6 +303,32 @@ datatable(
     )
   )
 )
+
+# TRIAL REFERENCE TABLE
+reference_df <- data.frame(
+  COG = c("A", "B", "C"),
+  Description = c("RNA processing", "Chromatin structure", "Energy production")
+)
+
+reference_table <- datatable(
+  reference_df,
+  options = list(dom = 't'),
+  rownames = FALSE
+)
+
+div(
+  class = "cog-layout",
+  
+  div(class = "cog-reference",
+      h4("COG Reference"),
+      reference_table
+  ),
+  
+  div(class = "cog-plots",
+      plot_table
+  )
+)
+
 ```
 
 #### antiSMASH results

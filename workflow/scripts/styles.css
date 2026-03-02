@@ -51,3 +51,22 @@ table.dataTable tbody tr {
 table.dataTable tbody td {
   background-color: white !important;
 }
+
+.cog-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.cog-reference {
+  width: 25%;
+  min-width: 250px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #fafafa;
+}
+
+.cog-plots {
+  width: 75%;
+}
