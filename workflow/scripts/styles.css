@@ -65,6 +65,8 @@ table.dataTable tbody td {
   padding: 15px;
   border-radius: 8px;
   background-color: #fafafa;
+  max-height: 650px;
+  overflow-y: auto;
 }
 
 .cog-plots {

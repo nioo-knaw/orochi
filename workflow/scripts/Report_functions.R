@@ -510,7 +510,7 @@ for (trt in treatments) {
         size = "TPM"
       )
     
-    ggplot2::ggsave(filename = file.path(outdir,plotsdircontigs,paste0(trt,".COG_top30.tiff")), plot = c1, width = 6, height = 8, units = "in", dpi = 500, compression = "lzw")
+    ggplot2::ggsave(filename = file.path(outdir,plotsdircontigs,paste0(trt,".COG_top30.tiff")), plot = c1, width = 4, height = 8, units = "in", dpi = 500, compression = "lzw")
     cog_plots_list[[trt]] <- c1
   }
 }

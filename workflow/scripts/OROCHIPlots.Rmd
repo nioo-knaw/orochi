@@ -269,24 +269,36 @@ datatable(
 ```
 
 
-```{r FigCOG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 9, fig.align = "center"}
+```{r FigCOG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 6, fig.height = 9, fig.align = "center"}
 library(DT)
 library(htmltools)
 
+plot_to_base64_new2 <- function(plot) {
+  tmp <- tempfile(fileext = ".png")
+  ggsave(tmp, plot, width = 10, height = 6, dpi = 300)
+
+  img <- base64enc::dataURI(file = tmp, mime = "image/png")
+
+  sprintf(
+    '<img src="%s" style="width:100%%; height:auto;">',
+    img
+  )
+}
+
 cog_plots_report <- lapply(names(cog_plots_list), plot2_top30_cog)
-cog_html <- vapply(cog_plots_report, plot_to_base64, character(1))
+cog_html <- vapply(cog_plots_report, plot_to_base64_new2, character(1))
 
 # Page labels = assembly names
 page_labels <- names(cog_plots_list)
 
-datatable(
+plot_table <- datatable(
   data.frame(Plot = cog_html),
   escape = FALSE,
   rownames = FALSE,
   colnames = NULL,
   options = list(
     dom = "tp",
-    scrollY = 600,
+    #scrollY = 600,
     pageLength = 1,
     pagingType = "full_numbers",
     drawCallback = JS(
