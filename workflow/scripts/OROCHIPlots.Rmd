@@ -317,13 +317,13 @@ plot_table <- datatable(
 )
 
 # TRIAL REFERENCE TABLE
-reference_df <- data.frame(
-  COG = c("A", "B", "C"),
-  Description = c("RNA processing", "Chromatin structure", "Energy production")
-)
+#reference_df <- data.frame(
+#  COG = c("A", "B", "C"),
+#  Description = c("RNA processing", "Chromatin structure", "Energy production")
+#)
 
 reference_table <- datatable(
-  reference_df,
+  cog_map,
   options = list(dom = 't'),
   rownames = FALSE
 )
