@@ -380,9 +380,8 @@ df <- df %>%
 cog_map <- read.delim(url("https://ftp.ncbi.nlm.nih.gov/pub/COG/COG2024/data/cog-24.fun.tab"), header = FALSE, stringsAsFactors = FALSE)
 cog_map <- cog_map[,c(1,4)]
 cog_map <- cog_map[cog_map$V4 != "",]
-colnames(cog_map) <- c("COG_category", "Description")
+colnames(cog_map) <- c("", "Description")
 write.csv(cog_map, file.path(outdir,plotsdircontigs,"COG_Categories_reference.csv"), row.names = FALSE)
-##### THIS ONE CAN BE USED TO PRODUCE THE REFERENCE TABLE THAT WILL BE ADDED IN THE REPORT
 
 merged_list <- list()
 kegg_plots_list <- list()
@@ -453,6 +452,7 @@ for (trt in treatments) {
     k1 <- ggplot(kegg_count_top_long_filt, aes(x = Sample, y = reorder(Pathway_name, Count))) +
       geom_point(aes(size = Count, color = Count)) +
       scale_color_gradient(low = "lightblue", high = "darkblue") +
+      scale_size(range = c(1.5, 9)) +
       theme_minimal() +
       labs(
         x = "",
