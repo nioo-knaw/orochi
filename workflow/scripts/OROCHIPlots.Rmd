@@ -79,6 +79,8 @@ For each of the sections shown in this report, these are the data used:
 * Contig-based: Assemblies
 * Bin-based: Refined and de-replicated bins
 
+**DISCLAIMER**: This report represents only a visual overview of certain stages of the workflow and should NOT be considered a complete reflection of Orochi’s functionality. Orochi produces a rich and structured set of outputs across numerous directories, not shown here. To truly take advantage of Orochi’s capabilities, users should explore said directories thoroughly and engage with the full range of generated files and results. 
+
 
 ## {.tabset}
 ### Read-based
