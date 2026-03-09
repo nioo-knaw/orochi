@@ -24,25 +24,29 @@ rule normal_reads:
         hist=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}.hist"
     params:
         kmerdepth=config['bbmap_D'],
-        threads=config['threads'],
+        # threads=config['threads'],
         memory=config['bbmap_mem']
+    threads:
+        int(workflow.cores * 0.5)
+    resources:
+        mem_mb=config['max_mem'] # * 0.6
     benchmark:
         f"{outdir}/results/benchmark/normal_reads/{{sample_pool}}.tsv"
     conda:
         "../envs/coassembly.yaml"
     log: f"{outdir}/logs/normal_reads{{sample_pool}}.log"
     shell:
-        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={params.threads} out={output.out1} out2={output.out2} hist={output.hist} {params.memory} 2> {log}"
+        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={threads} out={output.out1} out2={output.out2} hist={output.hist} {params.memory} 2> {log}"
 
 
 rule megahit:
     input:
         fwd=branch(config['normalize_reads'] == "Yes",
             then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_f.fastq",
-            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq"),
+            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz"),
         rev=branch(config['normalize_reads'] == "Yes",
             then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_normalized_r.fastq",
-            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq")
+            otherwise=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz")
 
     output:
         contigs=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_final.contigs.fa",
@@ -56,7 +60,9 @@ rule megahit:
     log: f"{outdir}/logs/megahit_{{sample_pool}}.log"
     benchmark:
         f"{outdir}/results/benchmark/megahit/{{sample_pool}}.tsv"
-    threads: 32
+    threads: int(workflow.cores * 0.9)
+    resources:
+        mem_mb=config['max_mem']
     conda:
         "../envs/megahit.yaml"
     shell:"megahit -f --out-dir {params.output_dir} --out-prefix {wildcards.sample_pool}_final -m {params.memory} --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev} 2> {log}"

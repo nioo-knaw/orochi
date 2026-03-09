@@ -1,0 +1,429 @@
+---
+title: "OROCHI Report"
+output: 
+  html_document:
+    theme: flatly
+    highlight: tango
+    css: styles.css
+params:
+  metaphlan_secondary: NULL
+  config_file: NULL
+author: OROCHI team
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = getwd())
+library(here)
+source(here("workflow", "scripts", "Report_functions.R"))
+```
+
+<!-- CSS to position the logo -->
+<style>
+#logo {
+  position: absolute;  /* float above content */
+  top: 10px;           /* distance from top */
+  right: 10px;         /* distance from right */
+  width: 150px;        /* adjust logo size */
+  height: auto;        /* maintain aspect ratio */
+  z-index: 1000;       /* stay on top of content */
+}
+</style>
+```{r logo, results='asis', echo=FALSE}
+cat(sprintf('<img id="logo" src="%s" alt="Orochi">', logo_file))
+```
+
+```{r footer, results='asis', echo=FALSE}
+cat('
+<div id="footer">
+  <img src="', NIOO, '" alt="NIOO" style="height:40px; vertical-align:middle; margin-right:10px;">
+  <img src="', WUR, '" alt="WUR" style="height:40px; vertical-align:middle; margin-right:10px;">
+  <span style="font-size:14px; color:#555;">
+    &nbsp;|&nbsp;
+    <a href="goto:https://github.com/nioo-knaw/orochi">https://github.com/nioo-knaw/orochi</a> &nbsp;|&nbsp;
+    Contact:
+    <a href="mailto:l.ariasgiraldo@nioo.knaw.nl">l.ariasgiraldo@nioo.knaw.nl</a>
+    ,
+    <a href="mailto:lotte.pronk@wur.nl">lotte.pronk@wur.nl</a>
+  </span>
+</div>
+', sep='')
+```
+
+```{=html}
+<style>
+#footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  background-color: #f8f8f8;
+  padding: 8px 0;
+  border-top: 1px solid #ddd;
+  z-index: 9999;
+}
+#footer img {
+  height: 40px;
+  vertical-align: middle;
+  margin-right: 10px;
+}
+</style>
+```
+
+All the figures and tables contained in this report are available with publication-ready quality in the output directory of the OROCHI user.
+
+For each of the sections shown in this report, these are the data used:
+
+* Read-based: Quality-controlled shotgun sequencing reads
+* Contig-based: Assemblies
+* Bin-based: Refined and de-replicated bins
+
+
+## {.tabset}
+### Read-based
+*All read-based analysis plots were made using MicrobiotaProcess. For more information, consult their documentation.
+
+#### Quality report (from fastp)
+
+Quality reports were produced at the beginning of the metagenomics analysis, when Orochi used fastp to trim the low-quality reads and remove sequences that should be excluded from further analysis (e.g. polyG tails). Below you can find the link corresponding to each sample.
+
+::: note
+NOTE: If you click on your samples and cannot visualize any of them, it means you did not download all the necessary directories for the proper display of Orochi's report. Please refer to the Orochi documentation.
+:::
+
+```{r Read Quality Plots, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
+
+
+quality_files <- list.files(file.path(outdir,"results/09_plots/rsc"), pattern = "\\.html$", full.names = TRUE)
+quality_files_rel <- file.path("rsc", basename(quality_files))
+
+cat('<div style="column-count:2; column-gap:40px; text-align:center;">\n')
+for (f in quality_files_rel) {
+  sample_name <- tools::file_path_sans_ext(basename(f))
+  cat(sprintf('<p><a href="%s" target="_blank">%s</a></p>\n', f, sample_name))
+}
+cat('</div>\n')
+```
+
+#### Alpha diversity
+A) Observed and Shannon indexes for all samples, regardless of treatment
+B) Boxplot and violin plot of Observed and Shannon indexes per treatment
+
+```{r Fig1, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+plot1_alpha_diversity()
+```
+
+#### Taxonomic abundance
+
+Average read counts per treatment plotted per taxonomic level. You can naviagte each level by clicking the buttons underneath.
+
+::: note
+Remember: You already have all these plots (per taxonomic level), there is no need to download them again. Simply look for them in `{OUTDIR}/results/09_plots/1-Reads/`
+:::
+
+
+```{r Fig2, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 20, fig.align = "center"}
+
+# Function to turn a ggplot into base64-encoded <img>
+plot_to_base64 <- function(p, width = 864, height = 576) {
+  tf <- tempfile(fileext = ".png")
+  ggsave(tf, plot = p, width = width/72, height = height/72, dpi = 500)  # inches = pixels/72
+  encoded <- base64enc::dataURI(file = tf, mime = "image/png")
+  sprintf('<img src="%s" width="%d" height="%d">', encoded, width, height)
+}
+
+plots_one_bar <- lapply(taxa_levels, plot2_average_taxonomic_abundance)
+
+plot_html_one_bar <- vapply(plots_one_bar, plot_to_base64, character(1))
+
+# Suppose these are your labels for each plot/page
+page_labels <- c("Phylum", "Class", "Order", "Family", "Genus", "Species")
+
+# Your DT
+datatable(
+  data.frame(Plot = plot_html_one_bar),
+  escape = FALSE,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",  # keep full numbers, we will customize them
+    # customize buttons
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         // only get the numeric page buttons
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var pageIndex = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(pageIndex) && labels[pageIndex]) {
+             $(this).html(labels[pageIndex]);
+           }
+         });
+       }"
+    )
+  )
+)
+
+
+```
+
+For all the samples, using a heatmap maybe be a better option to plot all this information in a more understandable way, where samples can also be seen.
+Columns correspond to samples, rows correspond to the labels found in the currently displayed taxonomic level. You can navigate each level by clicking the buttons underneath.
+
+```{r Fig3, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+
+plots_heatmap <- lapply(taxa_levels, plot3_taxonomic_abundance_heatmap)
+
+plot_html <- vapply(plots_heatmap, plot_to_base64, character(1))
+
+datatable(
+  data.frame(Plot = plot_html),
+  escape = FALSE,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",  # keep full numbers, we will customize them
+    # customize buttons
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         // only get the numeric page buttons
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var pageIndex = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(pageIndex) && labels[pageIndex]) {
+             $(this).html(labels[pageIndex]);
+           }
+         });
+       }"
+    )
+  )
+)
+```
+
+#### Beta diversity
+
+Bray-Curtis dissimilarity indices are used to calculate pairwise distances between all samples (even the ones that belong to the same treatment), and significance is calculated (Wilcoxon test)
+```{r Fig4, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, out.width = "648px", unit = "in", out.height = "576px", fig.width = 6, fig.height = 5, fig.align = "center"}
+safe_call("plot4_significance_between_pools")
+```
+
+PCoA of all samples. Colors correspond to treatment, and boxplots on the right and top side indicate the distribution of the samples of each treatment along each coordinate. 95% confidence intervals are also plotted.
+```{r Fig5, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+plot5_pcoa()
+```
+
+#### Clustering
+Dendrogram showing grouping of the whole dataset based on hierarchical cluster analysis, colored based on the treatments found in the metadata fed by the user.
+
+```{r Fig6, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+plot6_clustering()
+```
+
+```{=html}
+<div style="height:56px;"></div>
+```
+
+### Contig-based
+
+#### antiSMASH results
+HTML reports showing BGCs per sample pool, as indicated by the name shown in each button. Buttons in the top row correspond to bacterial results (antiSMASH) and buttons in the bottom row correspond to fungal results (fungiSMASH). Make sure to download the `{OUTDIR}/results/09_plots/rsc/` directory so you can visualize all the elements of the HTMLs.
+
+::: note
+Remember: These are standalone HTMLs that you can also find in `{OUTDIR}/results/08_BGC/antismash/{pool_name}/{bacterial}` and `{OUTDIR}/results/08_BGC/antismash/{pool_name}/{fungal}`.
+:::
+
+```{r antiSMASH output, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
+
+
+ASbac_files <- quality_files <- list.files(
+  file.path(outdir, "results/09_plots/rsc"),
+  pattern = "index\\.html$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+ASbac_files_rel <- sub(".*rsc/", "rsc/", ASbac_files)
+
+
+# group by assembly
+groups <- list()
+
+for (f in ASbac_files_rel) {
+  parts <- strsplit(f, "/")[[1]]
+  assembly <- parts[2]           # A, B, ...
+  tooltype <- parts[3]           # antismash_bac or antismash_fun
+
+  if (!assembly %in% names(groups)) {
+    groups[[assembly]] <- list()
+  }
+  groups[[assembly]][[tooltype]] <- f
+}
+
+cat('<div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start;text-align:center;">\n')
+
+#Legend column
+cat('<div style="
+  display:flex; 
+  flex-direction:column; 
+  gap:10px; 
+  align-items:center; 
+  flex:0 0 auto; 
+  min-width:140px;
+  font-weight:bold;
+  font-size:16px;
+">\n')
+
+cat('<p><span style="color:#1f77b4; padding:10px 0; display:inline-block;">Bacterial</span></p>\n')
+cat('<p><span style="color:#03b48d; padding:10px 0; display:inline-block;">Fungal</span></p>\n')
+
+cat('</div>\n')
+
+for (assembly in names(groups)) {
+
+  cat('<div style="display:flex; flex-direction:column; gap:10px; align-items:center; flex:0 0 auto; min-width:140px;">\n')
+  if (!is.null(groups[[assembly]][["antismash_bac"]])) {
+    cat(sprintf(
+      '<p><a href="%s" target="_blank" class="link-button btn-bac">%s</a></p>\n',
+      groups[[assembly]][["antismash_bac"]], assembly
+    ))
+  }
+  if (!is.null(groups[[assembly]][["antismash_fun"]])) {
+    cat(sprintf(
+      '<p><a href="%s" target="_blank" class="link-button btn-fun">%s</a></p>\n',
+      groups[[assembly]][["antismash_fun"]], assembly
+    ))
+  }
+
+  cat('</div>\n')
+}
+
+cat('</div>\n')
+```
+
+```{=html}
+<div style="height:56px;"></div>
+```
+
+### Bin-based
+
+```{r Fig7BinSummary, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
+plot8_binsummary()
+```
+
+#### Bin quality
+
+Scatterplots per pool showing the completeness and contamination of each bin based on CheckM results. Color corresponds to the full taxonomy assigned to the bin.
+The threshold that defines whether a bin is good quality or not is dependant on the type of sample processed.
+In general, we suggest to look for a minimum of 70% completeness and a maximum of 10% contamination.
+You can find more data about your bins in `{OUTDIR}/results/06_binning`.
+
+```{r Bin Quality, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.align = "center"}
+bin_plots_list <- lapply(names(all_bin_plots_png), plot9_binscatterplot)
+
+plot_to_base64_new <- function(p, link_html) {
+  tf <- tempfile(fileext = ".png")
+  ggsave(tf, plot = p, dpi = 500, width = 12, height = 6, units = "in")
+
+  encoded <- base64enc::dataURI(file = tf, mime = "image/png")
+
+  sprintf('
+    <div style="text-align:center;">
+      <img src="%s" style="width:100%%; height:auto; margin-bottom:10px;">
+      %s
+    </div>
+    ',
+    encoded,
+    link_html
+  )
+}
+
+interactive_links <- sprintf(
+  "<a href='%s' target='_blank' class='btn btn-primary btn-sm'>View interactive plot</a>",
+  all_bin_plots_html_paths_relative
+)
+
+#bin_plots_png <- vapply(bin_plots_list, plot_to_base64_new, character(1))
+bin_plots_png <- mapply(function(p, button) plot_to_base64_new(p, button),
+  bin_plots_list,
+  interactive_links
+)
+
+# Page labels = assembly names
+page_labels <- names(all_bin_plots_png)
+
+datatable(
+  data.frame(Plot = bin_plots_png),
+  escape = FALSE,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = "tp",
+    scrollY = "auto",
+    pageLength = 1,
+    pagingType = "full_numbers",
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
+           }
+         });
+       }"
+    )
+  )
+)
+```
+
+
+#### MAG linkage
+
+(From left to right) Relation between 16S sequences, contigs from each assembly (indicated at the top of the plot), and refined bins from your analysis. Phyloflash and MarkerMAG are used to extract and assemble 16S rRNA gene sequences from your data and link them to the more appropriate contigs and bins.
+The size of the fragment indicates the strength of the linkage - an approximation derived from the number of reads that matched -, and the color of the The width of the connections corresponds to the strength or number of linkages between elements. Color intensity in the flow indicates different linkage groups within the same round and the different shades of grey (if present) indicate which round of MarkerMAG estimation that linkage comes from.
+You can find more about this process in [MarkerMAG Official GitHub page](https://github.com/songweizhi/MarkerMAG).
+
+```{r Fig8MAG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 7, fig.align = "center"}
+mag_plots_list <- lapply(names(all_plots), plot7_maglinkage)
+mag_html <- vapply(mag_plots_list, plot_to_base64, character(1))
+
+# Page labels = assembly names
+page_labels <- names(all_plots)
+
+datatable(
+  data.frame(Plot = mag_html),
+  escape = FALSE,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
+           }
+         });
+       }"
+    )
+  )
+)
+```
+
+```{=html}
+<div style="height:60px;"></div>
+```
