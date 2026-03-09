@@ -118,7 +118,7 @@ plot1_alpha_diversity()
 
 #### Taxonomic abundance
 
-Average read counts per treatment plotted per taxonomic level. You can naviagte each level by clicking the buttons underneath.
+Average read counts per treatment plotted per taxonomic level. You can navigate each level by clicking the buttons underneath.
 
 ::: note
 Remember: You already have all these plots (per taxonomic level), there is no need to download them again. Simply look for them in `{OUTDIR}/results/09_plots/1-Reads/`
@@ -235,11 +235,12 @@ plot6_clustering()
 
 ### Contig-based
 ::: note
-This tab shows results _per assembly_. If you are not sure what each of your assemblies contain, please refer to the Orochi documentation and review the *Deciding on an assembly method* option.
+This tab shows results __per assembly__. If you are not sure what each of your assemblies contain, please refer to the Orochi documentation and review the *"Deciding on an assembly method"* option.
 :::
 
 #### Taxonomic annotation
 Taxonomic annotation per assembly is depicted using Krona. Below, you can find buttons per assembly that will take you to your local Krona HTML file.
+
 ::: note
 Remember: These are standalone HTMLs that you can also find in `{OUTDIR}/results/09_plots/rsc/{pool_name}`.
 :::
