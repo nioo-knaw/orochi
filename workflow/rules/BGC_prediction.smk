@@ -1,8 +1,10 @@
 """ The rules related to Biosynthetic Gene Cluster (BGC) prediction and related analyses"""
 
+minsize_antismash = config['min_contig_antismash']
+
 rule antismash:
     input:
-        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_prokaryote_{minsize}.gff",
+        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_prokaryote_{minsize_antismash}.gff",
         # gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_genes.gff",
         contigs=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample_pool}}/prokaryotes.fasta"
 
