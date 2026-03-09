@@ -234,8 +234,16 @@ plot6_clustering()
 ```
 
 ### Contig-based
+::: note
+This tab shows results _per assembly_. If you are not sure what each of your assemblies contain, please refer to the Orochi documentation and review the *Deciding on an assembly method* option.
+:::
 
 #### Taxonomic annotation
+Taxonomic annotation per assembly is depicted using Krona. Below, you can find buttons per assembly that will take you to your local Krona HTML file.
+::: note
+Remember: These are standalone HTMLs that you can also find in `{OUTDIR}/results/09_plots/rsc/{pool_name}`.
+:::
+
 ```{r Krona plots, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
 krona_files <- list.files(
   rsc_path,
@@ -284,6 +292,10 @@ cat('</div>\n')
 
 
 #### Functional annotation
+Functional annotation was performed using both the KEGG and COG databases. Predicted genes (ORFs) were quantified by mapping sequencing reads back to them using Salmon. Abundance is reported as TPM, and values from samples in the same pool were combined into a single plot for easy comparison.
+
+In the case of KEGG information, all was summarized into KEGG pathways. Dotplots were made where the samples are found as columns and the categories are found as rows. The size and color of each dot corresponds to the TPM value. Each page of this section corresponds to one assembly (whose name is depicted in the title of the plot and the name of the button).
+
 ```{r FigKEGG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 9, fig.align = "center"}
 
 kegg_plots_report <- lapply(names(kegg_plots_list), plot1_top30_kegg)
@@ -318,6 +330,7 @@ datatable(
 )
 ```
 
+For displaying COG annotation information, it was all summarized into COG categories. Since COG categories are not explicitly written in the plot, there is a reference table (on the left) that can be consulted for further information. Dotplots were made where the samples are found as columns and the categories are found as rows. The size and color of each dot corresponds to the TPM value. Each page of this section corresponds to one assembly (whose name is depicted in the title of the plot and the name of the button).
 
 ```{r FigCOG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 6, fig.height = 9, fig.align = "center"}
 library(DT)
