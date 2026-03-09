@@ -14,6 +14,8 @@
 
 #    shell:"prodigal -i {input.contigs} -o {output.gff} -a {output.faa} -d {output.fna} -p meta -f gff"
 
+minsize_antismash = config['min_contig_antismash']
+
 rule whokaryote:
     input:
         contigs=f"{outdir}/results/03_assembly/size_filtered/{{sample}}_{minsize}/contigs_{{sample}}_{minsize}.fasta",
@@ -22,7 +24,7 @@ rule whokaryote:
     output:
         headers_euk=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/eukaryote_contig_headers.txt",
         headers_prok=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/prokaryote_contig_headers.txt",
-        contigs_size=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/contigs{minsize}.fasta",
+        contigs_size=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/contigs{minsize_antismash}.fasta",
         euk_fasta=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/eukaryotes.fasta",
         prok_fasta=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/prokaryotes.fasta",
         unclassified_fasta=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/unclassified.fasta"
@@ -32,10 +34,10 @@ rule whokaryote:
 
     params:
         outdir=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}",
-        minsize=config['min_contig_antismash']
+        minsize_a=config['min_contig_antismash']
 
     shell:
-        "whokaryote.py --contigs {input.contigs} --outdir {params.outdir} --prodigal_file {input.prodigal_gff} --minsize {params.minsize} --f"
+        "whokaryote.py --contigs {input.contigs} --outdir {params.outdir} --prodigal_file {input.prodigal_gff} --minsize {params.minsize_a} --f"
 
 
 rule augustify:
@@ -63,11 +65,11 @@ rule filter_prokaryote_gff:
         gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_genes.gff",
         headers_prok=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/prokaryote_contig_headers.txt"
     output:
-        f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_prokaryote_{minsize}.gff"
+        f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_prokaryote_{minsize_antismash}.gff"
     conda:
         "../envs/size_filter.yaml"
     params:
-        size=config['min_contig_length'],
+        size=config['min_contig_antismash'],
         outdir=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}",
         script=os.path.abspath("workflow/scripts/filter_annotations.py")
     shell:
