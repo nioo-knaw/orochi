@@ -24,7 +24,7 @@ rule fastp:
 
 rule concat_host_phix:
         input:
-            host = lambda wildcards: config["host_genome"] if config['host_removal'] == "True" else [],
+            host = lambda wildcards: config["host_genome"] if config['host_removal'] else [],
             phix = "resources/contaminants_refs/GCF_000819615.1_ViralProj14015_genomic.fna"
         output:
             concat = temp(f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna")
