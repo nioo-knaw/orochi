@@ -62,12 +62,38 @@ rule MetaPhlAn4:
     shell:
         """
         mkdir -p {params.mtphln_outdir}
-        metaphlan {input.forward},{input.rev} --bowtie2out {params.mtphln_outdir}/{params.bowtie} --nproc {threads} --input_type fastq -o {output.file}
+        metaphlan {input.forward},{input.rev} --mapout {params.mtphln_outdir}/{params.bowtie} --nproc {threads} --input_type fastq -o {output.file}
         """
+
+rule MetaPhlAn_sgb_to_gtdb:
+    input:
+        f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt"
+    output:
+        f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.gtdb.txt"
+    conda:
+        "../envs/metaphlan4.yaml"
+    shell:
+        """
+        sgb_to_gtdb_profile.py \
+          -i {input} \
+          -o {output}
+        """
+
+def metaphlan_merge_inputs(wildcards):
+    if config["taxonomy_type"] == "GTDB":
+        return expand(
+            f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.gtdb.txt",
+            sample=samples["sample"]
+        )
+    else:
+        return expand(
+            f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt",
+            sample=samples["sample"]
+        )
 
 rule MetaPhlAn_secondary:
     input:
-        lambda wildcards: expand(f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt", sample=samples["sample"])
+        metaphlan_merge_inputs
     output:
         merged_table = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
     params:
