@@ -5,7 +5,7 @@ antismash_db = config["antismash_db"]
 download_antismash_db = config.get("download_antismash_db", False)
 
 
-def antismash_db_marker(wildcards):
+def antismash_db_input(wildcards):
     if download_antismash_db:
         return os.path.join(antismash_db, ".download_complete")
     return []
@@ -42,10 +42,18 @@ rule antismash:
     shell:
         """
         test -d {params.database_dir} || \ 
-        (echo "ERROR: antiSMASH database directory not found: {params.database_dir}") >&2; exit 1) 
+            (echo "ERROR: antiSMASH database directory not found: {params.database_dir}") >&2; exit 1) 
         
-        antismash {input.contigs} -c {params.threads} --genefinding-gff3 {input.gff} --output-dir {params.outdir} \
-        --taxon bacteria --output-basename bacterial --cc-mibig --cb-general --cb-knownclusters --databases {params.database_dir}
+        antismash {input.contigs} \
+        -c {params.threads} \
+        --genefinding-gff3 {input.gff} \
+        --output-dir {params.outdir} \
+        --taxon bacteria \
+        --output-basename bacterial \
+        --cc-mibig \
+        --cb-general \
+        --cb-knownclusters \
+        --databases {params.database_dir}
         """
 
 rule fungismash:
@@ -67,10 +75,19 @@ rule fungismash:
     shell:
         """
         test -d {params.database_dir} || \ 
-        (echo "ERROR: antiSMASH database directory not found: {params.database_dir}") >&2; exit 1) 
+            (echo "ERROR: antiSMASH database directory not found: {params.database_dir}") >&2; exit 1) 
         
-        antismash {input.contigs} -c {params.threads} --genefinding-gff3 {input.gff} --output-dir {params.outdir} \
-        --taxon fungi --cassis --output-basename fungal --cc-mibig --cb-general --cb-knownclusters --databases {params.database_dir}
+        antismash {input.contigs} \
+        -c {params.threads} \
+        --genefinding-gff3 {input.gff} \
+        --output-dir {params.outdir} \
+        --taxon fungi \
+        --cassis \
+        --output-basename fungal \
+        --cc-mibig \
+        --cb-general \
+        --cb-knownclusters \
+        --databases {params.database_dir}
         """
 
 rule bigscape:
