@@ -20,7 +20,7 @@ rule download_antismash_databases:
     shell:
         """
         mkdir -p {params.dbdir}
-        download-antismash-databases --output-dir {params.dbdir}
+        download-antismash-databases --database-dir {params.dbdir}
         """
 
 
@@ -41,8 +41,8 @@ rule antismash:
 
     shell:
         """
-        test -d {params.database_dir} || \ 
-            (echo "ERROR: antiSMASH database directory not found: {params.database_dir}") >&2; exit 1) 
+        test -d {params.database_dir} || \
+            (echo "ERROR: antiSMASH database directory not found: {params.database_dir}" >&2; exit 1)
         
         antismash {input.contigs} \
         -c {params.threads} \
@@ -74,8 +74,8 @@ rule fungismash:
 
     shell:
         """
-        test -d {params.database_dir} || \ 
-            (echo "ERROR: antiSMASH database directory not found: {params.database_dir}") >&2; exit 1) 
+        test -d {params.database_dir} || \
+            (echo "ERROR: antiSMASH database directory not found: {params.database_dir}" >&2; exit 1)
         
         antismash {input.contigs} \
         -c {params.threads} \
