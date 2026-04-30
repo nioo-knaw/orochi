@@ -90,6 +90,35 @@ rule fungismash:
         --databases {params.database_dir}
         """
 
+
+rule summarize_antismash_bacterial:
+    input:
+        json=rules.antismash.output.json,
+        antismash_dir=directory(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial")
+    output:
+        tsv=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial_summary.tsv"
+    conda:
+        "../envs/antismash.yaml"
+    params:
+        taxon="bacteria"
+    script:
+        "../scripts/summarize_antismash.py"
+
+
+rule summarize_antismash_fungal:
+    input:
+        json=rules.fungismash.output.json,
+        antismash_dir=directory(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal")
+    output:
+        tsv=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/fungal_summary.tsv"
+    conda:
+        "../envs/antismash.yaml"
+    params:
+        taxon="fungi"
+    script:
+        "../scripts/summarize_antismash.py"
+
+
 rule bigscape:
     input:
         "path/to/antismash_output"
