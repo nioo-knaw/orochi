@@ -92,7 +92,7 @@ def summarize_genbank_files(antismash_dir, taxon, output_tsv):
 
 
 summarize_genbank_files(
-    antismash_dir=snakemake.input.antismash_dir,
+    antismash_dir=snakemake.params.antismash_dir,
     taxon=snakemake.params.taxon,
     output_tsv=snakemake.output.tsv,
 )

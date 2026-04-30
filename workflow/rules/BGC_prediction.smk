@@ -93,13 +93,13 @@ rule fungismash:
 
 rule summarize_antismash_bacterial:
     input:
-        json=rules.antismash.output.json,
-        antismash_dir=directory(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial")
+        json=rules.antismash.output.json
     output:
         tsv=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial_summary.tsv"
     conda:
         "../envs/antismash.yaml"
     params:
+        antismash_dir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial",
         taxon="bacteria"
     script:
         "../scripts/summarize_antismash.py"
@@ -107,13 +107,13 @@ rule summarize_antismash_bacterial:
 
 rule summarize_antismash_fungal:
     input:
-        json=rules.fungismash.output.json,
-        antismash_dir=directory(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal")
+        json=rules.fungismash.output.json
     output:
         tsv=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/fungal_summary.tsv"
     conda:
         "../envs/antismash.yaml"
     params:
+        antismash_dir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal",
         taxon="fungi"
     script:
         "../scripts/summarize_antismash.py"
