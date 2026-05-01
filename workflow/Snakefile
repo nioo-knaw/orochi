@@ -19,7 +19,6 @@ POOL2SAMPLES = (
     .to_dict()
 )
 
-import pandas as pd
 df = pd.read_csv(config["samples"], sep="\t")
 SAMPLES = df["sample"].tolist()
 POOLS = sorted(df["sample_pool"].unique())
@@ -69,7 +68,7 @@ if config['assembly_method'] == "coassembly":
 
 elif config['assembly_method'] == "single_assembly":
     include: "rules/single_sample_assembly.smk"
-    target = expand(f"{config['outdir']}/results/05_test/{{sample}}/{{sample}}_test.txt",
+    target = expand(f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
                     sample=samples["sample"])
 else:
     raise ValueError("Unsupported assembly type")
@@ -89,7 +88,9 @@ rule all:
         f"{outdir}/results/09_plots/Orochi_report.html",
         target,
         salmon_targets,
-        salmon_final_targets
+        salmon_final_targets,
+        f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
+        f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv"
         # expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
         # f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt" @Todo: enable after testing
     # input: expand(output,

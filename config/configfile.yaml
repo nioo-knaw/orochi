@@ -82,8 +82,11 @@ emapper_database: "/path/to/emapper/database"
 # min_contig_antismash: The minimum length of the contigs for antiSMASH analysis.
 min_contig_antismash: 5000
 
-# antismash_db: The path to the antiSMASH database.
-antismash_db: "/path/to/antismash/database"
+# antismash_db: The path to the antiSMASH database. Change antismash_db path to your own path if you have already have
+# a matching antismash db available (antismash version 8.0.4). Set download_antismash_db to false in that case.
+# default antismash_db install location: "resources/antismash_db".
+antismash_db: "resources/antismash_db"
+download_antismash_db: true
 
 
 ## TAXONOMIC ANNOTATION
