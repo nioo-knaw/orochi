@@ -49,7 +49,7 @@ rule MetaPhlAn4:
         forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
     output:
-        file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt",
+        file = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.raw.txt",
     params:
         bowtie = lambda wildcards: f"{wildcards.sample}.bowtie2.bz2",
         mtphln_outdir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/"
@@ -62,22 +62,54 @@ rule MetaPhlAn4:
     shell:
         """
         mkdir -p {params.mtphln_outdir}
-        metaphlan {input.forward},{input.rev} --bowtie2out {params.mtphln_outdir}/{params.bowtie} --nproc {threads} --input_type fastq -o {output.file}
+        metaphlan {input.forward},{input.rev} --mapout {params.mtphln_outdir}/{params.bowtie} --nproc {threads} --input_type fastq -o {output.file}
+        """
+
+rule MetaPhlAn_sgb_to_gtdb:
+    input:
+        raw = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.raw.txt"
+    output:
+        final = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt"
+    conda:
+        "../envs/metaphlan4.yaml"
+    shell:
+        """
+        if [ "{config[taxonomy_type]}" = "GTDB" ]; then
+            sgb_to_gtdb_profile.py -i {input.raw} -o {output.final}
+            rm -f {input.raw}
+        else
+            mv {input.raw} {output.final}
+        fi
         """
 
 rule MetaPhlAn_secondary:
     input:
-        lambda wildcards: expand(f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt", sample=samples["sample"])
+        expand(f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt",
+            sample = samples["sample"])
     output:
         merged_table = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt"
     params:
         mtphln_dir = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/",
+        gtdb_flag = lambda wc: (
+            "--gtdb_profiles"
+            if config["taxonomy_type"] == "GTDB"
+            else ""
+        ),
+        raw_table      = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.raw.txt",
+        use_gtdb_reform = config["taxonomy_type"] == "GTDB",
 #       scripts_dir= "./workflow/scripts/"
     conda:
         "../envs/metaphlan4.yaml"
     shell:
         """
-        merge_metaphlan_tables.py {input} > {output.merged_table}
+        merge_metaphlan_tables.py {input} {params.gtdb_flag} > {params.raw_table}
+        if [ "{params.use_gtdb_reform}" = "True" ]; then
+            python workflow/scripts/gtdb_reform.py \\
+                -i {params.raw_table} \\
+                -o {output.merged_table}
+        else
+            mv {params.raw_table} {output.merged_table}
+        fi
         """
         
        # Rscript {params.scripts_dir}/MetaPhlAn_calculate_diversity.R -f {output.merged_table} -o {params.mtphln_dir}/beta_diversity

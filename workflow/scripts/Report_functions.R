@@ -110,12 +110,12 @@ for (level in taxa_levels) {
       force = TRUE
     )
   
-  p2 <- p2 + labs(title = paste("(Bacterial) Taxonomic Abundance at", level)) +
+ p2 <- p2 + labs(y = "Absolute Abundance (%)", title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
   ggplot2::ggsave(
-    filename = file.path(outdir,plotsdir,paste0("2-taxonomic_abundance_", tolower(level), ".tiff")),
+    filename = file.path(outdir,plotsdir,paste0("2-taxonomic_absolute_abundance_", tolower(level), ".tiff")),
     plot = p2,
     width = 12,
     height = 10,
@@ -155,12 +155,12 @@ for (level in taxa_levels) {
     )
   
   h1_gg <- as.ggplot(h1)
-  h1_gg <- h1_gg + labs(title = paste("(Bacterial) Taxonomic Abundance at", level)) +
+  h1_gg <- h1_gg + labs(title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
   ggplot2::ggsave(
-    filename = file.path(outdir, plotsdir, paste0("3-taxonomic_abundance_heatmap_", tolower(level), ".tiff")),
+    filename = file.path(outdir, plotsdir, paste0("3-taxonomic_absolute_abundance_heatmap_", tolower(level), ".tiff")),
     plot = h1_gg,
     width = 12,
     height = 10,
@@ -213,12 +213,12 @@ for (level in taxa_levels) {
       force = TRUE,
       topn = 20
     )
-  p3 <- p3 + labs(title = paste("(Bacterial) Taxonomic Abundance at", level)) +
+  p3 <- p3 + labs(y = "Relative Abundance (%)", title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
   ggplot2::ggsave(
-    filename = file.path(outdir, plotsdir,paste0("2-taxonomic_abundance_average_", tolower(level), ".tiff")),
+    filename = file.path(outdir, plotsdir,paste0("2-taxonomic_relative_abundance_", tolower(level), ".tiff")),
     plot = p3,
     width = 12,
     height = 10,
@@ -241,12 +241,12 @@ for (level in taxa_levels) {
       force=TRUE
     )
   h2_gg <- as.ggplot(h2)
-  h2_gg <- h2_gg + labs(title = paste("(Bacterial) Taxonomic Abundance at", level)) +
+  h2_gg <- h2_gg + labs(title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
   ggplot2::ggsave(
-    filename = file.path(outdir, plotsdir, paste0("3-taxonomic_abundance_heatmap_average_", tolower(level), ".tiff")),
+    filename = file.path(outdir, plotsdir, paste0("3-taxonomic_relative_abundance_heatmap_", tolower(level), ".tiff")),
     plot = h2_gg,
     width = 12,
     height = 10,

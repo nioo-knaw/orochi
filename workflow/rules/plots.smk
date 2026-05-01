@@ -25,7 +25,8 @@ rule report:
         metaphlan_secondary = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt",
         antismash_bac = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/index.html", sample_pool=sorted(set(samples["sample_pool"]))),
         antismash_fun = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/index.html", sample_pool=sorted(set(samples["sample_pool"]))),
-        html_fastp = expand(f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.html", sample=samples["sample"])
+        html_fastp = expand(f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.html", sample=samples["sample"]),
+        markermag_done = expand(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/markermag.done", sample_pool=sorted(set(samples["sample_pool"])))
     output:
         f"{outdir}/results/09_plots/Orochi_report.html"
     params:
