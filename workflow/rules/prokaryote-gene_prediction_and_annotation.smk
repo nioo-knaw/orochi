@@ -149,6 +149,18 @@ sample_to_pool = dict(zip(df["sample"], df["sample_pool"]))
 sample_to_fq1 = dict(zip(df["sample"], df["fq1"]))
 sample_to_fq2 = dict(zip(df["sample"], df["fq2"]))
 
+ASSEMBLY_UNITS = POOLS if config["assembly_method"] == "coassembly" else SAMPLES
+
+def assembly_unit_for_sample(sample):
+    if config["assembly_method"] == "coassembly":
+        return sample_to_pool[sample]
+    return sample
+
+def samples_for_assembly_unit(assembly_unit):
+    if config["assembly_method"] == "coassembly":
+        return [s for s in SAMPLES if sample_to_pool[s] == assembly_unit]
+    return [assembly_unit]
+
 rule salmon_assemblies1:
     input:
         orfs = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna"
@@ -167,7 +179,7 @@ rule salmon_assemblies1:
 
 rule salmon_samples2:
     input:
-        index=lambda wc: f"{outdir}/results/05_prokaryote_annotation/salmon/{SAMPLE2POOL[wc.sample]}/{SAMPLE2POOL[wc.sample]}_orfs.index",
+        index=lambda wc: f"{outdir}/results/05_prokaryote_annotation/salmon/{assembly_unit_for_sample(wc.sample)}/{assembly_unit_for_sample(wc.sample)}_orfs.index",
         forward=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
     output:
@@ -188,16 +200,16 @@ rule salmon_final3:
     input:
         quants=lambda wc: expand(
             f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/",
-            sample=[s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool])
+            sample=samples_for_assembly_unit(wc.sample_pool))
     output:
         quant = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
     params:
         sample_dir = lambda wc: " ".join(
-            [f"{outdir}/results/05_prokaryote_annotation/salmon/{s}" 
-             for s in SAMPLES if sample_to_pool[s] == wc.sample_pool]
+            [f"{outdir}/results/05_prokaryote_annotation/salmon/{s}"
+             for s in samples_for_assembly_unit(wc.sample_pool)]
         ),
         sample_name = lambda wc: " ".join(
-            [s for s in SAMPLES if sample_to_pool[s] == wc.sample_pool]
+            samples_for_assembly_unit(wc.sample_pool)
         ),
     threads:
         config["threads"]
@@ -207,5 +219,5 @@ rule salmon_final3:
         mem_mb = 200000
     shell:
         """
-        salmon quantmerge --quants {params.sample_dir}/ --names {params.sample_name} --column TPM -o {output.quant}
+        salmon quantmerge --quants {params.sample_dir} --names {params.sample_name} --column TPM -o {output.quant}
         """

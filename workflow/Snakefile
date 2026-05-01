@@ -78,9 +78,15 @@ salmon_targets = [
     for s in samples.index
 ]
 
+salmon_assembly_units = (
+    samples["sample_pool"].unique()
+    if config["assembly_method"] == "coassembly"
+    else samples["sample"]
+)
+
 salmon_final_targets = expand(
     f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
-    sample_pool=samples["sample_pool"].unique()
+    sample_pool=salmon_assembly_units
 )
 
 rule all:
