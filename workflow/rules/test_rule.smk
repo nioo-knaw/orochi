@@ -30,11 +30,8 @@ rule downstream_test_pool:
         f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/index.html",
         # f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
         f"{outdir}/results/09_plots/Orochi_report.html",
-        directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index"),
-        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
-        salmon_outputs = lambda wc: directory(expand(
-            f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}",
-            sample=POOL2SAMPLES[wc.sample_pool]))
+        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index",
+        f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
 
     output:
         test_file1=f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt",
