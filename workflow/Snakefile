@@ -40,6 +40,12 @@ df = pd.read_csv(config["samples"], sep="\t")
 SAMPLES = df["sample"].tolist()
 POOLS = sorted(df["sample_pool"].unique())
 
+ASSEMBLY_UNITS = (
+    POOLS
+    if config["assembly_method"] == "coassembly"
+    else SAMPLES
+)
+
 outdir = config["outdir"]
 minsize = config["min_contig_length"]
 
@@ -104,6 +110,15 @@ salmon_assembly_units = (
 salmon_final_targets = expand(
     f"{outdir}/results/05_prokaryote_annotation/salmon/merged/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
     sample_pool=salmon_assembly_units
+)
+
+mag_depth_targets = (
+    [
+        f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
+        f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv",
+    ]
+    if config["assembly_method"] == "coassembly"
+    else []
 )
 
 rule all:
