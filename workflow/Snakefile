@@ -74,7 +74,7 @@ else:
     raise ValueError("Unsupported assembly type")
 
 salmon_targets = [
-    f"{outdir}/results/05_prokaryote_annotation/salmon/{s}"
+    f"{outdir}/results/05_prokaryote_annotation/salmon/quants/{s}"
     for s in samples.index
 ]
 
@@ -85,7 +85,7 @@ salmon_assembly_units = (
 )
 
 salmon_final_targets = expand(
-    f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
+    f"{outdir}/results/05_prokaryote_annotation/salmon/merged/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
     sample_pool=salmon_assembly_units
 )
 

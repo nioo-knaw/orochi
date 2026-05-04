@@ -165,7 +165,7 @@ rule salmon_assemblies1:
     input:
         orfs = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna"
     output:
-        index_file = directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_orfs.index")
+        index_file = directory(f"{outdir}/results/05_prokaryote_annotation/salmon/indexes/{{sample_pool}}/{{sample_pool}}_orfs.index")
     threads:
         config["threads"]
     conda:
@@ -179,11 +179,11 @@ rule salmon_assemblies1:
 
 rule salmon_samples2:
     input:
-        index=lambda wc: f"{outdir}/results/05_prokaryote_annotation/salmon/{assembly_unit_for_sample(wc.sample)}/{assembly_unit_for_sample(wc.sample)}_orfs.index",
+        index=lambda wc: f"{outdir}/results/05_prokaryote_annotation/salmon/indexes/{assembly_unit_for_sample(wc.sample)}/{assembly_unit_for_sample(wc.sample)}_orfs.index",
         forward=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev=f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz"
     output:
-        directory(f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}")
+        directory(f"{outdir}/results/05_prokaryote_annotation/salmon/quants/{{sample}}")
 
     threads:
         config["threads"]
@@ -199,13 +199,13 @@ rule salmon_samples2:
 rule salmon_final3:
     input:
         quants=lambda wc: expand(
-            f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample}}/",
+            f"{outdir}/results/05_prokaryote_annotation/salmon/quants/{{sample}}/",
             sample=samples_for_assembly_unit(wc.sample_pool))
     output:
-        quant = f"{outdir}/results/05_prokaryote_annotation/salmon/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
+        quant = f"{outdir}/results/05_prokaryote_annotation/salmon/merged/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv"
     params:
         sample_dir = lambda wc: " ".join(
-            [f"{outdir}/results/05_prokaryote_annotation/salmon/{s}"
+            [f"{outdir}/results/05_prokaryote_annotation/salmon/quants/{s}"
              for s in samples_for_assembly_unit(wc.sample_pool)]
         ),
         sample_name = lambda wc: " ".join(
