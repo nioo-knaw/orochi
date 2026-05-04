@@ -11,6 +11,23 @@ samples = (
     .sort_index()
 )
 
+def get_sample_value(sample, column):
+    matches = samples.loc[samples["sample"] == sample, column]
+
+    if len(matches) == 0:
+        raise ValueError(
+            f"No sample named '{sample}' found in the samples table. "
+            f"If '{sample}' is a sample_pool, check for wildcard/output path collisions."
+        )
+
+    if len(matches) > 1:
+        raise ValueError(
+            f"Multiple rows found for sample '{sample}'. "
+            "Values in the 'sample' column must be unique."
+        )
+
+    return matches.iloc[0]
+
 SAMPLE2POOL = samples["sample_pool"].to_dict()
 
 POOL2SAMPLES = (

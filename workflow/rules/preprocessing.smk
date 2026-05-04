@@ -1,7 +1,7 @@
 rule fastp:
         input:
-            fq1 = lambda wildcards: samples.loc[samples["sample"] == wildcards.sample].fq1.item(),
-            fq2 = lambda wildcards: samples.loc[samples["sample"] == wildcards.sample].fq2.item(),
+            fq1 = lambda wildcards: get_sample_value(wildcards.sample, "fq1"),
+            fq2 = lambda wildcards: get_sample_value(wildcards.sample, "fq2"),
 
             # readF = "raw/{sample}_R1.fastq.gz",
             # readR = "raw/{sample}_R2.fastq.gz"
