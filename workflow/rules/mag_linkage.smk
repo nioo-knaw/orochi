@@ -46,8 +46,12 @@ rule unzip_phyloflash:
 
 rule unzip_reads:
     input:
-        forward_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
-        reverse_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz"
+        forward_reads = branch(config['assembly_method'] == "coassembly",
+            then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
+            otherwise=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_1.fastq.gz"),
+        reverse_reads = branch(config['assembly_method'] == "coassembly",
+            then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz",
+            otherwise=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_2.fastq.gz")
     output:
         forward_out=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_forward.fastq",
         reverse_out=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_reverse.fastq"
