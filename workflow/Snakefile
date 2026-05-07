@@ -127,8 +127,9 @@ rule all:
         target,
         salmon_targets,
         salmon_final_targets,
-        f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
-        f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv"
+        mag_depth_targets
+        # f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
+        # f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv"
         # expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
         # f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt" @Todo: enable after testing
     # input: expand(output,
