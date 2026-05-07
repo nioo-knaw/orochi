@@ -1,9 +1,16 @@
 """ Rules related to reconstructing 16S rRNA gene sequences and linking them to MAGs"""
 
+# We use the non-normalized reads (if coassembly) because the MAG coverage is also based on non-normalized reads
 rule phyloflash:
     input:
-        forward_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
-        reverse_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz"
+        forward_reads = branch(config['assembly_method'] == "coassembly",
+            then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
+            otherwise=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_1.fastq.gz"),
+        reverse_reads = branch(config['assembly_method'] == "coassembly",
+            then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz",
+            otherwise=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_2.fastq.gz")
+        # forward_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
+        # reverse_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz"
 
     output:
         phyloflash_out=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.phyloFlash.tar.gz",
