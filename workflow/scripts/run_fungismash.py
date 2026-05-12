@@ -1,41 +1,78 @@
+#!/usr/bin/env python3
+
 from pathlib import Path
 import json
+import subprocess
+import sys
 
-outdir_path = Path(params.outdir)
-outdir_path.mkdir(parents=True, exist_ok=True)
 
-log_path = Path(log[0])
-log_path.parent.mkdir(parents=True, exist_ok=True)
+def fasta_has_records(fasta):
+    """
+    Return True if a FASTA file exists and contains at least one sequence header.
+    """
+    fasta = Path(fasta)
 
-with open(log_path, "w") as log_handle:
-    log_handle.write(f"[fungismash] sample_pool={wildcards.sample_pool}\n")
-    log_handle.write(f"[fungismash] input={list(input)}\n")
-    log_handle.write(f"[fungismash] output.html={output.html}\n")
-    log_handle.write(f"[fungismash] output.json={output.json}\n")
-    log_handle.write(f"[fungismash] outdir={params.outdir}\n")
-    log_handle.write(f"[fungismash] database_dir={params.database_dir}\n")
+    if not fasta.exists() or fasta.stat().st_size == 0:
+        return False
 
-# Case 1: no eukaryotic sequences
-if not fasta_has_records(input.contigs):
-    reason = "No eukaryotic sequences are detected"
+    with open(fasta) as handle:
+        for line in handle:
+            if line.startswith(">"):
+                return True
 
-    with open(log_path, "a") as log_handle:
-        log_handle.write(f"[fungismash] {reason}. Writing placeholder outputs.\n")
+    return False
 
-    with open(output.html, "w") as handle:
+
+def gff_has_features(gff):
+    """
+    Return True if the GFF contains at least one gene, mRNA, or CDS feature.
+    """
+    gff = Path(gff)
+
+    if not gff.exists() or gff.stat().st_size == 0:
+        return False
+
+    with open(gff) as handle:
+        for line in handle:
+            if line.startswith("#"):
+                continue
+
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) >= 3 and parts[2] in {"gene", "mRNA", "CDS"}:
+                return True
+
+    return False
+
+
+def write_placeholder(html, json_out, sample, title, reason, detail=None):
+    """
+    Write placeholder fungiSMASH HTML and JSON outputs.
+    """
+    html = Path(html)
+    json_out = Path(json_out)
+
+    html.parent.mkdir(parents=True, exist_ok=True)
+    json_out.parent.mkdir(parents=True, exist_ok=True)
+
+    detail_html = ""
+    if detail:
+        detail_html = f"<p>{detail}</p>\n"
+
+    with open(html, "w") as handle:
         handle.write(
             "<html>\n"
-            "<head><title>No eukaryotic sequences</title></head>\n"
+            f"<head><title>{title}</title></head>\n"
             "<body>\n"
-            "<h1>No eukaryotic sequences are detected</h1>\n"
+            f"<h1>{reason}</h1>\n"
+            f"{detail_html}"
             "</body>\n"
             "</html>\n"
         )
 
-    with open(output.json, "w") as handle:
+    with open(json_out, "w") as handle:
         json.dump(
             {
-                "sample": wildcards.sample_pool,
+                "sample": sample,
                 "taxon": "fungi",
                 "status": "skipped",
                 "reason": reason,
@@ -45,72 +82,132 @@ if not fasta_has_records(input.contigs):
             indent=2,
         )
 
-# Case 2: eukaryotic contigs exist, but augustify produced no gene annotation
-elif "gff" in input.keys() and not gff_has_features(input.gff):
-    reason = "Eukaryotic sequences are detected, but no fungal gene annotations are available"
+
+def main():
+    sample = snakemake.wildcards.sample_pool
+
+    contigs = snakemake.input["contigs"]
+    html = snakemake.output["html"]
+    json_out = snakemake.output["json"]
+
+    outdir = snakemake.params["outdir"]
+    threads = str(snakemake.params["threads"])
+    database_dir = snakemake.params["database_dir"]
+
+    log_path = Path(snakemake.log[0])
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    outdir_path = Path(outdir)
+    outdir_path.mkdir(parents=True, exist_ok=True)
+
+    with open(log_path, "w") as log_handle:
+        log_handle.write(f"[fungismash] sample_pool={sample}\n")
+        log_handle.write(f"[fungismash] input={list(snakemake.input)}\n")
+        log_handle.write(f"[fungismash] output.html={html}\n")
+        log_handle.write(f"[fungismash] output.json={json_out}\n")
+        log_handle.write(f"[fungismash] outdir={outdir}\n")
+        log_handle.write(f"[fungismash] database_dir={database_dir}\n")
+
+    def log(message):
+        with open(log_path, "a") as log_handle:
+            log_handle.write(message + "\n")
+
+    # Case 1: no eukaryotic sequences.
+    # Important: do this before accessing snakemake.input["gff"].
+    if not fasta_has_records(contigs):
+        reason = "No eukaryotic sequences are detected"
+        log(f"[fungismash] {reason}. Writing placeholder outputs.")
+
+        write_placeholder(
+            html=html,
+            json_out=json_out,
+            sample=sample,
+            title="No eukaryotic sequences",
+            reason=reason,
+        )
+
+        return
+
+    # Case 2a: eukaryotic contigs exist, but no GFF was passed.
+    if "gff" not in snakemake.input.keys():
+        reason = "Eukaryotic sequences are detected, but no fungal gene annotations are available"
+        detail = "fungiSMASH was skipped because no augustify GFF file was provided."
+
+        log(f"[fungismash] {reason}. Writing placeholder outputs.")
+
+        write_placeholder(
+            html=html,
+            json_out=json_out,
+            sample=sample,
+            title="No fungal gene annotations",
+            reason=reason,
+            detail=detail,
+        )
+
+        return
+
+    gff = snakemake.input["gff"]
+    log(f"[fungismash] gff={gff}")
+
+    # Case 2b: eukaryotic contigs exist, but augustify produced no gene annotation.
+    if not gff_has_features(gff):
+        reason = "Eukaryotic sequences are detected, but no fungal gene annotations are available"
+        detail = (
+            "fungiSMASH was skipped because the augustify GFF file contains "
+            "no gene, mRNA, or CDS features."
+        )
+
+        log(f"[fungismash] {reason}. Writing placeholder outputs.")
+
+        write_placeholder(
+            html=html,
+            json_out=json_out,
+            sample=sample,
+            title="No fungal gene annotations",
+            reason=reason,
+            detail=detail,
+        )
+
+        return
+
+    # Case 3: normal fungiSMASH run.
+    if not Path(database_dir).is_dir():
+        raise FileNotFoundError(f"antiSMASH database directory not found: {database_dir}")
+
+    cmd = [
+        "antismash",
+        str(contigs),
+        "-c", str(threads),
+        "--genefinding-gff3", str(gff),
+        "--output-dir", str(outdir),
+        "--taxon", "fungi",
+        "--cassis",
+        "--output-basename", "fungal",
+        "--cc-mibig",
+        "--cb-general",
+        "--cb-knownclusters",
+        "--databases", str(database_dir),
+    ]
+
+    log("[fungismash] Eukaryotic sequences and gene annotations detected. Running antiSMASH.")
+    log("[fungismash] command: " + " ".join(cmd))
 
     with open(log_path, "a") as log_handle:
-        log_handle.write(f"[fungismash] {reason}. Writing placeholder outputs.\n")
-        log_handle.write(f"[fungismash] gff={input.gff}\n")
-
-    with open(output.html, "w") as handle:
-        handle.write(
-            "<html>\n"
-            "<head><title>No fungal gene annotations</title></head>\n"
-            "<body>\n"
-            "<h1>Eukaryotic sequences are detected, but no fungal gene annotations are available</h1>\n"
-            "<p>fungiSMASH was skipped because the augustify GFF file contains no gene, mRNA, or CDS features.</p>\n"
-            "</body>\n"
-            "</html>\n"
+        subprocess.run(
+            cmd,
+            stdout=log_handle,
+            stderr=log_handle,
+            check=True,
         )
 
-    with open(output.json, "w") as handle:
-        json.dump(
-            {
-                "sample": wildcards.sample_pool,
-                "taxon": "fungi",
-                "status": "skipped",
-                "reason": reason,
-                "records": [],
-            },
-            handle,
-            indent=2,
-        )
+    if not Path(html).exists() or Path(html).stat().st_size == 0:
+        raise FileNotFoundError(f"Expected output missing or empty: {html}")
 
-# Case 3: normal fungiSMASH run
-else:
-    shell(
-        r"""
-        echo "[fungismash] Eukaryotic sequences and gene annotations detected. Running antiSMASH." >> {log} 2>&1
+    if not Path(json_out).exists() or Path(json_out).stat().st_size == 0:
+        raise FileNotFoundError(f"Expected output missing or empty: {json_out}")
 
-        test -d {params.database_dir} || \
-            (echo "ERROR: antiSMASH database directory not found: {params.database_dir}" >> {log} 2>&1; exit 1)
+    log("[fungismash] antiSMASH finished successfully.")
 
-        echo "[fungismash] FASTA record count:" >> {log} 2>&1
-        grep -c "^>" {input.contigs} >> {log} 2>&1 || true
 
-        echo "[fungismash] GFF feature preview:" >> {log} 2>&1
-        awk '$0 !~ /^#/ {{print; count++}} count==5 {{exit}}' {input.gff} >> {log} 2>&1 || true
-
-        antismash {input.contigs} \
-            -c {params.threads} \
-            --genefinding-gff3 {input.gff} \
-            --output-dir {params.outdir} \
-            --taxon fungi \
-            --cassis \
-            --output-basename fungal \
-            --cc-mibig \
-            --cb-general \
-            --cb-knownclusters \
-            --databases {params.database_dir} \
-            >> {log} 2>&1
-
-        echo "[fungismash] antiSMASH finished." >> {log} 2>&1
-
-        test -s {output.html} || \
-            (echo "ERROR: expected output missing or empty: {output.html}" >> {log} 2>&1; exit 1)
-
-        test -s {output.json} || \
-            (echo "ERROR: expected output missing or empty: {output.json}" >> {log} 2>&1; exit 1)
-        """
-    )
+if __name__ == "__main__":
+    main()
