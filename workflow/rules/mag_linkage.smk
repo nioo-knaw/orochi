@@ -118,7 +118,7 @@ rule markermag_link:
         mem_mb=config['max_mem']
     shell:
         "MarkerMAG link -p {wildcards.sample_pool} -r1 {input.forward_reads} -r2 {input.reverse_reads} \
-        -marker {input.phyloflash} -mag {input.mag_fasta} -o {output.markerMAG_dir} -x fa -t {threads} -force"
+        -marker {input.phyloflash} -mag {input.mag_fasta} -o {output.markerMAG_dir} -x fa -t {threads} -force -skip_cn"
 
 
 rule add_taxonomy_maglinkage:

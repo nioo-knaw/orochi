@@ -4,7 +4,7 @@ rule spades:
         forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
     output:
-        f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/{{sample}}_contigs.fasta",
+        f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/contigs.fasta",
     params:
         outdir = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}",
         kmers = config['kmers']

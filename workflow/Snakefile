@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-
+from pathlib import Path
 
 if os.path.isfile("config/configfile.yaml"):
     configfile: "config/configfile.yaml"
@@ -54,6 +54,66 @@ minsize = config["min_contig_length"]
 #
 # for smk,rule in smks:
 #     include: smk
+
+def fasta_has_records(fasta):
+    fasta = Path(fasta)
+
+    if not fasta.exists() or fasta.stat().st_size == 0:
+        return False
+
+    with open(fasta) as handle:
+        for line in handle:
+            if line.startswith(">"):
+                return True
+
+    return False
+
+
+def gff_has_features(gff):
+    """
+    Return True if the GFF file contains at least one gene, mRNA, or CDS feature.
+    """
+    gff = Path(gff)
+
+    if not gff.exists() or gff.stat().st_size == 0:
+        return False
+
+    with open(gff) as handle:
+        for line in handle:
+            if line.startswith("#"):
+                continue
+
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) >= 3 and parts[2] in {"gene", "mRNA", "CDS"}:
+                return True
+
+    return False
+
+def fungal_summary_targets(wildcards):
+    """
+    Return fungal_summary.tsv only if the current assembly unit has
+    eukaryotic sequences and augustify produced gene annotations.
+
+    Otherwise return an empty list, so summarize_antismash_fungal
+    will not be requested.
+    """
+    sample_pool = wildcards.sample_pool
+
+    whokaryote_ckpt = checkpoints.whokaryote.get(sample=sample_pool)
+    euk_fasta = whokaryote_ckpt.output.euk_fasta
+
+    if not fasta_has_records(euk_fasta):
+        return []
+
+    augustify_ckpt = checkpoints.augustify.get(sample=sample_pool)
+    gff = augustify_ckpt.output.gff
+
+    if not gff_has_features(gff):
+        return []
+
+    return [
+        f"{outdir}/results/08_BGC/antismash/{sample_pool}/fungal/fungal_summary.tsv"
+    ]
 
 include: "rules/common.smk"
 include: "rules/preprocessing.smk"

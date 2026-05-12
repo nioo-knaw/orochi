@@ -39,9 +39,9 @@ rule CAT:
     shell:
         """
         mkdir -p {params.out_dir}
-        CAT_pack contigs -c {input.contigs} -n {threads} -d {params.db} -t {params.tax} -p {input.proteins} -o {params.out_dir}{params.prefix}
-        CAT_pack add_names -i {output.CAT} -o {output.names} -t {params.tax} --only_official --exclude_scores
-        CAT_pack summarise -c {input.contigs} -i {output.names} -o {output.summary}
+        CAT_pack contigs -c {input.contigs} -n {threads} -d {params.db} -t {params.tax} -p {input.proteins} -o {params.out_dir}{params.prefix} --force
+        CAT_pack add_names -i {output.CAT} -o {output.names} -t {params.tax} --only_official --exclude_scores --force
+        CAT_pack summarise -c {input.contigs} -i {output.names} -o {output.summary} --force
         """
 
 rule MetaPhlAn4:

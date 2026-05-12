@@ -323,7 +323,7 @@ checkpoint dereplicate_bins:
         "../envs/drep.yaml"
     shell:
         """
-        if [ $(echo "{input.input_file}" | tr ' ' '\n' | wc -l) -gt 1 ]; then
+        if [ $(wc -l < {input.input_file}) -gt 1 ]; then
             dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info} -comp {params.completeness_T} -con {params.contamination_T} --S_algorithm {params.S_algorithm}
         else
             mkdir -p {output.dereplicated_bins}

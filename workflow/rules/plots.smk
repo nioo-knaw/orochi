@@ -51,7 +51,7 @@ rule report:
                 "src": f"{outdir}/results/08_BGC/antismash/{sp}/fungal",
                 "dst": f"{outdir}/results/09_plots/rsc/{sp}/antismash_fun/"
             }
-            for sp in sorted(set(samples["sample_pool"]))
+            for sp in ASSEMBLY_UNITS
         ]),
         rep_antismash_bac = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_bac/",
             sample_pool=ASSEMBLY_UNITS
