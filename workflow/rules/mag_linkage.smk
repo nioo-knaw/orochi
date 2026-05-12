@@ -96,14 +96,41 @@ rule fastq_2_fasta:
         seqkit fq2fa {input.reverse_reads} -o {output.fasta_reverse} --threads {threads}
         """
 
+rule build_markermag_mag_dir:
+    input:
+        drep_done=f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done",
+        input_bins=f"{outdir}/results/06_binning/drep/input_bins.txt"
+    output:
+        mag_dir=directory(
+            f"{outdir}/results/06_binning/drep/markermag_by_sample/{{sample_pool}}/dereplicated_genomes"
+        ),
+        done=touch(
+            f"{outdir}/results/06_binning/drep/markermag_by_sample/{{sample_pool}}/dereplicated_genomes/.done"
+        )
+    conda:
+        "../envs/drep.yaml"
+    params:
+        drep_dir=f"{outdir}/results/06_binning/drep",
+        script=os.path.abspath("workflow/scripts/build_markermag_mag_dirs.py"),
+        copy_mode=config.get("markermag_mag_copy_mode", "symlink")
+    shell:
+        """
+        python {params.script} \
+            --drep-dir {params.drep_dir} \
+            --input-bins {input.input_bins} \
+            --sample-pool {wildcards.sample_pool} \
+            --out-dir {output.mag_dir} \
+            --copy-mode {params.copy_mode} \
+            --done {output.done}
+        """
 
 rule markermag_link:
     input:
         forward_reads=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_R1.fasta",
         reverse_reads=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_R2.fasta",
         phyloflash=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.all.final.fasta",
-        mag_fasta=f"{outdir}/results/06_binning/drep/dereplicated_genomes",
-        drep_done=f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done"
+        mag_fasta=f"{outdir}/results/06_binning/drep/markermag_by_sample/{{sample_pool}}/dereplicated_genomes",
+        mag_fasta_done=f"{outdir}/results/06_binning/drep/markermag_by_sample/{{sample_pool}}/dereplicated_genomes/.done"
     output:
         markerMAG_link=f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome.txt",
         markerMAG_dir=directory(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag"),
@@ -116,10 +143,32 @@ rule markermag_link:
         # With more threads the file number limit will be reached (>1024 open files).
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/markermag/{{sample_pool}}.log"
     shell:
-        "MarkerMAG link -p {wildcards.sample_pool} -r1 {input.forward_reads} -r2 {input.reverse_reads} \
-        -marker {input.phyloflash} -mag {input.mag_fasta} -o {output.markerMAG_dir} -x fa -t {threads} -force -skip_cn"
+        r"""
+        mkdir -p $(dirname {log})
+        exec > {log} 2>&1
+        set -x
 
+        echo "[MarkerMAG] sample_pool={wildcards.sample_pool}"
+        echo "[MarkerMAG] MAG directory: {input.mag_fasta}"
+        echo "[MarkerMAG] Number of MAGs:"
+        find {input.mag_fasta} -maxdepth 1 -type f -name "*.fa" | wc -l
+
+        MarkerMAG link \
+            -p {wildcards.sample_pool} \
+            -r1 {input.forward_reads} \
+            -r2 {input.reverse_reads} \
+            -marker {input.phyloflash} \
+            -mag {input.mag_fasta} \
+            -o {output.markerMAG_dir} \
+            -x fa \
+            -t {threads} \
+            -force
+
+        touch {output.markermag_done}
+        """
 
 rule add_taxonomy_maglinkage:
     input:

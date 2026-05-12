@@ -324,7 +324,7 @@ checkpoint dereplicate_bins:
     shell:
         """
         if [ $(wc -l < {input.input_file}) -gt 1 ]; then
-            dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info} -comp {params.completeness_T} -con {params.contamination_T} --S_algorithm {params.S_algorithm}
+            dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info} -comp {params.completeness_T} -con {params.contamination_T} --S_algorithm {params.S_algorithm} --skip_plots
         else
             mkdir -p {output.dereplicated_bins}
             cp $(cat {input.input_file}) {output.dereplicated_bins}/
