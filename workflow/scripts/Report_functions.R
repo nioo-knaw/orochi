@@ -388,7 +388,7 @@ kegg_plots_list <- list()
 cog_plots_list <- list()
 for (trt in treatments) {
   
-  salmon_file <- file.path(base_dir_05, "salmon", trt, paste0(trt, "_ORF_TPM.tsv"))
+  salmon_file <- file.path(base_dir_05, "salmon/merged", trt, paste0(trt, "_ORF_TPM.tsv"))
   eggnog_file <- file.path(base_dir_05, "eggnog", trt, paste0(trt, ".emapper.annotations.adjusted"))
   
   # Check files exist (prevents crashing)
