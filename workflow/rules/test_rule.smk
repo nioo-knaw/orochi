@@ -5,7 +5,7 @@ rule downstream_test_pool:
         f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_metabat2.done",
         f"{outdir}/results/06_binning/maxbin2/{{sample_pool}}/{{sample_pool}}_maxbin2.done",
         f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool.done",
-        f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done",
+        f"{outdir}/results/06_binning/drep/drep.done",
         # test_target,
         # f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
         # f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta.gz",
