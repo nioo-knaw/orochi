@@ -396,38 +396,57 @@ for (trt in treatments) {
     
     salmon_counts <- read.delim(salmon_file, header = TRUE, stringsAsFactors = FALSE)
     eggnog_out   <- read.delim(eggnog_file, header = TRUE, stringsAsFactors = FALSE)
-    
+
     merged_list[[trt]] <- eggnog_out %>%
       inner_join(salmon_counts, by = c("X.query" = "Name"))
-    
+    sample_cols <- setdiff(names(salmon_counts), "Name")
     kegg_counting <- merged_list[[trt]] %>%
-      select(X.query, KEGG_Pathway, all_of(names(merged_list[[trt]])[(which(names(merged_list[[trt]]) == "PFAMs") + 1):ncol(merged_list[[trt]])])) %>%
-      filter(KEGG_Pathway != "-") %>%  # remove genes with no KEGG annotation
+      select(X.query, KEGG_Pathway, all_of(sample_cols)) %>%
+      filter(!is.na(KEGG_Pathway), KEGG_Pathway != "-", KEGG_Pathway != "") %>%
       mutate(
         KEGG_Pathway = sapply(
           str_split(KEGG_Pathway, ","),
-          function(x) paste(x[str_starts(x, "ko")], collapse = ",")
+          function(x) {
+            x <- trimws(x)
+            keep <- x[str_starts(x, "ko")]
+            paste(keep, collapse = ",")
+          }
         )
       ) %>%
       filter(KEGG_Pathway != "") %>%
-      mutate(KEGG_Pathway = word(KEGG_Pathway, 1, sep = ","))
-    
-    # Incorporating nice names
+      mutate(
+        KEGG_Pathway = word(KEGG_Pathway, 1, sep = ",")
+      )
     kegg_counting_named <- kegg_counting %>%
       left_join(kegg_map, by = "KEGG_Pathway") %>%
-      mutate(Pathway_name = ifelse(is.na(Pathway_name), KEGG_Pathway, Pathway_name)) # fallback if missing
-    
-    # To get a table with the pathways corresponding to the categories that should be deleted (5-7) as well
-    # Removing from my own data the rows that contain a pathway listed in the 5to7 table
-    kegg_counting_named_filtered <- kegg_counting_named[!kegg_counting_named$Pathway_name %in% df$pathway_name,]
-    
-    # Keeping only the further used columns
-    kegg_counting_named_adj <- kegg_counting_named_filtered[,3:length(kegg_counting_named_filtered)]
-    
+      mutate(
+        Pathway_name = ifelse(
+          is.na(Pathway_name),
+          KEGG_Pathway,
+          Pathway_name
+        )
+      )
+    kegg_counting_named_filtered <- kegg_counting_named %>%
+      filter(!Pathway_name %in% df$pathway_name)
     # Average per Pathway for all samples
-    kegg_counting_averaged <- kegg_counting_named_adj %>%
-      group_by(Pathway_name) %>%
-      summarise(across(-last_col(), \(x) mean(x, na.rm = TRUE)))
+    if (nrow(kegg_counting_named_filtered) == 0 || length(sample_cols) == 0) {
+      
+      kegg_counting_averaged <- tibble(
+        `KEGG Pathway name` = character()
+      )
+      
+    } else {
+      
+      kegg_counting_averaged <- kegg_counting_named_filtered %>%
+        mutate(across(all_of(sample_cols), as.numeric)) %>%
+        group_by(Pathway_name) %>%
+        summarise(
+          across(all_of(sample_cols), \(x) mean(x, na.rm = TRUE)),
+          .groups = "drop"
+        )
+      
+      colnames(kegg_counting_averaged)[1] <- "KEGG Pathway name"
+    }
     
     colnames(kegg_counting_averaged)[1] <- "KEGG Pathway name"
     write.csv(kegg_counting_averaged, file.path(outdir, plotsdircontigs, paste0(trt, "_KEGG_functions.csv")), row.names = FALSE)
@@ -435,34 +454,117 @@ for (trt in treatments) {
     ## FOR PLOTTING
     # Keep top 30 for plot
     # First, a column where the sum of all columns is stored to be able to know which ones are the most abundant ones
-    kegg_counting_averaged$sum <- rowSums(kegg_counting_averaged[, sapply(kegg_counting_averaged, is.numeric)])
+    kegg_counting_averaged$sum <- rowSums(
+      kegg_counting_averaged[, sapply(kegg_counting_averaged, is.numeric), drop = FALSE],
+      na.rm = TRUE
+    )
     top_n <- 30
+
     kegg_count_top <- kegg_counting_averaged %>%
       slice_max(order_by = sum, n = top_n)
-    kegg_count_top <- kegg_count_top[,-length(kegg_count_top)]
-    
-    kegg_count_top_long <- pivot_longer(kegg_count_top, cols = colnames(kegg_count_top[,2:length(kegg_count_top)]), names_to = "Sample", values_to = "Count")
-    colnames(kegg_count_top_long)[1] <- "Pathway_name"
-    
-    # Filtering the ones with a count of zero so they do not show up in the plot
-    kegg_count_top_long_filt <- kegg_count_top_long |> 
-      dplyr::filter(Count > 0)
-    
-    # Plot
-    k1 <- ggplot(kegg_count_top_long_filt, aes(x = Sample, y = reorder(Pathway_name, Count))) +
-      geom_point(aes(size = Count, color = Count)) +
-      scale_color_gradient(low = "lightblue", high = "darkblue") +
-      scale_size(range = c(1.5, 9)) +
-      theme_minimal() +
-      labs(
-        x = "",
-        y = "KEGG Pathway",
-        title = paste0("KEGG Pathway Dotplot (Top 30) - Assembly ", trt),
-        color = "TPM",
-        size = "TPM"
+
+    # Remove the sum column
+    kegg_count_top <- kegg_count_top[, -ncol(kegg_count_top), drop = FALSE]
+
+    # Check whether there are sample/count columns
+    if (ncol(kegg_count_top) < 2) {
+      
+      message("No KEGG abundance columns available for treatment: ", trt)
+      
+      k1 <- ggplot() +
+        annotate(
+          "text",
+          x = 0.5,
+          y = 0.5,
+          label = paste0(
+            "No KEGG abundance data available\n\n",
+            "Assembly: ", trt
+          ),
+          size = 6,
+          hjust = 0.5,
+          vjust = 0.5
+        ) +
+        xlim(0, 1) +
+        ylim(0, 1) +
+        theme_void() +
+        labs(title = paste0("KEGG Pathway Dotplot (Top 30) - Assembly ", trt)) +
+        theme(
+          plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+        )
+      
+    } else {
+      
+      kegg_count_top_long <- pivot_longer(
+        kegg_count_top,
+        cols = -1,
+        names_to = "Sample",
+        values_to = "Count"
       )
-    
-    ggplot2::ggsave(filename = file.path(outdir,plotsdircontigs,paste0(trt,".KEGG_top30.tiff")), plot = k1, width = 8, height = 8, units = "in", dpi = 500, compression = "lzw")
+      
+      colnames(kegg_count_top_long)[1] <- "Pathway_name"
+      
+      kegg_count_top_long_filt <- kegg_count_top_long %>%
+        dplyr::filter(Count > 0)
+      
+      if (nrow(kegg_count_top_long_filt) == 0) {
+        
+        message("All KEGG values are zero for treatment: ", trt)
+        
+        k1 <- ggplot() +
+          annotate(
+            "text",
+            x = 0.5,
+            y = 0.5,
+            label = paste0(
+              "No KEGG pathway with TPM > 0\n\n",
+              "Assembly: ", trt
+            ),
+            size = 6,
+            hjust = 0.5,
+            vjust = 0.5
+          ) +
+          xlim(0, 1) +
+          ylim(0, 1) +
+          theme_void() +
+          labs(title = paste0("KEGG Pathway Dotplot (Top 30) - Assembly ", trt)) +
+          theme(
+            plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+          )
+        
+      } else {
+        
+        k1 <- ggplot(
+          kegg_count_top_long_filt,
+          aes(x = Sample, y = reorder(Pathway_name, Count))
+        ) +
+          geom_point(aes(size = Count, color = Count)) +
+          scale_color_gradient(low = "lightblue", high = "darkblue") +
+          scale_size(range = c(1.5, 9)) +
+          guides(
+            color = guide_colorbar(order = 1),
+            size = guide_legend(order = 2)
+          ) +
+          theme_minimal() +
+          labs(
+            x = "",
+            y = "KEGG Pathway",
+            title = paste0("KEGG Pathway Dotplot (Top 30) - Assembly ", trt),
+            color = "TPM",
+            size = "TPM"
+          )
+      }
+    }
+
+    ggplot2::ggsave(
+      filename = file.path(outdir, plotsdircontigs, paste0(trt, ".KEGG_top30.tiff")),
+      plot = k1,
+      width = 8,
+      height = 8,
+      units = "in",
+      dpi = 500,
+      compression = "lzw"
+    )
+
     kegg_plots_list[[trt]] <- k1
     
     
@@ -476,7 +578,7 @@ for (trt in treatments) {
     cog_counting <- cog_counting[cog_counting$COG_category != "-",]
     cog_counting_averaged <- cog_counting %>%
       group_by(COG_category) %>%
-      summarise(across(-last_col(), \(x) mean(x, na.rm = TRUE)))
+      summarise(across(where(is.numeric), \(x) mean(x, na.rm = TRUE)), .groups = "drop")
     
     colnames(cog_counting_averaged)[1] <- "COG Category"
     write.csv(cog_counting_averaged, file.path(outdir, plotsdircontigs, paste0(trt, "_COG_functions.csv")), row.names = FALSE)
@@ -484,33 +586,118 @@ for (trt in treatments) {
     ## For the COG plot
     # Keep top 30 for plot
     # First, a column where the sum of all columns is stored to be able to know which ones are the most abundant ones
-    cog_counting_averaged$sum <- rowSums(cog_counting_averaged[, sapply(cog_counting_averaged, is.numeric)])
+    cog_counting_averaged$sum <- rowSums(
+      cog_counting_averaged[, sapply(cog_counting_averaged, is.numeric), drop = FALSE],
+      na.rm = TRUE
+    )
+
     top_n <- 30
+
     cog_count_top <- cog_counting_averaged %>%
       slice_max(order_by = sum, n = top_n)
-    cog_count_top <- cog_count_top[,-length(cog_count_top)]
-    
-    cog_count_top_long <- pivot_longer(cog_count_top, cols = colnames(cog_count_top[,2:length(kegg_count_top)]), names_to = "Sample", values_to = "Count")
-    colnames(cog_count_top_long)[1] <- "COG_Category"
-    
-    # Filtering the ones with a count of zero so they do not show up in the plot
-    cog_count_top_long_filt <- cog_count_top_long |> 
-      dplyr::filter(Count > 0)
-    
-    # Plot
-    c1 <- ggplot(cog_count_top_long_filt, aes(x = Sample, y = reorder(COG_Category, Count))) +
-      geom_point(aes(size = Count, color = Count)) +
-      scale_color_gradient(low = "#EEE0E5", high = "magenta4") +
-      theme_minimal() +
-      labs(
-        x = "",
-        y = "COG Category",
-        title = paste0("COG Category Dotplot (Top 30) - Assembly ", trt),
-        color = "TPM",
-        size = "TPM"
+
+    # Remove the sum column
+    cog_count_top <- cog_count_top[, -ncol(cog_count_top), drop = FALSE]
+
+    # Check whether there are sample/count columns
+    if (ncol(cog_count_top) < 2) {
+      
+      message("No COG abundance columns available for treatment: ", trt)
+      
+      c1 <- ggplot() +
+        annotate(
+          "text",
+          x = 0.5,
+          y = 0.5,
+          label = paste0(
+            "No COG abundance data available\n\n",
+            "Assembly: ", trt
+          ),
+          size = 6,
+          hjust = 0.5,
+          vjust = 0.5
+        ) +
+        xlim(0, 1) +
+        ylim(0, 1) +
+        theme_void() +
+        labs(title = paste0("COG Category Dotplot (Top 30) - Assembly ", trt)) +
+        theme(
+          plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+        )
+      
+    } else {
+      
+      cog_count_top_long <- pivot_longer(
+        cog_count_top,
+        cols = -1,
+        names_to = "Sample",
+        values_to = "Count"
       )
-    
-    ggplot2::ggsave(filename = file.path(outdir,plotsdircontigs,paste0(trt,".COG_top30.tiff")), plot = c1, width = 4, height = 8, units = "in", dpi = 500, compression = "lzw")
+      
+      colnames(cog_count_top_long)[1] <- "COG_Category"
+      
+      cog_count_top_long_filt <- cog_count_top_long %>%
+        dplyr::filter(Count > 0)
+      
+      if (nrow(cog_count_top_long_filt) == 0) {
+        
+        message("All COG values are zero for treatment: ", trt)
+        
+        c1 <- ggplot() +
+          annotate(
+            "text",
+            x = 0.5,
+            y = 0.5,
+            label = paste0(
+              "No COG category with TPM > 0\n\n",
+              "Assembly: ", trt
+            ),
+            size = 6,
+            hjust = 0.5,
+            vjust = 0.5
+          ) +
+          xlim(0, 1) +
+          ylim(0, 1) +
+          theme_void() +
+          labs(title = paste0("COG Category Dotplot (Top 30) - Assembly ", trt)) +
+          theme(
+            plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+          )
+        
+      } else {
+        
+        c1 <- ggplot(
+          cog_count_top_long_filt,
+          aes(x = Sample, y = reorder(COG_Category, Count))
+        ) +
+          geom_point(aes(size = Count, color = Count)) +
+          scale_color_gradient(low = "#EEE0E5", high = "magenta4") +
+          scale_size(range = c(1.5, 9)) +
+          guides(
+            color = guide_colorbar(order = 1),
+            size = guide_legend(order = 2)
+          ) +
+          theme_minimal() +
+          labs(
+            x = "",
+            y = "COG Category",
+            title = paste0("COG Category Dotplot (Top 30) - Assembly ", trt),
+            color = "TPM",
+            size = "TPM"
+          )
+      }
+    }
+
+    ggplot2::ggsave(
+      filename = file.path(outdir, plotsdircontigs, paste0(trt, ".COG_top30.tiff")),
+      plot = c1,
+      width = 4,
+      height = 8,
+      units = "in",
+      dpi = 500,
+      compression = "lzw"
+    )
+
     cog_plots_list[[trt]] <- c1
   }
 }

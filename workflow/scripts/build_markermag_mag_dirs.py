@@ -161,6 +161,15 @@ def collect_representatives(derep_genomes_dir):
 
 
 def link_or_copy(src, dst, copy_mode):
+    src = Path(src)
+    dst = Path(dst)
+
+    if not src.exists():
+        raise FileNotFoundError(
+            f"Representative MAG does not exist: {src}. "
+            "This usually means dRep output is stale or dereplicated_genomes was partially deleted."
+        )
+
     dst.parent.mkdir(parents=True, exist_ok=True)
 
     if dst.exists() or dst.is_symlink():
@@ -293,6 +302,16 @@ def main():
             "MarkerMAG may fail if this sample has no MAGs."
         )
 
+    bad_links = []
+    for item in args.out_dir.iterdir():
+        if item.is_symlink() and not item.exists():
+            bad_links.append(str(item))
+
+    if bad_links:
+        raise RuntimeError(
+            "Broken symlinks were created:\n" + "\n".join(bad_links)
+        )
+    
     args.done.parent.mkdir(parents=True, exist_ok=True)
     args.done.write_text(
         f"sample_pool\t{args.sample_pool}\n"

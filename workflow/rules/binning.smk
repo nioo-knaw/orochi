@@ -302,33 +302,66 @@ rule prepare_drep_input:
 
 checkpoint dereplicate_bins:
     input:
-        input_file = f"{outdir}/results/06_binning/drep/input_bins.txt",
+        input_file=f"{outdir}/results/06_binning/drep/input_bins.txt",
         combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
     output:
-        dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes"),
-        done = touch(f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done")
+        dereplicated_bins=directory(
+            f"{outdir}/results/06_binning/drep/dereplicated_genomes"
+        ),
+        done=touch(
+            f"{outdir}/results/06_binning/drep/drep.done"
+        )
     params:
-        drep_output = f"{outdir}/results/06_binning/drep",
-        completeness_T = config['completeness_threshold'],
-        contamination_T = config['contamination_threshold'],
-        S_algorithm = config['S_algorithm']
-        # bin_dirs = lambda _, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))]),
+        drep_output=f"{outdir}/results/06_binning/drep",
+        completeness_T=config["completeness_threshold"],
+        contamination_T=config["contamination_threshold"],
+        S_algorithm=config["S_algorithm"]
     threads:
-        config['threads']
+        config["threads"]
     resources:
-        mem_mb=config['max_mem']
-    # log:
-    #     debug_log = f"{outdir}/results/06_binning/drep/drep_rule.log"
+        mem_mb=config["max_mem"]
     conda:
         "../envs/drep.yaml"
     shell:
-        """
-        if [ $(wc -l < {input.input_file}) -gt 1 ]; then
-            dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info} -comp {params.completeness_T} -con {params.contamination_T} --S_algorithm {params.S_algorithm} --skip_plots
+        r"""
+        set -euo pipefail
+
+        n_bins=$(grep -cv '^[[:space:]]*$' {input.input_file})
+
+        # Clean stale dRep outputs before rerun.
+        # This avoids old data_tables/done files being combined with missing representatives.
+        rm -rf {params.drep_output}/data
+        rm -rf {params.drep_output}/data_tables
+        rm -rf {params.drep_output}/dereplicated_genomes
+        rm -rf {params.drep_output}/figures
+        rm -f  {params.drep_output}/drep.done
+
+        mkdir -p {params.drep_output}
+
+        if [ "$n_bins" -gt 1 ]; then
+            dRep dereplicate {params.drep_output} \
+                -g {input.input_file} \
+                -p {threads} \
+                --genomeInfo {input.combined_info} \
+                -comp {params.completeness_T} \
+                -con {params.contamination_T} \
+                --S_algorithm {params.S_algorithm} \
+                --skip_plots
         else
             mkdir -p {output.dereplicated_bins}
-            cp $(cat {input.input_file}) {output.dereplicated_bins}/
+            cp "$(grep -v '^[[:space:]]*$' {input.input_file})" {output.dereplicated_bins}/
         fi
+
+        # Validate representative MAGs exist.
+        n_reps=$(find {output.dereplicated_bins} -maxdepth 1 -type f \
+            \( -name "*.fa" -o -name "*.fna" -o -name "*.fasta" \) | wc -l)
+
+        if [ "$n_reps" -eq 0 ]; then
+            echo "ERROR: dRep finished but no representative MAGs were found in {output.dereplicated_bins}" >&2
+            exit 1
+        fi
+
+        touch {output.done}
         """
 
 rule mag_depth:

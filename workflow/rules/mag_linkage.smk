@@ -98,7 +98,7 @@ rule fastq_2_fasta:
 
 rule build_markermag_mag_dir:
     input:
-        drep_done=f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done",
+        drep_done=f"{outdir}/results/06_binning/drep/drep.done",
         input_bins=f"{outdir}/results/06_binning/drep/input_bins.txt"
     output:
         mag_dir=directory(
@@ -114,7 +114,10 @@ rule build_markermag_mag_dir:
         script=os.path.abspath("workflow/scripts/build_markermag_mag_dirs.py"),
         copy_mode=config.get("markermag_mag_copy_mode", "symlink")
     shell:
-        """
+        r"""
+        rm -rf {output.mag_dir}
+        mkdir -p {output.mag_dir}
+
         python {params.script} \
             --drep-dir {params.drep_dir} \
             --input-bins {input.input_bins} \
@@ -133,18 +136,17 @@ rule markermag_link:
         mag_fasta_done=f"{outdir}/results/06_binning/drep/markermag_by_sample/{{sample_pool}}/dereplicated_genomes/.done"
     output:
         markerMAG_link=f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome.txt",
-        markerMAG_dir=directory(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag"),
         markermag_done=touch(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/markermag.done")
     conda:
         "../envs/markerMAG.yaml"
     threads:
         64
-        # This is a maximum number of threads, MarkerMAG will use less if not available.
-        # With more threads the file number limit will be reached (>1024 open files).
     resources:
-        mem_mb=config['max_mem']
+        mem_mb=config["max_mem"]
     log:
         f"{outdir}/logs/markermag/{{sample_pool}}.log"
+    params:
+        markermag_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag"
     shell:
         r"""
         mkdir -p $(dirname {log})
@@ -153,8 +155,27 @@ rule markermag_link:
 
         echo "[MarkerMAG] sample_pool={wildcards.sample_pool}"
         echo "[MarkerMAG] MAG directory: {input.mag_fasta}"
-        echo "[MarkerMAG] Number of MAGs:"
-        find {input.mag_fasta} -maxdepth 1 -type f -name "*.fa" | wc -l
+
+        n_mags=$(find -L {input.mag_fasta} -maxdepth 1 -type f \
+            \( -name "*.fa" -o -name "*.fna" -o -name "*.fasta" \) | wc -l)
+
+        echo "[MarkerMAG] Number of valid MAGs: $n_mags"
+
+        if [ "$n_mags" -eq 0 ]; then
+            echo "ERROR: No valid MAG fasta files found for {wildcards.sample_pool}" >&2
+            echo "MAG directory: {input.mag_fasta}" >&2
+            exit 1
+        fi
+
+        broken_links=$(find {input.mag_fasta} -maxdepth 1 -xtype l | wc -l)
+        if [ "$broken_links" -gt 0 ]; then
+            echo "ERROR: Broken symlinks found in {input.mag_fasta}" >&2
+            find {input.mag_fasta} -maxdepth 1 -xtype l -ls >&2
+            exit 1
+        fi
+
+        rm -rf {params.markermag_dir}
+        mkdir -p {params.markermag_dir}
 
         MarkerMAG link \
             -p {wildcards.sample_pool} \
@@ -162,10 +183,15 @@ rule markermag_link:
             -r2 {input.reverse_reads} \
             -marker {input.phyloflash} \
             -mag {input.mag_fasta} \
-            -o {output.markerMAG_dir} \
+            -o {params.markermag_dir} \
             -x fa \
             -t {threads} \
             -force
+
+        if [ ! -s {output.markerMAG_link} ]; then
+            echo "[MarkerMAG] No genome-level linkage detected. Writing empty placeholder."
+            printf "MarkerGene\tGenomicSeq\n" > {output.markerMAG_link}
+        fi
 
         touch {output.markermag_done}
         """
