@@ -576,6 +576,38 @@ plot8_binsummary <- function() {
   print(bin)
 }
 
+read_table_safe <- function(file) {
+  df <- read.table(file, header = TRUE, sep = "\t", quote = "", comment.char = "")
+  if (nrow(df) == 0) {
+    message(paste("File", file, "contains only a header (no data)."))
+    return(NULL)  # or return(df) if you prefer keeping empty dfs
+  }
+  return(df)
+}
+
+make_empty_plot <- function(assembly, message_text) {
+  ggplot() +
+    annotate(
+      "text",
+      x = 0.5,
+      y = 0.5,
+      label = message_text,
+      size = 6,
+      hjust = 0.5,
+      vjust = 0.5
+    ) +
+    xlim(0, 1) +
+    ylim(0, 1) +
+    theme_void() +
+    labs(title = paste0("16S-MAG Linkage for pool ", assembly)) +
+    theme(
+      plot.title = element_text(
+        size = 14,
+        hjust = 0.5,
+        face = "bold"
+      )
+    )
+}
 
 # MAG-Linkage
 contig_files <- list.files(base_dir, pattern = "_linkages_by_contig\\.txt$", 
@@ -591,9 +623,55 @@ for (contig_file in contig_files) {
   message("Processing assembly: ", assembly)
   
   # --- Load data ---
-  df1 <- read.table(contig_file, header = TRUE, sep = "\t", quote = "", comment.char = "")
-  df2 <- read.table(genome_file, header = TRUE, sep = "\t", quote = "", comment.char = "")
-  
+  df1 <- read_table_safe(contig_file)
+  df2 <- read_table_safe(genome_file)
+
+  output_plot_file <- file.path(
+    outdir,
+    plotsdirbins,
+    paste0(assembly, "_MAGlinkage.tiff")
+  )
+
+  # If either input file has only header / no rows,
+  # save a placeholder plot instead of skipping silently.
+  if (is.null(df1) || is.null(df2)) {
+    
+    if (is.null(df1) && is.null(df2)) {
+      message_text <- paste0(
+        "No linkage data available\n\n",
+        "Both contig-level and genome-level linkage files contain no data."
+      )
+    } else if (is.null(df1)) {
+      message_text <- paste0(
+        "No contig-level linkage data available\n\n",
+        basename(contig_file),
+        " contains only a header."
+      )
+    } else {
+      message_text <- paste0(
+        "No genome-level linkage data available\n\n",
+        basename(genome_file),
+        " contains only a header."
+      )
+    }
+
+    plot <- make_empty_plot(assembly, message_text)
+
+    ggplot2::ggsave(
+      filename = output_plot_file,
+      plot = plot,
+      dpi = 500,
+      width = 12,
+      height = 10,
+      units = "in",
+      compression = "lzw"
+    )
+
+    all_plots[[assembly]] <- plot
+
+    message("Saved placeholder plot for assembly ", assembly)
+    next
+  }
   # --- Prepare data ---
   df1 <- df1 %>%
     tidyr::separate(Marker___Genome.total., into = c("MarkerGene", "GenomicSeq_total"), sep = "___") %>%
@@ -630,7 +708,7 @@ for (contig_file in contig_files) {
       legend.justification = c(1, 1),
       legend.background = element_rect(fill = "transparent", color = NA)
     )
-  ggplot2::ggsave(filename = file.path(outdir, plotsdirbins, paste0(assembly,"_MAGlinkage.tiff")), plot = plot, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
+  ggplot2::ggsave(filename = output_plot_file, plot = plot, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
   all_plots[[assembly]] <- plot
 }
 
@@ -697,11 +775,83 @@ for (tr in treatments) {
         }
       )
     )
-  binstax <- cbind(bins,tax$taxonomy_concat)
-  colnames(binstax)[4] <- "taxonomy_concat"
+# Detect ID columns
+bins_id_col <- names(bins)[1]
+tax_id_col  <- names(tax)[1]
+
+bins <- bins %>%
+  rename(bin_id = all_of(bins_id_col))
+
+tax <- tax %>%
+  rename(bin_id = all_of(tax_id_col))
+
+# Build taxonomy string for each BAT assignment
+tax <- tax %>%
+  mutate(
+    taxonomy_concat = pmap_chr(
+      select(., superkingdom, phylum, class, order, family, genus, species),
+      ~ {
+        values <- list(...)
+        col_names <- c("kingdom", "phylum", "class", "order", "family", "genus", "species")
+        
+        out <- map2_chr(values, col_names, function(val, col) {
+          if (is.na(val) || val == "no support" || val == "") return("")
+          
+          prefix <- substr(col, 1, 1)
+          paste0(prefix, "_", val)
+        })
+        
+        out <- out[out != ""]
+        
+        if (length(out) == 0) {
+          return("unclassified")
+        }
+        
+        paste(out, collapse = ";")
+      }
+    )
+  )
+
+# Collapse multiple BAT taxonomy assignments per bin
+tax_collapsed <- tax %>%
+  group_by(bin_id) %>%
+  summarise(
+    taxonomy_concat = paste(unique(taxonomy_concat), collapse = " | "),
+    n_taxonomy_assignments = n(),
+    .groups = "drop"
+  )
+
+# Optional: report bins with multiple taxonomy assignments
+multi_tax <- tax_collapsed %>%
+  filter(n_taxonomy_assignments > 1)
+
+if (nrow(multi_tax) > 0) {
+  message("Bins with multiple taxonomy assignments in treatment ", tr, ":")
+  message(paste(multi_tax$bin_id, collapse = ", "))
+}
+
+# Merge by bin ID
+binstax <- bins %>%
+  left_join(tax_collapsed, by = "bin_id") %>%
+  mutate(
+    taxonomy_concat = ifelse(
+      is.na(taxonomy_concat) | taxonomy_concat == "",
+      "unclassified",
+      taxonomy_concat
+    )
+  )
+  
+binstax <- binstax %>%
+  mutate(
+    taxonomy_for_color = ifelse(
+      n_taxonomy_assignments > 1,
+      "multiple_taxonomy_assignments",
+      taxonomy_concat
+    )
+  )
   
   # Static plot
-  p_gg <- ggplot(binstax, aes(x = completeness, y = contamination, color = taxonomy_concat)) +
+  p_gg <- ggplot(binstax, aes(x = completeness, y = contamination, color = taxonomy_for_color)) +
     geom_point(alpha = 0.7, size = 3) +
     scale_color_brewer(palette = "Set3") +
     theme_minimal() +
@@ -727,7 +877,7 @@ for (tr in treatments) {
     y = ~contamination,
     type = 'scatter',
     mode = 'markers',
-    color = ~taxonomy_concat,
+    color = ~taxonomy_for_color,
     colors = "Set3",
     customdata = ~taxonomy_concat,
     hovertemplate = paste(
