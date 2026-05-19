@@ -103,33 +103,39 @@ def get_bins_for_sample_pool(wildcards):
     return bins
 
 
-checkpoint list_bins:
-    """Create a file listing all bins for a sample pool."""
-    input:
-        contig2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv"
-    output:
-        bin_list=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bin_list.txt"
-    run:
-        import pandas as pd
-        
-        df = pd.read_csv(input.contig2bin, sep="\t", header=None, names=["contig", "bin"])
-        bins = sorted(df["bin"].unique())
-        
-        with open(output.bin_list, "w") as f:
-            for bin_id in bins:
-                f.write(f"{bin_id}\n")
+# checkpoint list_bins:
+#     """Create a file listing all bins for a sample pool."""
+#     input:
+#         contig2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv"
+#     output:
+#         bin_list=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bin_list.txt"
+#     run:
+#         import pandas as pd
+#         
+#         df = pd.read_csv(input.contig2bin, sep="\t", header=None, names=["contig", "bin"])
+#         bins = sorted(df["bin"].unique())
+#         
+#         with open(output.bin_list, "w") as f:
+#             for bin_id in bins:
+#                 f.write(f"{bin_id}\n")
 
 
 def aggregate_bin_htmls(wildcards):
     """Aggregate all bin HTML files for a sample pool."""
-    # Wait for checkpoint to complete
-    checkpoint_output = checkpoints.list_bins.get(
-        sample_pool=wildcards.sample_pool
-    ).output.bin_list
+    import pandas as pd
     
-    # Read bin list
-    with open(checkpoint_output) as f:
-        bins = [line.strip() for line in f if line.strip()]
+    # Get the contig2bin file from the dastool checkpoint
+    checkpoint_output = checkpoints.dastool.get(
+        sample_pool=wildcards.sample_pool
+    ).output.c2bin
+    
+    # Read the contig2bin file to get list of bins
+    try:
+        df = pd.read_csv(checkpoint_output, sep="\t", header=None, names=["contig", "bin"])
+        bins = sorted(df["bin"].unique().tolist())
+    except (FileNotFoundError, pd.errors.EmptyDataError):
+        # During dry-run or if file is empty
+        bins = []
     
     # Return list of expected HTML files
     return expand(
@@ -218,7 +224,7 @@ rule aggregate_bin_antismash_reports:
         # Load bin summary
         try:
             summary_df = pd.read_csv(input.bin_taxonomy, sep="\t")
-        except:
+        except (FileNotFoundError, pd.errors.EmptyDataError):
             summary_df = pd.DataFrame()
         
         # Create HTML index
