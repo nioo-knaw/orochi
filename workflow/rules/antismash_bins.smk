@@ -169,43 +169,58 @@ rule regenerate_antismash_html_per_bin:
         html=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}/index.html"
     params:
         output_dir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}",
-        bin_id="{bin_id}",
-        database_dir=antismash_db
+        bin_id="{bin_id}"
     threads: 1
     conda:
         "../envs/antismash.yaml"
-    shell:
-        """
-        # Check if there are any GenBank files
-        n_gbk=$(find {input.filtered_gbk} -name "*.gbk" | wc -l)
-        
-        if [ "$n_gbk" -eq 0 ]; then
-            # Create empty HTML if no BGCs in this bin
-            mkdir -p {params.output_dir}
-            echo "<html><body><h1>No BGCs found in bin {params.bin_id}</h1></body></html>" > {output.html}
-        else
-            # Copy GenBank files to output directory
-            mkdir -p {params.output_dir}
-            cp {input.filtered_gbk}/*.gbk {params.output_dir}/
-            
-            # Use antiSMASH to regenerate HTML from GenBank files
-            # This is much faster than re-running full analysis
-            cd {params.output_dir}
-            
-            # Create a minimal completion marker so antiSMASH knows these are pre-analyzed
-            # Then just generate the HTML visualization
-            for gbk in *.gbk; do
-                python -c "
-from Bio import SeqIO
-import json
+    script:
+        "../scripts/regenerate_antismash_html.py"
 
-# antiSMASH can regenerate HTML if the GenBank files are properly formatted
-# The files from the original run should already have all the necessary features
-print('GenBank file ready: $gbk')
-                "
-            done
-        fi
-        """
+# rule regenerate_antismash_html_per_bin:
+#     """Regenerate antiSMASH HTML from filtered GenBank files for a bin."""
+#     input:
+#         filtered_gbk=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}_filtered_gbk"
+#     output:
+#         html=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}/index.html"
+#     params:
+#         output_dir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}",
+#         bin_id="{bin_id}",
+#         database_dir=antismash_db
+#     threads: 1
+#     conda:
+#         "../envs/antismash.yaml"
+#     shell:
+#         """
+#         # Check if there are any GenBank files
+#         n_gbk=$(find {input.filtered_gbk} -name "*.gbk" | wc -l)
+#
+#         if [ "$n_gbk" -eq 0 ]; then
+#             # Create empty HTML if no BGCs in this bin
+#             mkdir -p {params.output_dir}
+#             echo "<html><body><h1>No BGCs found in bin {params.bin_id}</h1></body></html>" > {output.html}
+#         else
+#             # Copy GenBank files to output directory
+#             mkdir -p {params.output_dir}
+#             cp {input.filtered_gbk}/*.gbk {params.output_dir}/
+#
+#             # Use antiSMASH to regenerate HTML from GenBank files
+#             # This is much faster than re-running full analysis
+#             cd {params.output_dir}
+#
+#             # Create a minimal completion marker so antiSMASH knows these are pre-analyzed
+#             # Then just generate the HTML visualization
+#             for gbk in *.gbk; do
+#                 python -c "
+# from Bio import SeqIO
+# import json
+#
+# # antiSMASH can regenerate HTML if the GenBank files are properly formatted
+# # The files from the original run should already have all the necessary features
+# print('GenBank file ready: $gbk')
+#                 "
+#             done
+#         fi
+#         """
 
 
 rule aggregate_bin_antismash_reports:
