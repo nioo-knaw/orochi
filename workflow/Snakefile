@@ -124,6 +124,7 @@ include: "rules/euk_gene_prediction.smk"
 include: "rules/BGC_prediction.smk"
 include: "rules/binning.smk"
 include: "rules/mag_linkage.smk"
+include: "rules/antismash_bins.smk"
 include: "rules/test_rule.smk"
 include: "rules/plots.smk"
 

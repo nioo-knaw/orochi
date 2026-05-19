@@ -33,7 +33,10 @@ rule downstream_test_pool:
         f"{outdir}/results/05_prokaryote_annotation/salmon/indexes/{{sample_pool}}/{{sample_pool}}_orfs.index",
         f"{outdir}/results/05_prokaryote_annotation/salmon/merged/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
         fungal_summary_targets,
-        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial_summary.tsv"
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial_summary.tsv",
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_per_bin_summary.tsv",
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin_index.html"
+
 
 
     output:

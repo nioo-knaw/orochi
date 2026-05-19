@@ -1,3 +1,93 @@
+rule map_bgc_to_bins:
+    input:
+        bgc_summary=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial_summary.tsv",
+        contig2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv",
+        bat_taxonomy=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
+    output:
+        bgc_bin_taxonomy=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_bin_taxonomy.tsv"
+    run:
+        import pandas as pd
+
+        # Load BGC summary
+        bgc_df = pd.read_csv(input.bgc_summary,sep="\t")
+
+        # Load contig to bin mapping
+        c2b_df = pd.read_csv(input.contig2bin,sep="\t",header=None,names=["contig_id", "bin_id"])
+
+        # Load BAT taxonomy (skip comment lines starting with #)
+        bat_df = pd.read_csv(input.bat_taxonomy,sep="\t",comment="#")
+        # BAT output has columns: bin, classification, reason, lineage, lineage scores
+        bat_df = bat_df.rename(columns={bat_df.columns[0]: "bin_id"})
+
+        # Merge BGC with bin assignment
+        bgc_bins = bgc_df.merge(c2b_df,on="contig_id",how="left")
+
+        # Merge with taxonomy
+        bgc_bins_tax = bgc_bins.merge(
+            bat_df[["bin_id", "lineage"]],
+            on="bin_id",
+            how="left"
+        )
+
+        # Add indicator for unbinned contigs
+        bgc_bins_tax["bin_status"] = bgc_bins_tax["bin_id"].apply(
+            lambda x: "binned" if pd.notna(x) else "unbinned"
+        )
+
+        # Save combined table
+        bgc_bins_tax.to_csv(output.bgc_bin_taxonomy,sep="\t",index=False)
+
+
+rule combine_all_bgc_bin_taxonomy:
+    input:
+        bgc_bin_tax_files=expand(
+            f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_bin_taxonomy.tsv",
+            sample_pool=ASSEMBLY_UNITS
+        )
+    output:
+        combined=f"{outdir}/results/08_BGC/antismash/combined_bgc_bin_taxonomy.tsv"
+    run:
+        import pandas as pd
+
+        dfs = []
+        for file in input.bgc_bin_tax_files:
+            df = pd.read_csv(file,sep="\t")
+            dfs.append(df)
+
+        combined_df = pd.concat(dfs,ignore_index=True)
+        combined_df.to_csv(output.combined,sep="\t",index=False)
+
+rule summarize_bgc_per_bin:
+    input:
+        bgc_bin_tax=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_bin_taxonomy.tsv"
+    output:
+        bin_summary=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_per_bin_summary.tsv"
+    run:
+        import pandas as pd
+
+        df = pd.read_csv(input.bgc_bin_tax,sep="\t")
+
+        # Only binned BGCs
+        binned = df[df["bin_status"] == "binned"].copy()
+
+        if len(binned) == 0:
+            # Create empty output with expected columns
+            summary = pd.DataFrame(columns=[
+                "bin_id", "taxonomy", "n_bgcs", "bgc_types", "sample_pool"
+            ])
+        else:
+            # Group by bin and summarize
+            summary = binned.groupby("bin_id").agg({
+                "lineage": "first",  # Taxonomy is the same for all BGCs in a bin
+                "bgc_id": "count",  # Count BGCs
+                "bgc_product": lambda x: ";".join(sorted(set(x))),  # Unique BGC types
+                "sample_pool": "first"
+            }).reset_index()
+
+            summary.columns = ["bin_id", "taxonomy", "n_bgcs", "bgc_types", "sample_pool"]
+
+        summary.to_csv(output.bin_summary,sep="\t",index=False)
+
 def get_bins_for_sample_pool(wildcards):
     """Get list of bins for a sample pool from the contig2bin file."""
     import pandas as pd
@@ -187,3 +277,5 @@ rule aggregate_bin_antismash_reports:
         
         with open(output.index, 'w') as f:
             f.write(html_content)
+
+
