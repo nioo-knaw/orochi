@@ -79,6 +79,8 @@ For each of the sections shown in this report, these are the data used:
 * Contig-based: Assemblies
 * Bin-based: Refined and de-replicated bins
 
+**DISCLAIMER**: This report represents only a visual overview of certain stages of the workflow and should NOT be considered a complete reflection of Orochi’s functionality. Orochi produces a rich and structured set of outputs across numerous directories, not shown here. To truly take advantage of Orochi’s capabilities, users should explore said directories thoroughly and engage with the full range of generated files and results. 
+
 
 ## {.tabset}
 ### Read-based
@@ -116,7 +118,7 @@ plot1_alpha_diversity()
 
 #### Taxonomic abundance
 
-Average read counts per treatment plotted per taxonomic level. You can naviagte each level by clicking the buttons underneath.
+Average read counts per treatment plotted per taxonomic level. You can navigate each level by clicking the buttons underneath.
 
 ::: note
 Remember: You already have all these plots (per taxonomic level), there is no need to download them again. Simply look for them in `{OUTDIR}/results/09_plots/1-Reads/`
@@ -232,6 +234,172 @@ plot6_clustering()
 ```
 
 ### Contig-based
+::: note
+This tab shows results __per assembly__. If you are not sure what each of your assemblies contain, please refer to the Orochi documentation and review the *"Deciding on an assembly method"* option.
+:::
+
+#### Taxonomic annotation
+Taxonomic annotation per assembly is depicted using Krona. Below, you can find buttons per assembly that will take you to your local Krona HTML file.
+
+::: note
+Remember: These are standalone HTMLs that you can also find in `{OUTDIR}/results/09_plots/rsc/{pool_name}`.
+:::
+
+```{r Krona plots, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
+krona_files <- list.files(
+  rsc_path,
+  pattern = "_krona\\.html$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+
+krona_files_rel <- sub(".*rsc/", "rsc/", krona_files)
+
+cat('<div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start; text-align:center;">\n')
+
+cat('<div style="
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:center;
+  flex:0 0 auto;
+  min-width:140px;
+  font-weight:bold;
+  font-size:16px;
+">\n')
+
+cat('<p><span style="padding:10px 0; display:inline-block;">Krona</span></p>\n')
+
+cat('</div>\n')
+
+for (f in krona_files_rel) {
+
+  parts <- strsplit(f, "/")[[1]]
+  assembly <- parts[2]
+
+  cat('<div style="display:flex; flex-direction:column; gap:10px; align-items:center; flex:0 0 auto; min-width:140px;">\n')
+
+  cat(sprintf(
+    '<p><a href="%s" target="_blank" class="link-button">%s</a></p>\n',
+    f, assembly
+  ))
+
+  cat('</div>\n')
+}
+
+cat('</div>\n')
+
+```
+
+
+#### Functional annotation
+Functional annotation was performed using both the KEGG and COG databases. Predicted genes (ORFs) were quantified by mapping sequencing reads back to them using Salmon. Abundance is reported as TPM, and values from samples in the same pool were combined into a single plot for easy comparison.
+
+In the case of KEGG information, all was summarized into KEGG pathways. Dotplots were made where the samples are found as columns and the categories are found as rows. The size and color of each dot corresponds to the TPM value. Each page of this section corresponds to one assembly (whose name is depicted in the title of the plot and the name of the button).
+
+```{r FigKEGG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 9, fig.align = "center"}
+
+kegg_plots_report <- lapply(names(kegg_plots_list), plot1_top30_kegg)
+kegg_html <- vapply(kegg_plots_report, plot_to_base64, character(1))
+
+# Page labels = assembly names
+page_labels <- names(kegg_plots_list)
+
+datatable(
+  data.frame(Plot = kegg_html),
+  escape = FALSE,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = "tp",
+    scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
+           }
+         });
+       }"
+    )
+  )
+)
+```
+
+For displaying COG annotation information, it was all summarized into COG categories. Since COG categories are not explicitly written in the plot, there is a reference table (on the left) that can be consulted for further information. Dotplots were made where the samples are found as columns and the categories are found as rows. The size and color of each dot corresponds to the TPM value. Each page of this section corresponds to one assembly (whose name is depicted in the title of the plot and the name of the button).
+
+```{r FigCOG, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 6, fig.height = 9, fig.align = "center"}
+library(DT)
+library(htmltools)
+
+plot_to_base64_new2 <- function(plot) {
+  tmp <- tempfile(fileext = ".png")
+  ggsave(tmp, plot, width = 6, height = 6, dpi = 300)
+
+  img <- base64enc::dataURI(file = tmp, mime = "image/png")
+
+  sprintf(
+    '<img src="%s" style="width:100%%; height:auto;">',
+    img
+  )
+}
+
+cog_plots_report <- lapply(names(cog_plots_list), plot2_top30_cog)
+cog_html <- vapply(cog_plots_report, plot_to_base64_new2, character(1))
+
+# Page labels = assembly names
+page_labels <- names(cog_plots_list)
+
+plot_table <- datatable(
+  data.frame(Plot = cog_html),
+  escape = FALSE,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = "tp",
+    #scrollY = 600,
+    pageLength = 1,
+    pagingType = "full_numbers",
+    drawCallback = JS(
+      "function(settings) {
+         var labels = ", jsonlite::toJSON(page_labels), ";
+         var api = this.api();
+         $(api.table().container()).find('a.paginate_button').each(function() {
+           var idx = parseInt($(this).text(), 10) - 1;
+           if (!isNaN(idx) && labels[idx]) {
+             $(this).html(labels[idx]);
+           }
+         });
+       }"
+    )
+  )
+)
+
+reference_table <- datatable(
+  cog_map,
+  options = list(dom = 't'),
+  rownames = FALSE
+)
+
+div(
+  class = "cog-layout",
+  
+  div(class = "cog-reference",
+      h4("COG Reference"),
+      reference_table
+  ),
+  
+  div(class = "cog-plots",
+      plot_table
+  )
+)
+
+```
 
 #### antiSMASH results
 HTML reports showing BGCs per sample pool, as indicated by the name shown in each button. Buttons in the top row correspond to bacterial results (antiSMASH) and buttons in the bottom row correspond to fungal results (fungiSMASH). Make sure to download the `{OUTDIR}/results/09_plots/rsc/` directory so you can visualize all the elements of the HTMLs.

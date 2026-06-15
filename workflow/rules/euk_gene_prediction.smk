@@ -1,22 +1,9 @@
 """ Rules related to gene prediction """
 
-#rule prodigal:
-#    input:
-#        contigs=f"{outdir}/results/03_assembly/size_filtered/{{sample}}_{minsize}/contigs_{{sample}}_{minsize}.fasta"
-
-#    output:
-#        gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_genes.gff",
-#        faa=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_proteins.faa",
-#        fna=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_orfs.fna"
-
-#    conda:
-#        "../envs/prodigal.yaml"
-
-#    shell:"prodigal -i {input.contigs} -o {output.gff} -a {output.faa} -d {output.fna} -p meta -f gff"
 
 minsize_antismash = config['min_contig_antismash']
 
-rule whokaryote:
+checkpoint whokaryote:
     input:
         contigs=f"{outdir}/results/03_assembly/size_filtered/{{sample}}_{minsize}/contigs_{{sample}}_{minsize}.fasta",
         prodigal_gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_genes.gff"
@@ -37,10 +24,21 @@ rule whokaryote:
         minsize_a=config['min_contig_antismash']
 
     shell:
-        "whokaryote.py --contigs {input.contigs} --outdir {params.outdir} --prodigal_file {input.prodigal_gff} --minsize {params.minsize_a} --f"
+        """
+        whokaryote.py --contigs {input.contigs} --outdir {params.outdir} --prodigal_file {input.prodigal_gff} --minsize {params.minsize_a} --f
+
+        # Make sure all declared outputs exist.
+        # Some samples may have no eukaryotic or unclassified contigs.
+        touch {output.headers_euk}
+        touch {output.headers_prok}
+        touch {output.euk_fasta}
+        touch {output.prok_fasta}
+        touch {output.unclassified_fasta}
+        touch {output.contigs_size}
+        """
 
 
-rule augustify:
+checkpoint augustify:
     input:
         f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/eukaryotes.fasta"
     output:
@@ -55,7 +53,12 @@ rule augustify:
     threads:
         config['threads']
     shell:
-        "python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {threads} --outdir {params.outdir}"
+        """
+        python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {threads} --outdir {params.outdir}
+        # Ensure declared outputs exist even if augustify produced no annotation
+        touch {output.tax}
+        touch {output.gff}
+        """
 
 
 # This rule filters the prodigal gff file so that only prokaryotic genes on contigs above the size threshold are kept

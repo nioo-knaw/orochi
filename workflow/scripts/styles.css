@@ -11,6 +11,7 @@
   padding: 8px 16px;
   margin: 6px;
   color: white !important;
+  background-color: #14BDCC;
   text-decoration: none;
   border-radius: 6px;
   font-size: 14px;
@@ -30,6 +31,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .dataTables_wrapper {
   width: 100% !important;
+  background-color: white !important;
 }
 
 td:nth-child(1) {
@@ -37,4 +39,37 @@ td:nth-child(1) {
 }
 td:nth-child(2) {
   width: 10% !important;
+}
+
+table.dataTable {
+  background-color: white !important;
+}
+
+table.dataTable tbody tr {
+  background-color: white !important;
+}
+
+table.dataTable tbody td {
+  background-color: white !important;
+}
+
+.cog-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.cog-reference {
+  width: 25%;
+  min-width: 250px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #fafafa;
+  max-height: 650px;
+  overflow-y: auto;
+}
+
+.cog-plots {
+  width: 75%;
 }

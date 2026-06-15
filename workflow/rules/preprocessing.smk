@@ -1,7 +1,7 @@
 rule fastp:
         input:
-            fq1 = lambda wildcards: samples.loc[samples["sample"] == wildcards.sample].fq1.item(),
-            fq2 = lambda wildcards: samples.loc[samples["sample"] == wildcards.sample].fq2.item(),
+            fq1 = lambda wildcards: get_sample_value(wildcards.sample, "fq1"),
+            fq2 = lambda wildcards: get_sample_value(wildcards.sample, "fq2"),
 
             # readF = "raw/{sample}_R1.fastq.gz",
             # readR = "raw/{sample}_R2.fastq.gz"
@@ -40,7 +40,7 @@ rule fastp:
 
 rule concat_host_phix:
         input:
-            host = lambda wildcards: config["host_genome"] if config['host_removal'] == "True" else [],
+            host = lambda wildcards: config["host_genome"] if config['host_removal'] else [],
             phix = "resources/contaminants_refs/GCF_000819615.1_ViralProj14015_genomic.fna"
         output:
             concat = temp(f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna")

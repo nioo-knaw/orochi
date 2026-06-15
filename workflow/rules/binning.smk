@@ -264,28 +264,31 @@ rule checkm2_to_drep_format:
 
 rule combine_genome_info:
     input:
-        genome_info_files=expand(f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv",
-            sample_pool=sorted(set(samples["sample_pool"])))
+        genome_info_files=expand(
+            f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv",
+            sample_pool=ASSEMBLY_UNITS
+        )
     output:
         combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
     run:
         # Read and combine all genome info files
         dfs = []
         for file in input.genome_info_files:
-            df = pd.read_csv(file,sep=",")  # Using comma as it's the output separator from previous rule
+            df = pd.read_csv(file, sep=",")
             dfs.append(df)
 
         # Concatenate all dataframes
-        combined_df = pd.concat(dfs,ignore_index=True)
+        combined_df = pd.concat(dfs, ignore_index=True)
 
         # Save combined dataframe
-        combined_df.to_csv(output.combined_info,sep=",",index=False)
+        combined_df.to_csv(output.combined_info, sep=",", index=False)
 
 
 rule prepare_drep_input:
     input:
         bins_dir=expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
-            sample_pool=sorted(set(samples["sample_pool"])))
+            sample_pool=ASSEMBLY_UNITS
+        )
     output:
         input_file = f"{outdir}/results/06_binning/drep/input_bins.txt"
     run:
@@ -299,38 +302,78 @@ rule prepare_drep_input:
 
 checkpoint dereplicate_bins:
     input:
-        input_file = f"{outdir}/results/06_binning/drep/input_bins.txt",
+        input_file=f"{outdir}/results/06_binning/drep/input_bins.txt",
         combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
     output:
-        dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes"),
-        done = touch(f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done")
+        dereplicated_bins=directory(
+            f"{outdir}/results/06_binning/drep/dereplicated_genomes"
+        ),
+        done=touch(
+            f"{outdir}/results/06_binning/drep/drep.done"
+        )
     params:
-        drep_output = f"{outdir}/results/06_binning/drep",
-        # bin_dirs = lambda _, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))]),
+        drep_output=f"{outdir}/results/06_binning/drep",
+        completeness_T=config["completeness_threshold"],
+        contamination_T=config["contamination_threshold"],
+        S_algorithm=config["S_algorithm"]
     threads:
-        config['threads']
+        config["threads"]
     resources:
-        mem_mb=config['max_mem']
-    # log:
-    #     debug_log = f"{outdir}/results/06_binning/drep/drep_rule.log"
+        mem_mb=config["max_mem"]
     conda:
         "../envs/drep.yaml"
     shell:
-        """
-        if [ $(echo "{input.input_file}" | tr ' ' '\n' | wc -l) -gt 1 ]; then
-            dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info}
+        r"""
+        set -euo pipefail
+
+        n_bins=$(grep -cv '^[[:space:]]*$' {input.input_file})
+
+        # Clean stale dRep outputs before rerun.
+        # This avoids old data_tables/done files being combined with missing representatives.
+        rm -rf {params.drep_output}/data
+        rm -rf {params.drep_output}/data_tables
+        rm -rf {params.drep_output}/dereplicated_genomes
+        rm -rf {params.drep_output}/figures
+        rm -f  {params.drep_output}/drep.done
+
+        mkdir -p {params.drep_output}
+
+        if [ "$n_bins" -gt 1 ]; then
+            dRep dereplicate {params.drep_output} \
+                -g {input.input_file} \
+                -p {threads} \
+                --genomeInfo {input.combined_info} \
+                -comp {params.completeness_T} \
+                -con {params.contamination_T} \
+                --S_algorithm {params.S_algorithm} \
+                --skip_plots
         else
             mkdir -p {output.dereplicated_bins}
-            cp $(cat {input.input_file}) {output.dereplicated_bins}/
+            cp "$(grep -v '^[[:space:]]*$' {input.input_file})" {output.dereplicated_bins}/
         fi
+
+        # Validate representative MAGs exist.
+        n_reps=$(find {output.dereplicated_bins} -maxdepth 1 -type f \
+            \( -name "*.fa" -o -name "*.fna" -o -name "*.fasta" \) | wc -l)
+
+        if [ "$n_reps" -eq 0 ]; then
+            echo "ERROR: dRep finished but no representative MAGs were found in {output.dereplicated_bins}" >&2
+            exit 1
+        fi
+
+        touch {output.done}
         """
 
 rule mag_depth:
     input:
-        fairy_coverage = expand(f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
-                                sample_pool=sorted(set(samples["sample_pool"]))),
-        dastool_contig2bin = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv",
-                                    sample_pool=sorted(set(samples["sample_pool"]))),
+        fairy_coverage = expand(
+            f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
+            sample_pool=ASSEMBLY_UNITS
+        ),
+        dastool_contig2bin = expand(
+            f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv",
+            sample_pool=ASSEMBLY_UNITS
+        ),
     output:
         binned_coverage = f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
         mag_depth = f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv",

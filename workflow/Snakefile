@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-
+from pathlib import Path
 
 if os.path.isfile("config/configfile.yaml"):
     configfile: "config/configfile.yaml"
@@ -9,7 +9,41 @@ samples = (
     pd.read_csv(config["samples"], sep="\t", dtype={"sample": str})
     .set_index("sample", drop=False)
     .sort_index()
+)
 
+def get_sample_value(sample, column):
+    matches = samples.loc[samples["sample"] == sample, column]
+
+    if len(matches) == 0:
+        raise ValueError(
+            f"No sample named '{sample}' found in the samples table. "
+            f"If '{sample}' is a sample_pool, check for wildcard/output path collisions."
+        )
+
+    if len(matches) > 1:
+        raise ValueError(
+            f"Multiple rows found for sample '{sample}'. "
+            "Values in the 'sample' column must be unique."
+        )
+
+    return matches.iloc[0]
+
+SAMPLE2POOL = samples["sample_pool"].to_dict()
+
+POOL2SAMPLES = (
+    samples.groupby("sample_pool")
+    .apply(lambda x: x.index.tolist())
+    .to_dict()
+)
+
+df = pd.read_csv(config["samples"], sep="\t")
+SAMPLES = df["sample"].tolist()
+POOLS = sorted(df["sample_pool"].unique())
+
+ASSEMBLY_UNITS = (
+    POOLS
+    if config["assembly_method"] == "coassembly"
+    else SAMPLES
 )
 
 outdir = config["outdir"]
@@ -21,11 +55,69 @@ minsize = config["min_contig_length"]
 # for smk,rule in smks:
 #     include: smk
 
+def fasta_has_records(fasta):
+    fasta = Path(fasta)
+
+    if not fasta.exists() or fasta.stat().st_size == 0:
+        return False
+
+    with open(fasta) as handle:
+        for line in handle:
+            if line.startswith(">"):
+                return True
+
+    return False
+
+
+def gff_has_features(gff):
+    """
+    Return True if the GFF file contains at least one gene, mRNA, or CDS feature.
+    """
+    gff = Path(gff)
+
+    if not gff.exists() or gff.stat().st_size == 0:
+        return False
+
+    with open(gff) as handle:
+        for line in handle:
+            if line.startswith("#"):
+                continue
+
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) >= 3 and parts[2] in {"gene", "mRNA", "CDS"}:
+                return True
+
+    return False
+
+def fungal_summary_targets(wildcards):
+    """
+    Return fungal_summary.tsv only if the current assembly unit has
+    eukaryotic sequences and augustify produced gene annotations.
+
+    Otherwise return an empty list, so summarize_antismash_fungal
+    will not be requested.
+    """
+    sample_pool = wildcards.sample_pool
+
+    whokaryote_ckpt = checkpoints.whokaryote.get(sample=sample_pool)
+    euk_fasta = whokaryote_ckpt.output.euk_fasta
+
+    if not fasta_has_records(euk_fasta):
+        return []
+
+    augustify_ckpt = checkpoints.augustify.get(sample=sample_pool)
+    gff = augustify_ckpt.output.gff
+
+    if not gff_has_features(gff):
+        return []
+
+    return [
+        f"{outdir}/results/08_BGC/antismash/{sample_pool}/fungal/fungal_summary.tsv"
+    ]
+
 include: "rules/common.smk"
 include: "rules/preprocessing.smk"
 include: "rules/mash_clustering.smk"
-include: "rules/coassembly.smk"
-include: "rules/single_sample_assembly.smk"
 include: "rules/size_filter.smk"
 include: "rules/prokaryote-gene_prediction_and_annotation.smk"
 include: "rules/euk_gene_prediction.smk"
@@ -51,21 +143,53 @@ target = None
 
 
 if config['assembly_method'] == "coassembly":
-    target = expand(f"{config['outdir']}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt",
-                    sample_pool=samples["sample_pool"].unique())
-                    #, sample_name=samples["sample"])
+    include: "rules/coassembly.smk"
+    target = expand(
+        f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt",
+        sample_pool=samples["sample_pool"].unique()
+    )
+
 elif config['assembly_method'] == "single_assembly":
-    target = expand(f"{config['outdir']}/results/05_test/{{sample}}/{{sample}}_test.txt",
+    include: "rules/single_sample_assembly.smk"
+    target = expand(f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
                     sample=samples["sample"])
 else:
     raise ValueError("Unsupported assembly type")
+
+salmon_targets = [
+    f"{outdir}/results/05_prokaryote_annotation/salmon/quants/{s}"
+    for s in samples.index
+]
+
+salmon_assembly_units = (
+    samples["sample_pool"].unique()
+    if config["assembly_method"] == "coassembly"
+    else samples["sample"]
+)
+
+salmon_final_targets = expand(
+    f"{outdir}/results/05_prokaryote_annotation/salmon/merged/{{sample_pool}}/{{sample_pool}}_ORF_TPM.tsv",
+    sample_pool=salmon_assembly_units
+)
+
+mag_depth_targets = (
+    [
+        f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
+        f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv",
+    ]
+    if config["assembly_method"] == "coassembly"
+    else []
+)
 
 rule all:
     input:
         f"{outdir}/results/09_plots/Orochi_report.html",
         target,
-        f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
-        f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv"
+        salmon_targets,
+        salmon_final_targets,
+        mag_depth_targets
+        # f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
+        # f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv"
         # expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
         # f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt" @Todo: enable after testing
     # input: expand(output,
