@@ -165,7 +165,8 @@ rule eggnog:
         adj = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations.adjusted"
     params:
         db = config["emapper_database"],
-        out_dir = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}"
+        out_dir = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}",
+        temp_dir = lambda wildcards: os.path.join(config["tmpdir"], "eggnog", wildcards.sample_pool)
     threads:
         config["threads"]
     conda:
@@ -180,6 +181,7 @@ rule eggnog:
             -i {input.proteins} \
             --cpu {threads} \
             -o {params.out_dir} \
+            --temp_dir {params.temp_dir} \
             --data_dir {params.db} \
             --pident 30 \
             --query_cover 50 \
