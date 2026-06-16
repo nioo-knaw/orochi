@@ -23,9 +23,18 @@ checkpoint whokaryote:
         outdir=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}",
         minsize_a=config['min_contig_antismash']
 
+    log:
+        f"{outdir}/logs/whokaryote/whokaryote_{{sample}}.log"
+
     shell:
         """
-        whokaryote.py --contigs {input.contigs} --outdir {params.outdir} --prodigal_file {input.prodigal_gff} --minsize {params.minsize_a} --f
+        whokaryote.py \
+            --contigs {input.contigs} \
+            --outdir {params.outdir} \
+            --prodigal_file {input.prodigal_gff} \
+            --minsize {params.minsize_a} \
+            --f \
+            > {log} 2>&1
 
         # Make sure all declared outputs exist.
         # Some samples may have no eukaryotic or unclassified contigs.
@@ -52,9 +61,18 @@ checkpoint augustify:
         outdir=f"{outdir}/logs/augustify/{{sample}}",
     threads:
         config['threads']
+    log:
+        f"{outdir}/logs/augustify/augustify_{{sample}}.log"
     shell:
         """
-        python {params.script} -g {input} -p {params.param_file} -m {output.tax} -P {output.gff} -t {threads} --outdir {params.outdir}
+        python {params.script} \
+            -g {input} \
+            -p {params.param_file} \
+            -m {output.tax} \
+            -P {output.gff} \
+            -t {threads} \
+            --outdir {params.outdir} \
+            > {log} 2>&1
         # Ensure declared outputs exist even if augustify produced no annotation
         touch {output.tax}
         touch {output.gff}
@@ -75,5 +93,13 @@ rule filter_prokaryote_gff:
         size=config['min_contig_antismash'],
         outdir=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}",
         script=os.path.abspath("workflow/scripts/filter_annotations.py")
+    log:
+        f"{outdir}/logs/filter_prokaryote_gff/{{sample}}_{{minsize_antismash}}.log"
     shell:
-        "python {params.script} --gff {input.gff} --headerfile {input.headers_prok} --outdir {params.outdir} --minsize {params.size} --sample_name {wildcards.sample}"
+        "python {params.script} \
+            --gff {input.gff} \
+            --headerfile {input.headers_prok} \
+            --outdir {params.outdir} \
+            --minsize {params.size} \
+            --sample_name {wildcards.sample} \
+            2> {log}"
