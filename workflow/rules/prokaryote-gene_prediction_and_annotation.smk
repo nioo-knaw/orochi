@@ -21,7 +21,7 @@ rule prodigal:
             -d {output.fna} \
             -p meta \
             -f gff \
-            2> {log}
+            > {log} 2>&1
             """
 
 
@@ -58,7 +58,7 @@ rule CAT:
             -p {input.proteins} \
             -o {params.out_dir}{params.prefix} \
             --force \
-            2> {log}
+            > {log} 2>&1
         CAT_pack add_names \
             -i {output.CAT} \
             -o {output.names} \
@@ -66,13 +66,13 @@ rule CAT:
             --only_official \
             --exclude_scores \
             --force \
-            2>> {log}
+            >> {log} 2>&1
         CAT_pack summarise \
             -c {input.contigs} \
             -i {output.names} \
             -o {output.summary} \
             --force \
-            2>> {log}
+            >> {log} 2>&1
         """
 
 rule MetaPhlAn4:
@@ -97,7 +97,7 @@ rule MetaPhlAn4:
         mkdir -p {params.mtphln_outdir}
         metaphlan {input.forward},{input.rev} --mapout {params.mtphln_outdir}/{params.bowtie} \
             --nproc {threads} --input_type fastq -o {output.file} \
-            2> {log}
+            > {log} 2>&1
         """
 
 rule MetaPhlAn_sgb_to_gtdb:
@@ -188,10 +188,9 @@ rule eggnog:
             --subject_cover 50 \
             --report_orthologs \
             --override \
-            2> {log}
+            > {log} 2>&1
         head -n -3  <(tail -n +5 {output.raw}) > {output.adj}
         """
-    # @Todo: Perhaps specify the temp dir for eggnog to avoid issues with large files?
 
 import pandas as pd
 
