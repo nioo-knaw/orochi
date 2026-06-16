@@ -77,7 +77,7 @@ rule coverm:
     conda:
         "../envs/single_assembly.yaml"
     log:
-        f"{output}/logs/coverm/coverm_{{sample}}.log"
+        f"{outdir}/logs/coverm/coverm_{{sample}}.log"
     shell:
         """
         coverm contig \
