@@ -10,14 +10,23 @@ rule prodigal:
         fna = f"{outdir}/results/04_gene_prediction/prodigal/{{sample_pool}}/{{sample_pool}}_orfs.fna"
     conda:
         "../envs/prodigal.yaml"
+    log: f"{outdir}/logs/prodigal/prodigal_{{sample_pool}}.log"
     resources: mem_mb = 100000  # Set a high memory limit for Prodigal (100GB), but not max_mb, to still allow for parallelization
     shell:
-        "prodigal -i {input.contigs} -o {output.gff} -a {output.faa} -d {output.fna} -p meta -f gff"
+        """
+        prodigal \
+            -i {input.contigs} \
+            -o {output.gff} \
+            -a {output.faa} \
+            -d {output.fna} \
+            -p meta \
+            -f gff \
+            2> {log}
+            """
 
 
 rule CAT:
     input:
-#        contigs = {rules.rename_megahit.output.fasta},
         contigs = f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta",
         proteins = {rules.prodigal.output.faa}
     output:
@@ -36,12 +45,34 @@ rule CAT:
         mem_mb = 100000  # Set a high memory limit for CAT (100GB), but not max_mb, to still allow for parallelization
     conda:
         "../envs/cat.yaml"
+    log:
+        f"{outdir}/logs/CAT/CAT_{{sample_pool}}.log"
     shell:
         """
         mkdir -p {params.out_dir}
-        CAT_pack contigs -c {input.contigs} -n {threads} -d {params.db} -t {params.tax} -p {input.proteins} -o {params.out_dir}{params.prefix} --force
-        CAT_pack add_names -i {output.CAT} -o {output.names} -t {params.tax} --only_official --exclude_scores --force
-        CAT_pack summarise -c {input.contigs} -i {output.names} -o {output.summary} --force
+        CAT_pack contigs \
+            -c {input.contigs} \
+            -n {threads} \
+            -d {params.db} \
+            -t {params.tax} \
+            -p {input.proteins} \
+            -o {params.out_dir}{params.prefix} \
+            --force \
+            2> {log}
+        CAT_pack add_names \
+            -i {output.CAT} \
+            -o {output.names} \
+            -t {params.tax} \
+            --only_official \
+            --exclude_scores \
+            --force \
+            2>> {log}
+        CAT_pack summarise \
+            -c {input.contigs} \
+            -i {output.names} \
+            -o {output.summary} \
+            --force \
+            2>> {log}
         """
 
 rule MetaPhlAn4:
@@ -59,10 +90,14 @@ rule MetaPhlAn4:
         mem_mb = 500000  # Still allows for parallelization, but sets a high memory limit for MetaPhlAn (500GB)
     conda:
         "../envs/metaphlan4.yaml"
+    log:
+        f"{outdir}/logs/MetaPhlAn4/metaplhan_{{sample}}.log"
     shell:
         """
         mkdir -p {params.mtphln_outdir}
-        metaphlan {input.forward},{input.rev} --mapout {params.mtphln_outdir}/{params.bowtie} --nproc {threads} --input_type fastq -o {output.file}
+        metaphlan {input.forward},{input.rev} --mapout {params.mtphln_outdir}/{params.bowtie} \
+            --nproc {threads} --input_type fastq -o {output.file} \
+            2> {log}
         """
 
 rule MetaPhlAn_sgb_to_gtdb:
@@ -72,13 +107,15 @@ rule MetaPhlAn_sgb_to_gtdb:
         final = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.txt"
     conda:
         "../envs/metaphlan4.yaml"
+    log:
+        f"{outdir}/logs/MetaPhlAn4/MetaPhlAn_sgb_to_gtdb.log"
     shell:
         """
         if [ "{config[taxonomy_type]}" = "GTDB" ]; then
-            sgb_to_gtdb_profile.py -i {input.raw} -o {output.final}
-            rm -f {input.raw}
+            sgb_to_gtdb_profile.py -i {input.raw} -o {output.final} 2>> {log}
+            rm -f {input.raw} 2>> {log}
         else
-            mv {input.raw} {output.final}
+            mv {input.raw} {output.final} 2>> {log}
         fi
         """
 
@@ -100,15 +137,19 @@ rule MetaPhlAn_secondary:
 #       scripts_dir= "./workflow/scripts/"
     conda:
         "../envs/metaphlan4.yaml"
+    log:
+        f"{outdir}/logs/MetaPhlAn4/MetaPhlAn_secondary.log"
     shell:
         """
-        merge_metaphlan_tables.py {input} {params.gtdb_flag} > {params.raw_table}
+        merge_metaphlan_tables.py {input} {params.gtdb_flag} > {params.raw_table} 2> {log}
+        
         if [ "{params.use_gtdb_reform}" = "True" ]; then
             python workflow/scripts/gtdb_reform.py \\
                 -i {params.raw_table} \\
-                -o {output.merged_table}
+                -o {output.merged_table} \
+                2 >> {log}
         else
-            mv {params.raw_table} {output.merged_table}
+            mv {params.raw_table} {output.merged_table} 2>> {log}
         fi
         """
         
@@ -119,6 +160,9 @@ rule MetaPhlAn_secondary:
 rule eggnog:
     input:
         proteins = rules.prodigal.output.faa
+    output:
+        raw = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations",
+        adj = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations.adjusted"
     params:
         db = config["emapper_database"],
         out_dir = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}"
@@ -126,14 +170,23 @@ rule eggnog:
         config["threads"]
     conda:
         "../envs/eggnog.yaml"
-    output:
-        raw = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations",
-        adj = f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations.adjusted"
+    log:
+        f"{outdir}/logs/eggnog/eggnog_{{sample_pool}}.log"
     resources:
         mem_mb = 500000  # Set a high memory limit for eggNOG (500GB), but not max_mb, to still allow for parallelization
     shell:
         """
-        emapper.py -i {input.proteins} --cpu {threads} -o {params.out_dir} --data_dir {params.db} --pident 30 --query_cover 50 --subject_cover 50 --report_orthologs --override
+        emapper.py \
+            -i {input.proteins} \
+            --cpu {threads} \
+            -o {params.out_dir} \
+            --data_dir {params.db} \
+            --pident 30 \
+            --query_cover 50 \
+            --subject_cover 50 \
+            --report_orthologs \
+            --override \
+            2> {log}
         head -n -3  <(tail -n +5 {output.raw}) > {output.adj}
         """
     # @Todo: Perhaps specify the temp dir for eggnog to avoid issues with large files?
@@ -170,11 +223,14 @@ rule salmon_assemblies1:
         config["threads"]
     conda:
         "../envs/salmon.yaml"
+    log:
+        f"{outdir}/logs/salmon_assemblies1/salmon_assemblies1_{{sample_pool}}.log"
     resources:
         mem_mb = 200000
     shell:
         """
-        salmon index -t {input.orfs} -i {output.index_file} -k 31
+        salmon index -t {input.orfs} -i {output.index_file} -k 31 \
+            2> {log}
         """
 
 rule salmon_samples2:
@@ -189,11 +245,14 @@ rule salmon_samples2:
         config["threads"]
     conda:
         "../envs/salmon.yaml"
+    log:
+        f"{outdir}/logs/salmon_samples2/salmon_samples2_{{sample}}.log"
     resources:
         mem_mb = 200000
     shell:
         """
-        salmon quant -i {input.index} --libType IU -1 {input.forward} -2 {input.rev} -p {threads} -o {output} --meta
+        salmon quant -i {input.index} --libType IU -1 {input.forward} -2 {input.rev} -p {threads} -o {output} --meta \
+            2> {log}
         """
 
 rule salmon_final3:
@@ -215,9 +274,12 @@ rule salmon_final3:
         config["threads"]
     conda:
         "../envs/salmon.yaml"
+    log:
+        f"{outdir}/logs/salmon_final3/salmon_final3_{{sample_pool}}.log"
     resources:
         mem_mb = 200000
     shell:
         """
-        salmon quantmerge --quants {params.sample_dir} --names {params.sample_name} --column TPM -o {output.quant}
+        salmon quantmerge --quants {params.sample_dir} --names {params.sample_name} --column TPM -o {output.quant} \
+            2> {log}
         """
