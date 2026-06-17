@@ -37,10 +37,12 @@ rule download_antismash_databases:
         "../envs/antismash.yaml"
     params:
         dbdir=antismash_db,
+    log:
+        f"{outdir}/logs/antismash/download_antismash_databases.log"
     shell:
         """
         mkdir -p {params.dbdir}
-        download-antismash-databases --database-dir {params.dbdir}
+        download-antismash-databases --database-dir {params.dbdir} > {log} 2>&1
         """
 
 
@@ -59,6 +61,9 @@ rule antismash:
         threads=config['threads'],
         database_dir=antismash_db
 
+    log:
+        f"{outdir}/logs/antismash/bacterial/antismash_{{sample_pool}}.log"
+
     shell:
         """
         test -d {params.database_dir} || \
@@ -73,7 +78,8 @@ rule antismash:
         --cc-mibig \
         --cb-general \
         --cb-knownclusters \
-        --databases {params.database_dir}
+        --databases {params.database_dir} \
+        > {log} 2>&1
         """
 
 rule fungismash:
@@ -85,7 +91,7 @@ rule fungismash:
         json=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal/fungal.json"
 
     log:
-        f"{outdir}/logs/antismash/fungal/{{sample_pool}}.log"
+        f"{outdir}/logs/antismash/fungal/fungismash_{{sample_pool}}.log"
 
     conda:
         "../envs/antismash.yaml"
@@ -109,6 +115,8 @@ rule summarize_antismash_bacterial:
     params:
         antismash_dir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial",
         taxon="bacteria"
+    log:
+        f"{outdir}/logs/antismash/bacterial/summarize_antismash_bacterial/{{sample_pool}}.log"
     script:
         "../scripts/summarize_antismash.py"
 
@@ -123,6 +131,8 @@ rule summarize_antismash_fungal:
     params:
         antismash_dir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/fungal",
         taxon="fungi"
+    log:
+        f"{outdir}/logs/antismash/fungal/summarize_antismash_fungal/{{sample_pool}}.log"
     script:
         "../scripts/summarize_antismash.py"
 

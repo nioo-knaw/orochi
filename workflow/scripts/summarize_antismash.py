@@ -4,8 +4,12 @@
 
 from pathlib import Path
 import csv
-
+import sys
 from Bio import SeqIO
+
+log = open(snakemake.log[0], "w")
+sys.stdout = log
+sys.stderr = log
 
 
 def get_structured_antismash_value(seq_record, key, default=""):
