@@ -358,7 +358,7 @@ rule add_taxonomy_maglinkage:
     resources:
         mem_mb=config['max_mem']
     log:
-        f"{resources}/logs/add_taxonomy_maglinkage/add_taxonomy_maglinkage_{{sample_pool}}.log"
+        f"{outdir}/logs/add_taxonomy_maglinkage/add_taxonomy_maglinkage_{{sample_pool}}.log"
     shell:
         """
         python3 workflow/scripts/add_markermag_taxonomy.py \
