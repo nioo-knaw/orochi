@@ -73,6 +73,11 @@ rule report:
         "../envs/html.yaml"
     shell:
         r"""
+        set -euo pipefail
+        
+        echo "Starting Orochi report generation..." > {log}
+        echo "Timestamp: $(date)" >> {log}
+        
         mkdir -p {params.outdir_html}
         echo "Copying fastp HTML reports..." >> {log}
         cp {input.html_fastp} {params.outdir_html} 2>> {log}
@@ -109,5 +114,10 @@ rule report:
                     cp "$file" "$dst/$rel"
                 done
         done 2>> {log}
-        Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}
+        
+        echo "Rendering final HTML report with R..." >> {log}
+        
+        Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output} >> {log} 2>&1
+        
+        echo "Report generation completed successfully at $(date)" >> {log}
         """

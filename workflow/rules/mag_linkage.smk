@@ -28,10 +28,41 @@ rule phyloflash:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/phyloflash/phyloflash_{{sample_pool}}.log"
 
     shell: # We have to zip the phyloflash output and move it because it will be stored in the WD otherwise.
-        "phyloFlash.pl -dbhome {params.db} -lib {wildcards.sample_pool} -zip \
-         -CPUs {threads} -read1 {input.forward_reads} -read2 {input.reverse_reads}; mv {wildcards.sample_pool}.phyloFlash.* {params.phylo_dir}"
+        """
+        set -euo pipefail
+        
+        echo "Starting phyloFlash analysis for {wildcards.sample_pool}" > {log}
+        echo "Timestamp: $(date)" >> {log}
+        echo "Database: {params.db}" >> {log}
+        echo "Forward reads: {input.forward_reads}" >> {log}
+        echo "Reverse reads: {input.reverse_reads}" >> {log}
+        echo "CPUs: {threads}" >> {log}
+        echo "" >> {log}
+        
+        # Ensure output directory exists
+        mkdir -p {params.phylo_dir}
+        
+        # Run phyloFlash
+        phyloFlash.pl \
+            -dbhome {params.db} \
+            -lib {wildcards.sample_pool} \
+            -zip \
+            -CPUs {threads} \
+            -read1 {input.forward_reads} \
+            -read2 {input.reverse_reads} \
+            >> {log} 2>&1
+        
+        # Move all phyloFlash output files to the target directory
+        echo "" >> {log}
+        echo "Moving phyloFlash output files to {params.phylo_dir}" >> {log}
+        mv {wildcards.sample_pool}.phyloFlash.* {params.phylo_dir} 2>> {log}
+        
+        echo "phyloFlash analysis completed successfully at $(date)" >> {log}
+        """
 
 rule unzip_phyloflash:
     input:
@@ -41,8 +72,10 @@ rule unzip_phyloflash:
         phyloflash_classification=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/{{sample_pool}}.phyloFlash.extractedSSUclassifications.csv"
     params:
         phyloflash_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/"
+    log:
+        f"{outdir}/logs/phyloflash/unzip_phyloflash_{{sample_pool}}.log"
     shell:
-        "tar -xzf {input.phyloflash_tar} -C {params.phyloflash_dir}"
+        "tar -xzf {input.phyloflash_tar} -C {params.phyloflash_dir} 2> {log}"
 
 rule unzip_reads:
     input:
@@ -55,8 +88,35 @@ rule unzip_reads:
     output:
         forward_out=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_forward.fastq",
         reverse_out=f"{outdir}/results/07_maglinkage/{{sample_pool}}/{{sample_pool}}_reverse.fastq"
+    log:
+        f"{outdir}/logs/unzip_reads/unzip_reads_{{sample_pool}}.log"
     shell:
-        "gunzip -c {input.forward_reads} > {output.forward_out}; gunzip -c {input.reverse_reads} > {output.reverse_out}"
+        """
+        set -euo pipefail
+        
+        echo "Starting read decompression for {wildcards.sample_pool}" > {log}
+        echo "Timestamp: $(date)" >> {log}
+        echo "Forward reads: {input.forward_reads}" >> {log}
+        echo "Reverse reads: {input.reverse_reads}" >> {log}
+        echo "" >> {log}
+        
+        # Decompress forward reads
+        echo "Decompressing forward reads..." >> {log}
+        gunzip -c {input.forward_reads} > {output.forward_out} 2>> {log}
+        
+        # Decompress reverse reads
+        echo "Decompressing reverse reads..." >> {log}
+        gunzip -c {input.reverse_reads} > {output.reverse_out} 2>> {log}
+        
+        # Verify output files
+        forward_size=$(stat -f%z {output.forward_out} 2>/dev/null || stat -c%s {output.forward_out})
+        reverse_size=$(stat -f%z {output.reverse_out} 2>/dev/null || stat -c%s {output.reverse_out})
+        
+        echo "" >> {log}
+        echo "Decompression completed successfully at $(date)" >> {log}
+        echo "Forward output size: $forward_size bytes" >> {log}
+        echo "Reverse output size: $reverse_size bytes" >> {log}
+        """
 
 rule rename_reads:
     input:
@@ -73,9 +133,45 @@ rule rename_reads:
         config["threads"]
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/rename_reads/rename_reads_{{sample_pool}}.log"
     shell:
-        "MarkerMAG rename_reads -r1 {input.forward_reads} -r2 {input.reverse_reads} -p {wildcards.sample_pool} -fq \
-        -t {threads}; mv {wildcards.sample_pool}_R*.fastq {params.renamed_dir}"
+        """
+        set -euo pipefail
+        
+        echo "Starting read renaming for {wildcards.sample_pool}" > {log}
+        echo "Timestamp: $(date)" >> {log}
+        echo "Input forward: {input.forward_reads}" >> {log}
+        echo "Input reverse: {input.reverse_reads}" >> {log}
+        echo "Threads: {threads}" >> {log}
+        echo "" >> {log}
+        
+        # Run MarkerMAG rename_reads
+        echo "Running MarkerMAG rename_reads..." >> {log}
+        MarkerMAG rename_reads \
+            -r1 {input.forward_reads} \
+            -r2 {input.reverse_reads} \
+            -p {wildcards.sample_pool} \
+            -fq \
+            -t {threads} \
+            >> {log} 2>&1
+        
+        # Move renamed files to output directory
+        echo "" >> {log}
+        echo "Moving renamed files to {params.renamed_dir}" >> {log}
+        mv {wildcards.sample_pool}_R*.fastq {params.renamed_dir} 2>> {log}
+        
+        # Verify output files exist
+        if [ -f {output.forward_renamed} ] && [ -f {output.reverse_renamed} ]; then
+            echo "Read renaming completed successfully at $(date)" >> {log}
+            echo "Output files:" >> {log}
+            echo "  - {output.forward_renamed}" >> {log}
+            echo "  - {output.reverse_renamed}" >> {log}
+        else
+            echo "ERROR: Expected output files not found" >&2
+            exit 1
+        fi
+        """
 
 rule fastq_2_fasta:
     input:
@@ -90,10 +186,18 @@ rule fastq_2_fasta:
         config["threads"]
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/fastq_2_fasta/fastq_2_fasta_{{sample_pool}}.log"
     shell:
         """
-        seqkit fq2fa {input.forward_reads} -o {output.fasta_forward} --threads {threads}
-        seqkit fq2fa {input.reverse_reads} -o {output.fasta_reverse} --threads {threads}
+        echo "Starting conversion of FASTQ to FASTA for {wildcards.sample_pool}" > {log}
+        echo "Timestamp: $(date)" >> {log}
+        echo "Input forward: {input.forward_reads}" >> {log}
+        echo "Input reverse: {input.reverse_reads}" >> {log}
+        echo "" >> {log}
+        seqkit fq2fa {input.forward_reads} -o {output.fasta_forward} --threads {threads} 2>> {log}
+        seqkit fq2fa {input.reverse_reads} -o {output.fasta_reverse} --threads {threads} 2>> {log}
+        echo "Conversion completed successfully at $(date)" >> {log}
         """
 
 rule build_markermag_mag_dir:
@@ -113,6 +217,8 @@ rule build_markermag_mag_dir:
         drep_dir=f"{outdir}/results/06_binning/drep",
         script=os.path.abspath("workflow/scripts/build_markermag_mag_dirs.py"),
         copy_mode=config.get("markermag_mag_copy_mode", "symlink")
+    log:
+        f"{outdir}/logs/build_markermag_mag_dir/build_markermag_mag_dir_{{sample_pool}}.log"
     shell:
         r"""
         rm -rf {output.mag_dir}
@@ -124,7 +230,8 @@ rule build_markermag_mag_dir:
             --sample-pool {wildcards.sample_pool} \
             --out-dir {output.mag_dir} \
             --copy-mode {params.copy_mode} \
-            --done {output.done}
+            --done {output.done} \
+            > {log} 2>&1
         """
 
 rule markermag_link:
@@ -140,43 +247,69 @@ rule markermag_link:
     conda:
         "../envs/markerMAG.yaml"
     threads:
-        64
+        config["threads"]
     resources:
         mem_mb=config["max_mem"]
     log:
-        f"{outdir}/logs/markermag/{{sample_pool}}.log"
+        f"{outdir}/logs/markermag_link/markermag_link_{{sample_pool}}.log"
     params:
         markermag_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag"
     shell:
         r"""
-        mkdir -p $(dirname {log})
-        exec > {log} 2>&1
-        set -x
-
-        echo "[MarkerMAG] sample_pool={wildcards.sample_pool}"
-        echo "[MarkerMAG] MAG directory: {input.mag_fasta}"
-
+        set -euo pipefail
+        
+        # Initialize log
+        echo "Starting MarkerMAG linkage analysis for {wildcards.sample_pool}" > {log}
+        echo "Timestamp: $(date)" >> {log}
+        echo "Threads: {threads}" >> {log}
+        echo "" >> {log}
+        
+        # Log input files
+        echo "Input files:" >> {log}
+        echo "  Forward reads: {input.forward_reads}" >> {log}
+        echo "  Reverse reads: {input.reverse_reads}" >> {log}
+        echo "  PhyloFlash markers: {input.phyloflash}" >> {log}
+        echo "  MAG directory: {input.mag_fasta}" >> {log}
+        echo "" >> {log}
+        
+        # Validate and count MAGs
+        echo "Validating MAG directory..." >> {log}
         n_mags=$(find -L {input.mag_fasta} -maxdepth 1 -type f \
             \( -name "*.fa" -o -name "*.fna" -o -name "*.fasta" \) | wc -l)
-
-        echo "[MarkerMAG] Number of valid MAGs: $n_mags"
-
+        
+        echo "Number of valid MAG files found: $n_mags" >> {log}
+        
         if [ "$n_mags" -eq 0 ]; then
-            echo "ERROR: No valid MAG fasta files found for {wildcards.sample_pool}" >&2
-            echo "MAG directory: {input.mag_fasta}" >&2
+            echo "ERROR: No valid MAG fasta files found for {wildcards.sample_pool}" >> {log}
+            echo "MAG directory contents:" >> {log}
+            ls -lh {input.mag_fasta} >> {log} 2>&1 || echo "Directory not accessible" >> {log}
             exit 1
         fi
-
-        broken_links=$(find {input.mag_fasta} -maxdepth 1 -xtype l | wc -l)
+        
+        # Check for broken symlinks
+        echo "Checking for broken symlinks..." >> {log}
+        broken_links=$(find {input.mag_fasta} -maxdepth 1 -xtype l 2>/dev/null | wc -l)
+        
         if [ "$broken_links" -gt 0 ]; then
-            echo "ERROR: Broken symlinks found in {input.mag_fasta}" >&2
-            find {input.mag_fasta} -maxdepth 1 -xtype l -ls >&2
+            echo "ERROR: Found $broken_links broken symlink(s) in {input.mag_fasta}" >> {log}
+            echo "Broken symlinks:" >> {log}
+            find {input.mag_fasta} -maxdepth 1 -xtype l -ls >> {log} 2>&1
             exit 1
         fi
-
+        
+        echo "MAG directory validation successful" >> {log}
+        echo "" >> {log}
+        
+        # Prepare output directory
+        echo "Preparing output directory: {params.markermag_dir}" >> {log}
         rm -rf {params.markermag_dir}
         mkdir -p {params.markermag_dir}
-
+        
+        # Run MarkerMAG link
+        echo "Running MarkerMAG link analysis..." >> {log}
+        echo "Command: MarkerMAG link -p {wildcards.sample_pool} -r1 {input.forward_reads} -r2 {input.reverse_reads} -marker {input.phyloflash} -mag {input.mag_fasta} -o {params.markermag_dir} -x fa -t {threads} -force" >> {log}
+        echo "" >> {log}
+        
         MarkerMAG link \
             -p {wildcards.sample_pool} \
             -r1 {input.forward_reads} \
@@ -186,13 +319,29 @@ rule markermag_link:
             -o {params.markermag_dir} \
             -x fa \
             -t {threads} \
-            -force
-
-        if [ ! -s {output.markerMAG_link} ]; then
-            echo "[MarkerMAG] No genome-level linkage detected. Writing empty placeholder."
+            -force \
+            >> {log} 2>&1
+        
+        echo "" >> {log}
+        echo "MarkerMAG link completed" >> {log}
+        
+        # Check if linkage file exists and has content
+        if [ ! -f {output.markerMAG_link} ]; then
+            echo "WARNING: MarkerMAG did not produce linkage output file" >> {log}
+            echo "Creating empty placeholder with header" >> {log}
             printf "MarkerGene\tGenomicSeq\n" > {output.markerMAG_link}
+        elif [ ! -s {output.markerMAG_link} ]; then
+            echo "WARNING: MarkerMAG linkage file is empty" >> {log}
+            echo "Adding header to empty file" >> {log}
+            printf "MarkerGene\tGenomicSeq\n" > {output.markerMAG_link}
+        else:
+            n_links=$(tail -n +2 {output.markerMAG_link} 2>/dev/null | wc -l)
+            echo "Success: Found $n_links genome-marker linkages" >> {log}
         fi
-
+        
+        echo "" >> {log}
+        echo "MarkerMAG linkage analysis completed successfully at $(date)" >> {log}
+        
         touch {output.markermag_done}
         """
 
@@ -208,8 +357,13 @@ rule add_taxonomy_maglinkage:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{resources}/logs/add_taxonomy_maglinkage/add_taxonomy_maglinkage_{{sample_pool}}.log"
     shell:
         """
-        python3 workflow/scripts/add_markermag_taxonomy.py -m {input.markermag_link} -p {input.phyloflash_classification} -o {output.tax_linked}
+        python3 workflow/scripts/add_markermag_taxonomy.py \
+            -m {input.markermag_link} \
+            -p {input.phyloflash_classification} \
+            -o {output.tax_linked} \
+            2> {log}
         """
-
