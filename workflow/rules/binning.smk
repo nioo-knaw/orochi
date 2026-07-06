@@ -457,7 +457,7 @@ rule mag_depth:
     resources:
         mem_mb=config['max_mem']
     log:
-        f"{outdir}/logs/mag_depth/mag_depth_{{sample_pool}}.log"
+        f"{outdir}/logs/mag_depth/mag_depth.log"
     shell:
         """
         python3 workflow/scripts/mag_depth.py \

@@ -108,7 +108,7 @@ rule MetaPhlAn_sgb_to_gtdb:
     conda:
         "../envs/metaphlan4.yaml"
     log:
-        f"{outdir}/logs/MetaPhlAn4/MetaPhlAn_sgb_to_gtdb.log"
+        f"{outdir}/logs/MetaPhlAn4/MetaPhlAn_sgb_to_gtdb_{{sample}}.log"
     shell:
         """
         if [ "{config[taxonomy_type]}" = "GTDB" ]; then

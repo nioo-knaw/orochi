@@ -86,7 +86,7 @@ rule filter_prokaryote_gff:
         gff=f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_genes.gff",
         headers_prok=f"{outdir}/results/04_gene_prediction/whokaryote/{{sample}}/prokaryote_contig_headers.txt"
     output:
-        f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_prokaryote_{minsize_antismash}.gff"
+        f"{outdir}/results/04_gene_prediction/prodigal/{{sample}}/{{sample}}_prokaryote_{{minsize_antismash}}.gff"
     conda:
         "../envs/size_filter.yaml"
     params:
