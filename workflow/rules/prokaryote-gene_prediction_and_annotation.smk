@@ -177,6 +177,7 @@ rule eggnog:
         mem_mb = 500000  # Set a high memory limit for eggNOG (500GB), but not max_mb, to still allow for parallelization
     shell:
         """
+        mkdir -p {params.temp_dir}
         emapper.py \
             -i {input.proteins} \
             --cpu {threads} \
