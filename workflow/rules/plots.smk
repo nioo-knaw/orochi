@@ -1,4 +1,4 @@
-from workflow.scripts.augustify import outdir
+outdir = config["outdir"]
 
 rule krona:
     input: rules.CAT.output.names
