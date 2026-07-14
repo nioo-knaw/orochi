@@ -78,13 +78,13 @@ def starts_with_sample_pool(filename, sample_pool):
     """
     name = Path(filename).name
 
-    if name.startswith(sample_pool + "_"):
+    if name.startswith(sample_pool + "_") or name.startswith("maxbin_" + sample_pool + "_") or name.startswith("metabat2_" + sample_pool + "_"):
         return True
 
-    if name.startswith(sample_pool + "."):
+    if name.startswith(sample_pool + ".") or name.startswith("maxbin." + sample_pool + ".") or name.startswith("metabat2." + sample_pool + "."):
         return True
 
-    if name.startswith(sample_pool + "-"):
+    if name.startswith(sample_pool + "-") or name.startswith("maxbin-" + sample_pool + "-") or name.startswith("metabat2-" + sample_pool + "-"):
         return True
 
     return False

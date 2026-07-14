@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 import subprocess
 import sys
-
+import shutil
 
 def fasta_has_records(fasta):
     """
@@ -82,6 +82,19 @@ def write_placeholder(html, json_out, sample, title, reason, detail=None):
             indent=2,
         )
 
+def reset_output_dir(outdir):
+    """
+    Remove and recreate the antiSMASH output directory.
+    """
+    outdir_path = Path(outdir).resolve()
+
+    if outdir_path.name != "fungal":
+        raise ValueError(f"Refusing to remove unexpected output directory: {outdir_path}")
+
+    if outdir_path.exists():
+        shutil.rmtree(outdir_path)
+
+    outdir_path.mkdir(parents=True, exist_ok=True)
 
 def main():
     sample = snakemake.wildcards.sample_pool
@@ -96,9 +109,6 @@ def main():
 
     log_path = Path(snakemake.log[0])
     log_path.parent.mkdir(parents=True, exist_ok=True)
-
-    outdir_path = Path(outdir)
-    outdir_path.mkdir(parents=True, exist_ok=True)
 
     with open(log_path, "w") as log_handle:
         log_handle.write(f"[fungismash] sample_pool={sample}\n")
@@ -117,7 +127,7 @@ def main():
     if not fasta_has_records(contigs):
         reason = "No eukaryotic sequences are detected"
         log(f"[fungismash] {reason}. Writing placeholder outputs.")
-
+        reset_output_dir(outdir)
         write_placeholder(
             html=html,
             json_out=json_out,
@@ -134,7 +144,7 @@ def main():
         detail = "fungiSMASH was skipped because no augustify GFF file was provided."
 
         log(f"[fungismash] {reason}. Writing placeholder outputs.")
-
+        reset_output_dir(outdir)
         write_placeholder(
             html=html,
             json_out=json_out,
@@ -158,7 +168,7 @@ def main():
         )
 
         log(f"[fungismash] {reason}. Writing placeholder outputs.")
-
+        reset_output_dir(outdir)
         write_placeholder(
             html=html,
             json_out=json_out,
@@ -183,6 +193,7 @@ def main():
         "--taxon", "fungi",
         "--cassis",
         "--output-basename", "fungal",
+        "--tfbs",
         "--cc-mibig",
         "--cb-general",
         "--cb-knownclusters",
@@ -191,7 +202,7 @@ def main():
 
     log("[fungismash] Eukaryotic sequences and gene annotations detected. Running antiSMASH.")
     log("[fungismash] command: " + " ".join(cmd))
-
+    reset_output_dir(outdir)
     with open(log_path, "a") as log_handle:
         subprocess.run(
             cmd,
