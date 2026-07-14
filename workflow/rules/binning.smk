@@ -227,7 +227,7 @@ rule checkm2:
         config['threads']
     resources:
         mem_mb=config['max_mem']
-    log: f"{outdir}/logs/{{sample_pool}}_checkm2.log"
+    log: f"{outdir}/logs/checkm2/{{sample_pool}}_checkm2.log"
     conda:
         "../envs/checkm2.yaml"
     shell:
@@ -263,7 +263,7 @@ rule BAT:
         config['threads']
     resources:
         mem_mb=config['max_mem']
-    log: f"{outdir}/logs/{{sample_pool}}_bat.log"
+    log: f"{outdir}/logs/BAT/{{sample_pool}}_bat.log"
     conda:
         "../envs/cat.yaml"
     shell:
