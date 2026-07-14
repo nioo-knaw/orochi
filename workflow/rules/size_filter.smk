@@ -13,5 +13,14 @@ rule size_filter_contigs:
         size=config['min_contig_length'],
         outdir=f"{outdir}/results/03_assembly/size_filtered/{{sample}}_{minsize}",
         script=os.path.abspath("workflow/scripts/sizefilter_contigs.py")
+    log:
+        f"{outdir}/logs/size_filter_contigs/size_filtered_{{sample}}.log"
     shell:
-        "python {params.script} --contigs {input} --outdir {params.outdir} --minsize {params.size} --sample_name {wildcards.sample}"
+        """
+        python {params.script} \
+        --contigs {input} \
+        --outdir {params.outdir} \
+        --minsize {params.size} \
+        --sample_name {wildcards.sample} \
+        > {log} 2>&1
+        """

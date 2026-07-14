@@ -19,10 +19,18 @@ rule fairy_sketch:
         sketch_dir=f"{outdir}/results/06_binning/coverage/fairy_sketch"
     resources:
         mem_mb=lambda wildcards: int(config['max_mem'] * 0.4)
+    log:
+        f"{outdir}/logs/fairy_sketch/fairy_sketch_{{sample}}.log"
     conda:
         "../envs/fairy.yaml"
     shell:
-        "fairy sketch -1 {input.forward} -2 {input.rev} -d {params.sketch_dir}"
+        """
+        fairy sketch \
+            -1 {input.forward} \
+            -2 {input.rev} \
+            -d {params.sketch_dir} \
+            > {log} 2>&1
+        """
 
 # Estimate coverage with fairy, using sketched reads and assembly.
 rule fairy_coverage:
@@ -36,10 +44,18 @@ rule fairy_coverage:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/fairy_coverage/fairy_coverage_{{sample_pool}}.log"
     conda:
         "../envs/fairy.yaml"
     shell:
-        "fairy coverage {input.sketch_files} {input.assembly} -t {threads} -o {output.coverage_file}"
+        """
+        fairy coverage \
+        {input.sketch_files} {input.assembly} \
+        -t {threads} \
+        -o {output.coverage_file} \
+        > {log} 2>&1
+        """
 
 
 checkpoint metabat2:
@@ -57,10 +73,19 @@ checkpoint metabat2:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/metabat2/metabat2_{{sample_pool}}.log"
     conda:
         "../envs/metabat2.yaml"
     shell:
-        "metabat2 -i {input.assembly} -a {input.depth} -o {params.bin_prefix} -t {threads}"
+        """
+        metabat2 \
+        -i {input.assembly} \
+        -a {input.depth} \
+        -o {params.bin_prefix} \
+        -t {threads} \
+        > {log} 2>&1
+        """
 
 
 def make_maxbin_coverage(input_file, output_file):
@@ -101,12 +126,19 @@ checkpoint maxbin2:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/maxbin2/maxbin2_{{sample_pool}}.log"
     conda:
         "../envs/maxbin2.yaml"
     shell:
         """
 	mkdir -p {output.bin_dir}
-	run_MaxBin.pl -contig {input.assembly} -abund {input.coverage} -out {params.bin_prefix} -thread {threads}
+	run_MaxBin.pl \
+	    -contig {input.assembly} \
+	    -abund {input.coverage} \
+	    -out {params.bin_prefix} \
+	    -thread {threads} \
+	    > {log} 2>&1
 	"""
 
 
@@ -163,10 +195,21 @@ checkpoint dastool:
         # input_list=lambda wildcards, input: format_dastool_input(input.contigs2bin_files) #Comma-separated list
     threads:
         config['threads']
+    log:
+        f"{outdir}/logs/dastool/dastool_{{sample_pool}}.log"
     conda:
         "../envs/dastool.yaml"
     shell:
-        "DAS_Tool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {threads} --write_bins"
+        """
+        DAS_Tool \
+            -i {params.input_list} \
+            -l metabat2,maxbin \
+            -c {input.assembly} \
+            -o {params.dastool_output} \
+            -t {threads} \
+            --write_bins\
+            > {log} 2>&1
+        """
 
 
 rule checkm2:
@@ -184,11 +227,20 @@ rule checkm2:
         config['threads']
     resources:
         mem_mb=config['max_mem']
-    log: f"{outdir}/logs/{{sample_pool}}_checkm2.log"
+    log: f"{outdir}/logs/checkm2/{{sample_pool}}_checkm2.log"
     conda:
         "../envs/checkm2.yaml"
     shell:
-        "checkm2 predict --threads {threads} -x fa --input {input.dastool_dir} --output-directory {params.output_dir} --force --database_path {params.db_path} 2> {log}"
+        """
+        checkm2 predict \
+            --threads {threads} \
+            -x fa \
+            --input {input.dastool_dir} \
+            --output-directory {params.output_dir} \
+            --force \
+            --database_path {params.db_path} \
+            > {log} 2>&1
+        """
 
 rule BAT:
     input:
@@ -211,15 +263,30 @@ rule BAT:
         config['threads']
     resources:
         mem_mb=config['max_mem']
-    log: f"{outdir}/logs/{{sample_pool}}_bat.log"
+    log: f"{outdir}/logs/BAT/{{sample_pool}}_bat.log"
     conda:
         "../envs/cat.yaml"
     shell:
         """ 
         mkdir -p {params.output_dir}
-        CAT_pack bins -b {input.dastool_dir} -d {params.db_path} -t {params.tax_path} -p {input.proteins} \
-         -a {input.alignment} -s .fa -n {threads} -o {params.output_dir}{params.prefix} --force 2> {log}
-        CAT_pack add_names -i {output.bat_class} -o {output.bat_names} -t {params.tax_path} --only_official --exclude_scores
+        CAT_pack bins \
+            -b {input.dastool_dir} \
+            -d {params.db_path} \
+            -t {params.tax_path} \
+            -p {input.proteins} \
+            -a {input.alignment} \
+            -s .fa \
+            -n {threads} \
+            -o {params.output_dir}{params.prefix} \
+            --force \
+            > {log} 2>&1
+        CAT_pack add_names \
+            -i {output.bat_class} \
+            -o {output.bat_names} \
+            -t {params.tax_path} \
+            --only_official \
+            --exclude_scores \
+            >> {log} 2>&1
         """
 
 rule checkm2_to_drep_format:
@@ -320,6 +387,8 @@ checkpoint dereplicate_bins:
         config["threads"]
     resources:
         mem_mb=config["max_mem"]
+    log:
+        f"{outdir}/logs/drep/dereplicate_bins.log"
     conda:
         "../envs/drep.yaml"
     shell:
@@ -346,10 +415,12 @@ checkpoint dereplicate_bins:
                 -comp {params.completeness_T} \
                 -con {params.contamination_T} \
                 --S_algorithm {params.S_algorithm} \
-                --skip_plots
+                --skip_plots \
+                > {log} 2>&1
         else
             mkdir -p {output.dereplicated_bins}
-            cp "$(grep -v '^[[:space:]]*$' {input.input_file})" {output.dereplicated_bins}/
+            cp "$(grep -v '^[[:space:]]*$' {input.input_file})" {output.dereplicated_bins}/ \
+                > {log} 2>&1
         fi
 
         # Validate representative MAGs exist.
@@ -360,6 +431,8 @@ checkpoint dereplicate_bins:
             echo "ERROR: dRep finished but no representative MAGs were found in {output.dereplicated_bins}" >&2
             exit 1
         fi
+
+        echo "Successfully dereplicated $n_bins bins into $n_reps representative MAGs" >> {log}
 
         touch {output.done}
         """
@@ -383,8 +456,13 @@ rule mag_depth:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/mag_depth/mag_depth.log"
     shell:
         """
-        python3 workflow/scripts/mag_depth.py --coverage {input.fairy_coverage} --mapping {input.dastool_contig2bin} -o {params.outdir}
+        python3 workflow/scripts/mag_depth.py \
+            --coverage {input.fairy_coverage} \
+            --mapping {input.dastool_contig2bin} \
+            -o {params.outdir} \
+            > {log} 2>&1
         """
-

@@ -1,3 +1,5 @@
+outdir = config["outdir"]
+
 rule krona:
     input: rules.CAT.output.names
     output:
@@ -9,12 +11,15 @@ rule krona:
         "../envs/krona.yaml"
     threads:
         config['threads']
+    log:
+        f"{outdir}/logs/krona/krona_{{sample_pool}}.log"
     shell:
         """
         mkdir -p {params.temp_dir}
-		bash workflow/scripts/convert2krona.sh {input} > {params.out_temp}
-		ktImportText {params.out_temp} -o {output}
-		"""
+        bash workflow/scripts/convert2krona.sh {input} > {params.out_temp} 2>> {log}
+        ktImportText {params.out_temp} -o {output} >> {log} 2>&1
+        echo "Krona plot successfully generated for {wildcards.sample_pool}" >> {log}
+        """
 
 # SAMPLES_POOLS = glob_wildcards(f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv").sample_pool
 import glob
@@ -68,13 +73,23 @@ rule report:
         "../envs/html.yaml"
     shell:
         r"""
+        set -euo pipefail
+        
+        echo "Starting Orochi report generation..." > {log}
+        echo "Timestamp: $(date)" >> {log}
+        
         mkdir -p {params.outdir_html}
-        cp {input.html_fastp} {params.outdir_html}
+        echo "Copying fastp HTML reports..." >> {log}
+        cp {input.html_fastp} {params.outdir_html} 2>> {log}
+        
         mkdir -p {params.rep_antismash_bac}
         mkdir -p {params.rep_antismash_fun}
+        
+        echo "Copying bacterial antiSMASH results..." >> {log}
         echo '{params.antismash_bac}' | jq -c '.[]' | while read pair; do
             src=$(echo "$pair" | jq -r '.src')
             dst=$(echo "$pair" | jq -r '.dst')
+            echo "  Processing: $src -> $dst" >> {log}
             mkdir -p "$dst"
             find "$src" -type f \
                 \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.svg" -o -name "*.png" \) \
@@ -83,10 +98,13 @@ rule report:
                     mkdir -p "$dst/$(dirname "$rel")"
                     cp "$file" "$dst/$rel"
                 done
-        done
+        done 2>> {log}
+        
+        echo "Copying fungal antiSMASH results..." >> {log}
         echo '{params.antismash_fun}' | jq -c '.[]' | while read pair; do
             src=$(echo "$pair" | jq -r '.src')
             dst=$(echo "$pair" | jq -r '.dst')
+            echo "  Processing: $src -> $dst" >> {log}
             mkdir -p "$dst"
             find "$src" -type f \
                 \( -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.svg" -o -name "*.png" \) \
@@ -95,6 +113,11 @@ rule report:
                     mkdir -p "$dst/$(dirname "$rel")"
                     cp "$file" "$dst/$rel"
                 done
-        done
-        Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output}
+        done 2>> {log}
+        
+        echo "Rendering final HTML report with R..." >> {log}
+        
+        Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output} >> {log} 2>&1
+        
+        echo "Report generation completed successfully at $(date)" >> {log}
         """
