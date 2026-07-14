@@ -57,7 +57,11 @@ rule combine_all_bgc_bin_taxonomy:
         combined_df = pd.concat(dfs,ignore_index=True)
         combined_df.to_csv(output.combined,sep="\t",index=False)
 
-rule summarize_bgc_per_bin:
+checkpoint summarize_bgc_per_bin:
+    """Summarize BGCs per bin. A checkpoint because downstream per-bin
+    antiSMASH report generation only runs for bins listed here, i.e. bins
+    with at least one detected BGC -- the exact bin list isn't known until
+    this rule has run."""
     input:
         bgc_bin_tax=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_bin_taxonomy.tsv"
     output:
@@ -88,56 +92,33 @@ rule summarize_bgc_per_bin:
 
         summary.to_csv(output.bin_summary,sep="\t",index=False)
 
-def get_bins_for_sample_pool(wildcards):
-    """Get list of bins for a sample pool from the contig2bin file."""
+def bins_with_bgcs(wildcards):
+    """Bin IDs that have at least one detected BGC for this sample pool.
+
+    Reads the summarize_bgc_per_bin checkpoint, which only lists bins with
+    binned BGC regions -- bins with zero BGCs simply don't appear here, so
+    no filtering/regeneration work is done for them.
+    """
     import pandas as pd
-    
-    contig2bin_file = checkpoints.dastool.get(
+
+    summary_file = checkpoints.summarize_bgc_per_bin.get(
         sample_pool=wildcards.sample_pool
-    ).output.c2bin
-    
-    # Read contig2bin file
-    df = pd.read_csv(contig2bin_file, sep="\t", header=None, names=["contig", "bin"])
-    bins = df["bin"].unique().tolist()
-    
-    return bins
+    ).output.bin_summary
 
+    try:
+        df = pd.read_csv(summary_file, sep="\t")
+    except (FileNotFoundError, pd.errors.EmptyDataError):
+        return []
 
-# checkpoint list_bins:
-#     """Create a file listing all bins for a sample pool."""
-#     input:
-#         contig2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv"
-#     output:
-#         bin_list=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bin_list.txt"
-#     run:
-#         import pandas as pd
-#         
-#         df = pd.read_csv(input.contig2bin, sep="\t", header=None, names=["contig", "bin"])
-#         bins = sorted(df["bin"].unique())
-#         
-#         with open(output.bin_list, "w") as f:
-#             for bin_id in bins:
-#                 f.write(f"{bin_id}\n")
+    if df.empty or "bin_id" not in df.columns:
+        return []
+
+    return sorted(df["bin_id"].unique().tolist())
 
 
 def aggregate_bin_htmls(wildcards):
-    """Aggregate all bin HTML files for a sample pool."""
-    import pandas as pd
-    
-    # Get the contig2bin file from the dastool checkpoint
-    checkpoint_output = checkpoints.dastool.get(
-        sample_pool=wildcards.sample_pool
-    ).output.c2bin
-    
-    # Read the contig2bin file to get list of bins
-    try:
-        df = pd.read_csv(checkpoint_output, sep="\t", header=None, names=["contig", "bin"])
-        bins = sorted(df["bin"].unique().tolist())
-    except (FileNotFoundError, pd.errors.EmptyDataError):
-        # During dry-run or if file is empty
-        bins = []
-    
-    # Return list of expected HTML files
+    """Expected per-bin antiSMASH HTML report, for every bin with a BGC."""
+    bins = bins_with_bgcs(wildcards)
     return expand(
         f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}/index.html",
         sample_pool=wildcards.sample_pool,
@@ -146,7 +127,10 @@ def aggregate_bin_htmls(wildcards):
 
 
 rule filter_antismash_by_bin:
-    """Filter antiSMASH GenBank files to only include contigs from one bin."""
+    """Filter antiSMASH GenBank region files to only include contigs from one
+    bin. Not used by the per-bin HTML report (see filter_antismash_json_by_bin
+    for that) -- kept as an input source for tools that consume per-bin
+    GenBank files directly, e.g. BiG-SCAPE."""
     input:
         antismash_json=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial.json",
         contig2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv"
@@ -161,66 +145,51 @@ rule filter_antismash_by_bin:
         "../scripts/filter_antismash_bins.py"
 
 
-rule regenerate_antismash_html_per_bin:
-    """Regenerate antiSMASH HTML from filtered GenBank files for a bin."""
+rule filter_antismash_json_by_bin:
+    """Filter the antiSMASH results JSON down to the records belonging to
+    one bin. This is the input antiSMASH's own --reuse-results mode needs to
+    regenerate a per-bin HTML report without re-running any analysis."""
     input:
-        filtered_gbk=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}_filtered_gbk"
+        antismash_json=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial.json",
+        contig2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv"
+    output:
+        filtered_json=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}_reuse.json"
+    params:
+        bin_id="{bin_id}"
+    log:
+        f"{outdir}/logs/antismash/bacterial/per_bin/{{sample_pool}}_{{bin_id}}_filter_json.log"
+    script:
+        "../scripts/filter_antismash_json_by_bin.py"
+
+
+rule regenerate_antismash_html_per_bin:
+    """Regenerate a full antiSMASH HTML report for one bin using antiSMASH's
+    own --reuse-results mode against the bin's filtered results JSON. Only
+    output rendering is redone; gene finding, cluster detection, ClusterBlast
+    etc. are all skipped since their results are already cached in the JSON,
+    so this is much cheaper than a full antiSMASH run."""
+    input:
+        filtered_json=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}_reuse.json"
     output:
         html=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}/index.html"
     params:
         output_dir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}",
-        bin_id="{bin_id}"
-    threads: 1
+        bin_id="{bin_id}",
+        database_dir=antismash_db
+    threads: 2
+    log:
+        f"{outdir}/logs/antismash/bacterial/per_bin/{{sample_pool}}_{{bin_id}}_regenerate_html.log"
     conda:
         "../envs/antismash.yaml"
-    script:
-        "../scripts/regenerate_antismash_html.py"
-
-# rule regenerate_antismash_html_per_bin:
-#     """Regenerate antiSMASH HTML from filtered GenBank files for a bin."""
-#     input:
-#         filtered_gbk=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}_filtered_gbk"
-#     output:
-#         html=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}/index.html"
-#     params:
-#         output_dir=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin/{{bin_id}}",
-#         bin_id="{bin_id}",
-#         database_dir=antismash_db
-#     threads: 1
-#     conda:
-#         "../envs/antismash.yaml"
-#     shell:
-#         """
-#         # Check if there are any GenBank files
-#         n_gbk=$(find {input.filtered_gbk} -name "*.gbk" | wc -l)
-#
-#         if [ "$n_gbk" -eq 0 ]; then
-#             # Create empty HTML if no BGCs in this bin
-#             mkdir -p {params.output_dir}
-#             echo "<html><body><h1>No BGCs found in bin {params.bin_id}</h1></body></html>" > {output.html}
-#         else
-#             # Copy GenBank files to output directory
-#             mkdir -p {params.output_dir}
-#             cp {input.filtered_gbk}/*.gbk {params.output_dir}/
-#
-#             # Use antiSMASH to regenerate HTML from GenBank files
-#             # This is much faster than re-running full analysis
-#             cd {params.output_dir}
-#
-#             # Create a minimal completion marker so antiSMASH knows these are pre-analyzed
-#             # Then just generate the HTML visualization
-#             for gbk in *.gbk; do
-#                 python -c "
-# from Bio import SeqIO
-# import json
-#
-# # antiSMASH can regenerate HTML if the GenBank files are properly formatted
-# # The files from the original run should already have all the necessary features
-# print('GenBank file ready: $gbk')
-#                 "
-#             done
-#         fi
-#         """
+    shell:
+        """
+        antismash --reuse-results {input.filtered_json} \
+            --output-dir {params.output_dir} \
+            --output-basename {params.bin_id} \
+            --databases {params.database_dir} \
+            -c {threads} \
+            > {log} 2>&1
+        """
 
 
 rule aggregate_bin_antismash_reports:
