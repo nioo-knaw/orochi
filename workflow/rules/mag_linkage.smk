@@ -247,7 +247,7 @@ rule markermag_link:
     conda:
         "../envs/markerMAG.yaml"
     threads:
-        config["threads"]
+        min(config["threads"], 16)
     resources:
         mem_mb=config["max_mem"]
     log:
@@ -300,6 +300,24 @@ rule markermag_link:
         echo "MAG directory validation successful" >> {log}
         echo "" >> {log}
         
+        # --- Dynamically size threads for MarkerMAG based on actual read count ---
+        # Prevents handing MarkerMAG more threads than the data can meaningfully
+        # use, which triggers an internal bug on very small datasets (empty
+        # per-thread subsets during Rd2 -> missing merged file -> crash).
+        n_reads=$(grep -c '^>' {input.forward_reads} || echo 0)
+        echo "Read count in forward reads: $n_reads" >> {log}
+
+        if [ "$n_reads" -lt 1000 ]; then
+            effective_threads=1
+        else
+            effective_threads=$(( n_reads / 50 ))
+            if [ "$effective_threads" -gt {threads} ]; then
+                effective_threads={threads}
+            fi
+        fi
+        echo "Effective threads passed to MarkerMAG: $effective_threads" >> {log}
+        echo "" >> {log}
+        
         # Prepare output directory
         echo "Preparing output directory: {params.markermag_dir}" >> {log}
         rm -rf {params.markermag_dir}
@@ -334,7 +352,7 @@ rule markermag_link:
             echo "WARNING: MarkerMAG linkage file is empty" >> {log}
             echo "Adding header to empty file" >> {log}
             printf "MarkerGene\tGenomicSeq\n" > {output.markerMAG_link}
-        else:
+        else
             n_links=$(tail -n +2 {output.markerMAG_link} 2>/dev/null | wc -l)
             echo "Success: Found $n_links genome-marker linkages" >> {log}
         fi
@@ -365,5 +383,5 @@ rule add_taxonomy_maglinkage:
             -m {input.markermag_link} \
             -p {input.phyloflash_classification} \
             -o {output.tax_linked} \
-            2> {log}
+            {log} 2>&1
         """
