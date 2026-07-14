@@ -383,5 +383,5 @@ rule add_taxonomy_maglinkage:
             -m {input.markermag_link} \
             -p {input.phyloflash_classification} \
             -o {output.tax_linked} \
-            {log} 2>&1
+            > {log} 2>&1
         """
