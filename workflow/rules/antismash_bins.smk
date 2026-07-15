@@ -14,10 +14,24 @@ rule map_bgc_to_bins:
         # Load contig to bin mapping
         c2b_df = pd.read_csv(input.contig2bin,sep="\t",header=None,names=["contig_id", "bin_id"])
 
-        # Load BAT taxonomy (skip comment lines starting with #)
-        bat_df = pd.read_csv(input.bat_taxonomy,sep="\t",comment="#")
-        # BAT output has columns: bin, classification, reason, lineage, lineage scores
+        # Load BAT taxonomy. The header line itself starts with "#" (e.g.
+        # "# bin\tclassification\treason\t..."), so comment="#" must NOT be
+        # used here -- it would drop the header and treat the first data row
+        # as column names instead.
+        bat_df = pd.read_csv(input.bat_taxonomy,sep="\t")
         bat_df = bat_df.rename(columns={bat_df.columns[0]: "bin_id"})
+
+        # CAT_pack's own "lineage" column is a taxid string (e.g.
+        # "1;131567;2;..."), not a human-readable name. Build a readable
+        # lineage from the named rank columns added by --only_official,
+        # skipping ranks with no support/NA.
+        rank_cols = ["superkingdom", "phylum", "class", "order", "family", "genus", "species"]
+        bat_df["lineage"] = bat_df[rank_cols].apply(
+            lambda row: ";".join(
+                str(v) for v in row if pd.notna(v) and v not in ("no support", "NA")
+            ),
+            axis=1
+        )
 
         # Merge BGC with bin assignment
         bgc_bins = bgc_df.merge(c2b_df,on="contig_id",how="left")
