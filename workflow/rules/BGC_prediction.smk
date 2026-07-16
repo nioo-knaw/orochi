@@ -66,19 +66,27 @@ rule antismash:
 
     shell:
         """
-        test -d {params.database_dir} || \
-            (echo "ERROR: antiSMASH database directory not found: {params.database_dir}" >&2; exit 1)
-        
-        antismash {input.contigs} \
+        test -d {params.database_dir:q} || \
+            (echo "ERROR: antiSMASH database directory not found: {params.database_dir:q}" >&2; exit 1)
+
+        # Safety check before removing antiSMASH output directory
+        test "$(basename "{params.outdir:q}")" = "bacterial" || \
+            (echo "ERROR: refusing to remove unexpected output directory: {params.outdir:q}" >&2; exit 1)
+
+        # Clean antiSMASH folder for re-run
+        rm -rf {params.outdir:q}
+
+        antismash {input.contigs:q} \
         -c {params.threads} \
-        --genefinding-gff3 {input.gff} \
-        --output-dir {params.outdir} \
+        --genefinding-gff3 {input.gff:q} \
+        --output-dir {params.outdir:q} \
         --taxon bacteria \
         --output-basename bacterial \
+        --tfbs \
         --cc-mibig \
         --cb-general \
         --cb-knownclusters \
-        --databases {params.database_dir} \
+        --databases {params.database_dir:q} \
         > {log} 2>&1
         """
 

@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 import subprocess
 import sys
-
+import shutil
 
 def fasta_has_records(fasta):
     """
@@ -84,8 +84,6 @@ def write_placeholder(html, json_out, sample, title, reason, detail=None):
 
 
 def main():
-    sys.stderr = sys.stdout = open(snakemake.log[0], "w")
-
     sample = snakemake.wildcards.sample_pool
 
     contigs = snakemake.input["contigs"]
@@ -111,7 +109,7 @@ def main():
     if not fasta_has_records(contigs):
         reason = "No eukaryotic sequences are detected"
         print(f"[fungismash] {reason}. Writing placeholder outputs.")
-
+        reset_output_dir(outdir)
         write_placeholder(
             html=html,
             json_out=json_out,
@@ -128,7 +126,7 @@ def main():
         detail = "fungiSMASH was skipped because no augustify GFF file was provided."
 
         print(f"[fungismash] {reason}. Writing placeholder outputs.")
-
+        reset_output_dir(outdir)
         write_placeholder(
             html=html,
             json_out=json_out,
@@ -152,7 +150,7 @@ def main():
         )
 
         print(f"[fungismash] {reason}. Writing placeholder outputs.")
-
+        reset_output_dir(outdir)
         write_placeholder(
             html=html,
             json_out=json_out,
