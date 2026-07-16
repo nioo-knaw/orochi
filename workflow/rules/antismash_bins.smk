@@ -2,7 +2,8 @@ rule map_bgc_to_bins:
     input:
         bgc_summary=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial_summary.tsv",
         contig2bin=f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv",
-        bat_taxonomy=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt"
+        bat_taxonomy=f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}.bin2classification.names.txt",
+        markermag_taxonomy=f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome_taxonomy.txt"
     output:
         bgc_bin_taxonomy=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_bin_taxonomy.tsv"
     run:
@@ -47,6 +48,33 @@ rule map_bgc_to_bins:
             on="bin_id",
             how="left"
         )
+
+        # Load markerMAG taxonomy (16S-based genome-marker linkage). Not every
+        # bin is reached by a 16S linkage, so this is a left join and missing
+        # values are expected -- shown alongside, not instead of, BAT taxonomy.
+        try:
+            markermag_df = pd.read_csv(input.markermag_taxonomy, sep="\t")
+        except (FileNotFoundError, pd.errors.EmptyDataError):
+            markermag_df = pd.DataFrame(columns=["GenomicSeq", "taxonomy"])
+
+        if not markermag_df.empty and "GenomicSeq" in markermag_df.columns:
+            markermag_df = markermag_df.rename(
+                columns={"GenomicSeq": "bin_id", "taxonomy": "markermag_taxonomy"}
+            )
+            # "unknown" is add_markermag_taxonomy.py's placeholder for marker
+            # genes with no phyloFlash classification -- not informative here.
+            markermag_df = markermag_df[markermag_df["markermag_taxonomy"] != "unknown"]
+            # A bin can have multiple marker gene linkages; collapse to one
+            # taxonomy string per bin.
+            markermag_tax = (
+                markermag_df.groupby("bin_id")["markermag_taxonomy"]
+                .agg(lambda x: ";".join(sorted(set(x))))
+                .reset_index()
+            )
+        else:
+            markermag_tax = pd.DataFrame(columns=["bin_id", "markermag_taxonomy"])
+
+        bgc_bins_tax = bgc_bins_tax.merge(markermag_tax, on="bin_id", how="left")
 
         # Add indicator for unbinned contigs
         bgc_bins_tax["bin_status"] = bgc_bins_tax["bin_id"].apply(
@@ -96,18 +124,19 @@ checkpoint summarize_bgc_per_bin:
         if len(binned) == 0:
             # Create empty output with expected columns
             summary = pd.DataFrame(columns=[
-                "bin_id", "taxonomy", "n_bgcs", "bgc_types", "sample_pool"
+                "bin_id", "taxonomy", "markermag_taxonomy", "n_bgcs", "bgc_types", "sample_pool"
             ])
         else:
             # Group by bin and summarize
             summary = binned.groupby("bin_id").agg({
                 "lineage": "first",  # Taxonomy is the same for all BGCs in a bin
+                "markermag_taxonomy": "first",  # Same for all BGCs in a bin
                 "bgc_id": "count",  # Count BGCs
                 "bgc_product": lambda x: ";".join(sorted(set(x))),  # Unique BGC types
                 "sample_pool": "first"
             }).reset_index()
 
-            summary.columns = ["bin_id", "taxonomy", "n_bgcs", "bgc_types", "sample_pool"]
+            summary.columns = ["bin_id", "taxonomy", "markermag_taxonomy", "n_bgcs", "bgc_types", "sample_pool"]
 
         summary.to_csv(output.bin_summary,sep="\t",index=False)
 
@@ -229,7 +258,13 @@ rule aggregate_bin_antismash_reports:
             summary_df = pd.read_csv(input.bin_taxonomy, sep="\t")
         except (FileNotFoundError, pd.errors.EmptyDataError):
             summary_df = pd.DataFrame()
-        
+
+        if not summary_df.empty:
+            if "markermag_taxonomy" not in summary_df.columns:
+                summary_df["markermag_taxonomy"] = "N/A"
+            else:
+                summary_df["markermag_taxonomy"] = summary_df["markermag_taxonomy"].fillna("N/A")
+
         # Create HTML index
         html_content = f"""
         <!DOCTYPE html>
@@ -252,31 +287,34 @@ rule aggregate_bin_antismash_reports:
             <table>
                 <tr>
                     <th>Bin ID</th>
-                    <th>Taxonomy</th>
+                    <th>BAT Taxonomy</th>
+                    <th>MarkerMAG Taxonomy</th>
                     <th>Number of BGCs</th>
                     <th>BGC Types</th>
                     <th>antiSMASH Report</th>
                 </tr>
         """
-        
+
         if not summary_df.empty:
             for _, row in summary_df.iterrows():
                 bin_id = row['bin_id']
                 taxonomy = row.get('taxonomy', 'N/A')
+                markermag_taxonomy = row.get('markermag_taxonomy', 'N/A')
                 n_bgcs = row.get('n_bgcs', 0)
                 bgc_types = row.get('bgc_types', 'N/A')
-                
+
                 html_content += f"""
                 <tr>
                     <td>{bin_id}</td>
                     <td><em>{taxonomy}</em></td>
+                    <td><em>{markermag_taxonomy}</em></td>
                     <td>{n_bgcs}</td>
                     <td>{bgc_types}</td>
                     <td><a href="per_bin/{bin_id}/index.html" target="_blank">View Report</a></td>
                 </tr>
                 """
         else:
-            html_content += "<tr><td colspan='5'>No bins with BGCs found</td></tr>"
+            html_content += "<tr><td colspan='6'>No bins with BGCs found</td></tr>"
         
         html_content += """
             </table>
