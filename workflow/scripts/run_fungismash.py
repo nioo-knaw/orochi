@@ -3,7 +3,6 @@
 from pathlib import Path
 import json
 import subprocess
-import sys
 import shutil
 
 def fasta_has_records(fasta):
@@ -109,21 +108,26 @@ def main():
     threads = str(snakemake.params["threads"])
     database_dir = snakemake.params["database_dir"]
 
-    outdir_path = Path(outdir)
-    outdir_path.mkdir(parents=True, exist_ok=True)
+    log_path = Path(snakemake.log[0])
+    log_path.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"[fungismash] sample_pool={sample}")
-    print(f"[fungismash] input={list(snakemake.input)}")
-    print(f"[fungismash] output.html={html}")
-    print(f"[fungismash] output.json={json_out}")
-    print(f"[fungismash] outdir={outdir}")
-    print(f"[fungismash] database_dir={database_dir}")
+    with open(log_path, "w") as log_handle:
+        log_handle.write(f"[fungismash] sample_pool={sample}\n")
+        log_handle.write(f"[fungismash] input={list(snakemake.input)}\n")
+        log_handle.write(f"[fungismash] output.html={html}\n")
+        log_handle.write(f"[fungismash] output.json={json_out}\n")
+        log_handle.write(f"[fungismash] outdir={outdir}\n")
+        log_handle.write(f"[fungismash] database_dir={database_dir}\n")
+
+    def log(message):
+        with open(log_path, "a") as log_handle:
+            log_handle.write(message + "\n")
 
     # Case 1: no eukaryotic sequences.
     # Important: do this before accessing snakemake.input["gff"].
     if not fasta_has_records(contigs):
         reason = "No eukaryotic sequences are detected"
-        print(f"[fungismash] {reason}. Writing placeholder outputs.")
+        log(f"[fungismash] {reason}. Writing placeholder outputs.")
         reset_output_dir(outdir)
         write_placeholder(
             html=html,
@@ -140,7 +144,7 @@ def main():
         reason = "Eukaryotic sequences are detected, but no fungal gene annotations are available"
         detail = "fungiSMASH was skipped because no augustify GFF file was provided."
 
-        print(f"[fungismash] {reason}. Writing placeholder outputs.")
+        log(f"[fungismash] {reason}. Writing placeholder outputs.")
         reset_output_dir(outdir)
         write_placeholder(
             html=html,
@@ -154,7 +158,7 @@ def main():
         return
 
     gff = snakemake.input["gff"]
-    print(f"[fungismash] gff={gff}")
+    log(f"[fungismash] gff={gff}")
 
     # Case 2b: eukaryotic contigs exist, but augustify produced no gene annotation.
     if not gff_has_features(gff):
@@ -164,7 +168,7 @@ def main():
             "no gene, mRNA, or CDS features."
         )
 
-        print(f"[fungismash] {reason}. Writing placeholder outputs.")
+        log(f"[fungismash] {reason}. Writing placeholder outputs.")
         reset_output_dir(outdir)
         write_placeholder(
             html=html,
@@ -197,16 +201,17 @@ def main():
         "--databases", str(database_dir),
     ]
 
-    print("[fungismash] Eukaryotic sequences and gene annotations detected. Running antiSMASH.")
-    print("[fungismash] command: " + " ".join(cmd))
+    log("[fungismash] Eukaryotic sequences and gene annotations detected. Running antiSMASH.")
+    log("[fungismash] command: " + " ".join(cmd))
     reset_output_dir(outdir)
 
-    subprocess.run(
-        cmd,
-        stdout=sys.stdout,
-        stderr=sys.stderr,
-        check=True,
-    )
+    with open(log_path, "a") as log_handle:
+        subprocess.run(
+            cmd,
+            stdout=log_handle,
+            stderr=log_handle,
+            check=True,
+        )
 
     if not Path(html).exists() or Path(html).stat().st_size == 0:
         raise FileNotFoundError(f"Expected output missing or empty: {html}")
@@ -214,7 +219,7 @@ def main():
     if not Path(json_out).exists() or Path(json_out).stat().st_size == 0:
         raise FileNotFoundError(f"Expected output missing or empty: {json_out}")
 
-    print("[fungismash] antiSMASH finished successfully.")
+    log("[fungismash] antiSMASH finished successfully.")
 
 
 if __name__ == "__main__":
