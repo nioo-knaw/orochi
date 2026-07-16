@@ -20,6 +20,11 @@ rule map_bgc_to_bins:
         # as column names instead.
         bat_df = pd.read_csv(input.bat_taxonomy,sep="\t")
         bat_df = bat_df.rename(columns={bat_df.columns[0]: "bin_id"})
+        # CAT_pack bins was run with -s .fa, but add_names does not strip
+        # that suffix from the bin name (e.g. "A_bin.001.fa"), while
+        # DASTool_contig2bin.tsv uses the bare bin id (e.g. "A_bin.001").
+        # Strip it so the merge below on bin_id actually matches.
+        bat_df["bin_id"] = bat_df["bin_id"].str.removesuffix(".fa")
 
         # CAT_pack's own "lineage" column is a taxid string (e.g.
         # "1;131567;2;..."), not a human-readable name. Build a readable
