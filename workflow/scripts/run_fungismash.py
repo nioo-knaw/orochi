@@ -83,6 +83,21 @@ def write_placeholder(html, json_out, sample, title, reason, detail=None):
         )
 
 
+def reset_output_dir(outdir):
+    """
+    Remove and recreate the antiSMASH output directory.
+    """
+    outdir_path = Path(outdir).resolve()
+
+    if outdir_path.name != "fungal":
+        raise ValueError(f"Refusing to remove unexpected output directory: {outdir_path}")
+
+    if outdir_path.exists():
+        shutil.rmtree(outdir_path)
+
+    outdir_path.mkdir(parents=True, exist_ok=True)
+
+
 def main():
     sample = snakemake.wildcards.sample_pool
 
@@ -175,6 +190,7 @@ def main():
         "--taxon", "fungi",
         "--cassis",
         "--output-basename", "fungal",
+        "--tfbs",
         "--cc-mibig",
         "--cb-general",
         "--cb-knownclusters",
@@ -183,6 +199,7 @@ def main():
 
     print("[fungismash] Eukaryotic sequences and gene annotations detected. Running antiSMASH.")
     print("[fungismash] command: " + " ".join(cmd))
+    reset_output_dir(outdir)
 
     subprocess.run(
         cmd,
