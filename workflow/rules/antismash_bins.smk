@@ -38,13 +38,19 @@ rule map_bgc_to_bins:
             ),
             axis=1
         )
+        # Lowest available rank, kept alongside the full lineage -- the full
+        # string stays in the tsv for downstream figure scripts, while the
+        # HTML report only has room to show the lowest rank per bin.
+        bat_df["lineage_lowest"] = bat_df["lineage"].apply(
+            lambda s: s.split(";")[-1] if s else "N/A"
+        )
 
         # Merge BGC with bin assignment
         bgc_bins = bgc_df.merge(c2b_df,on="contig_id",how="left")
 
         # Merge with taxonomy
         bgc_bins_tax = bgc_bins.merge(
-            bat_df[["bin_id", "lineage"]],
+            bat_df[["bin_id", "lineage", "lineage_lowest"]],
             on="bin_id",
             how="left"
         )
@@ -64,15 +70,20 @@ rule map_bgc_to_bins:
             # "unknown" is add_markermag_taxonomy.py's placeholder for marker
             # genes with no phyloFlash classification -- not informative here.
             markermag_df = markermag_df[markermag_df["markermag_taxonomy"] != "unknown"]
-            # A bin can have multiple marker gene linkages; collapse to one
-            # taxonomy string per bin.
-            markermag_tax = (
-                markermag_df.groupby("bin_id")["markermag_taxonomy"]
-                .agg(lambda x: ";".join(sorted(set(x))))
-                .reset_index()
+            markermag_df["markermag_taxonomy_lowest"] = markermag_df["markermag_taxonomy"].apply(
+                lambda s: s.split(";")[-1] if isinstance(s, str) and s else "N/A"
             )
+            # A bin can have multiple marker gene linkages (e.g. several 16S
+            # copies); collapse to one row per bin. "||" separates distinct
+            # full lineages (each internally ";"-delimited by rank) so it
+            # stays unambiguous; the lowest-rank names use ", " since they're
+            # single tokens.
+            markermag_tax = markermag_df.groupby("bin_id").agg(
+                markermag_taxonomy=("markermag_taxonomy", lambda x: " || ".join(sorted(set(x)))),
+                markermag_taxonomy_lowest=("markermag_taxonomy_lowest", lambda x: ", ".join(sorted(set(x))))
+            ).reset_index()
         else:
-            markermag_tax = pd.DataFrame(columns=["bin_id", "markermag_taxonomy"])
+            markermag_tax = pd.DataFrame(columns=["bin_id", "markermag_taxonomy", "markermag_taxonomy_lowest"])
 
         bgc_bins_tax = bgc_bins_tax.merge(markermag_tax, on="bin_id", how="left")
 
@@ -121,22 +132,35 @@ checkpoint summarize_bgc_per_bin:
         # Only binned BGCs
         binned = df[df["bin_status"] == "binned"].copy()
 
+        summary_columns = [
+            "bin_id", "taxonomy", "taxonomy_lowest",
+            "markermag_taxonomy", "markermag_taxonomy_lowest",
+            "n_bgcs", "bgc_types", "sample_pool"
+        ]
+
         if len(binned) == 0:
             # Create empty output with expected columns
-            summary = pd.DataFrame(columns=[
-                "bin_id", "taxonomy", "markermag_taxonomy", "n_bgcs", "bgc_types", "sample_pool"
-            ])
+            summary = pd.DataFrame(columns=summary_columns)
         else:
-            # Group by bin and summarize
+            # Group by bin and summarize. Taxonomy (both full and
+            # lowest-rank) is the same for all BGCs in a bin.
             summary = binned.groupby("bin_id").agg({
-                "lineage": "first",  # Taxonomy is the same for all BGCs in a bin
-                "markermag_taxonomy": "first",  # Same for all BGCs in a bin
+                "lineage": "first",
+                "lineage_lowest": "first",
+                "markermag_taxonomy": "first",
+                "markermag_taxonomy_lowest": "first",
                 "bgc_id": "count",  # Count BGCs
-                "bgc_product": lambda x: ";".join(sorted(set(x))),  # Unique BGC types
+                # Unique BGC types with their per-bin counts, e.g.
+                # "NRPS:2;T1PKS:1", most frequent first -- lets the HTML
+                # report render these as pills without losing the counts.
+                "bgc_product": lambda x: ";".join(
+                    f"{name}:{count}" for name, count in
+                    sorted(x.value_counts().items(), key=lambda kv: (-kv[1], kv[0]))
+                ),
                 "sample_pool": "first"
             }).reset_index()
 
-            summary.columns = ["bin_id", "taxonomy", "markermag_taxonomy", "n_bgcs", "bgc_types", "sample_pool"]
+            summary.columns = summary_columns
 
         summary.to_csv(output.bin_summary,sep="\t",index=False)
 
@@ -260,10 +284,22 @@ rule aggregate_bin_antismash_reports:
             summary_df = pd.DataFrame()
 
         if not summary_df.empty:
-            if "markermag_taxonomy" not in summary_df.columns:
-                summary_df["markermag_taxonomy"] = "N/A"
-            else:
-                summary_df["markermag_taxonomy"] = summary_df["markermag_taxonomy"].fillna("N/A")
+            for col in ["taxonomy", "taxonomy_lowest", "markermag_taxonomy", "markermag_taxonomy_lowest"]:
+                if col not in summary_df.columns:
+                    summary_df[col] = "N/A"
+                else:
+                    summary_df[col] = summary_df[col].fillna("N/A")
+
+        def bgc_types_to_pills(bgc_types_str):
+            """Render a "Type:count;Type2:count2" string as sorted pill spans."""
+            if not isinstance(bgc_types_str, str) or not bgc_types_str or bgc_types_str == "N/A":
+                return "N/A"
+            pills = []
+            for entry in bgc_types_str.split(";"):
+                name, _, count = entry.rpartition(":")
+                name, count = (name, count) if name else (entry, "1")
+                pills.append(f'<span class="bgc-pill">{name} &times;{count}</span>')
+            return "".join(pills)
 
         # Create HTML index
         html_content = f"""
@@ -279,14 +315,24 @@ rule aggregate_bin_antismash_reports:
                 tr:hover {{ background-color: #f5f5f5; }}
                 a {{ color: #0066cc; text-decoration: none; }}
                 a:hover {{ text-decoration: underline; }}
+                .bgc-pill {{
+                    display: inline-block;
+                    background-color: #e8f0fe;
+                    color: #1a3a6b;
+                    border-radius: 12px;
+                    padding: 2px 10px;
+                    margin: 2px;
+                    font-size: 0.85em;
+                    white-space: nowrap;
+                }}
             </style>
         </head>
         <body>
-            <h1>antiSMASH BGC Results per Bin</h1>
+            <h1>antiSMASH BGC Results per MAG</h1>
             <h2>Sample Pool: {params.sample_pool}</h2>
             <table>
                 <tr>
-                    <th>Bin ID</th>
+                    <th>MAG ID</th>
                     <th>BAT Taxonomy</th>
                     <th>MarkerMAG Taxonomy</th>
                     <th>Number of BGCs</th>
@@ -298,18 +344,20 @@ rule aggregate_bin_antismash_reports:
         if not summary_df.empty:
             for _, row in summary_df.iterrows():
                 bin_id = row['bin_id']
-                taxonomy = row.get('taxonomy', 'N/A')
-                markermag_taxonomy = row.get('markermag_taxonomy', 'N/A')
+                taxonomy_full = row.get('taxonomy', 'N/A')
+                taxonomy_lowest = row.get('taxonomy_lowest', 'N/A')
+                markermag_full = row.get('markermag_taxonomy', 'N/A')
+                markermag_lowest = row.get('markermag_taxonomy_lowest', 'N/A')
                 n_bgcs = row.get('n_bgcs', 0)
-                bgc_types = row.get('bgc_types', 'N/A')
+                bgc_types_html = bgc_types_to_pills(row.get('bgc_types', 'N/A'))
 
                 html_content += f"""
                 <tr>
                     <td>{bin_id}</td>
-                    <td><em>{taxonomy}</em></td>
-                    <td><em>{markermag_taxonomy}</em></td>
+                    <td><em title="{taxonomy_full}">{taxonomy_lowest}</em></td>
+                    <td><em title="{markermag_full}">{markermag_lowest}</em></td>
                     <td>{n_bgcs}</td>
-                    <td>{bgc_types}</td>
+                    <td>{bgc_types_html}</td>
                     <td><a href="per_bin/{bin_id}/index.html" target="_blank">View Report</a></td>
                 </tr>
                 """
