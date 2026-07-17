@@ -1,7 +1,7 @@
 name: orochi_clustering
 channels:
-  - bioconda
   - conda-forge
+  - bioconda
 dependencies:
   - python == 3.11
   - scipy == 1.13.1

@@ -5,3 +5,4 @@ channels:
 dependencies:
   - drep
   - gsl=2.7.0
+  - pandas=1.5.3

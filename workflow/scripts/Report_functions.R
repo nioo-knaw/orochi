@@ -29,8 +29,10 @@ outdir <- config$outdir
 
 
 plotsdir <- "results/09_plots/PLOTS/1-Reads"
+plotsdircontigs <- "results/09_plots/PLOTS/2-Contigs"
 plotsdirbins <- "results/09_plots/PLOTS/3-Bins"
 dir.create(file.path(outdir, plotsdir), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path(outdir, plotsdircontigs), recursive = TRUE, showWarnings = FALSE)
 dir.create(file.path(outdir, plotsdirbins), recursive = TRUE, showWarnings = FALSE)
 
 # To save the other htmls in one same location for easier visualization later
@@ -108,12 +110,12 @@ for (level in taxa_levels) {
       force = TRUE
     )
   
-  p2 <- p2 + labs(title = paste("(Bacterial) Taxonomic Abundance at", level)) +
+ p2 <- p2 + labs(y = "Absolute Abundance (%)", title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
   ggplot2::ggsave(
-    filename = file.path(outdir,plotsdir,paste0("2-taxonomic_abundance_", tolower(level), ".tiff")),
+    filename = file.path(outdir,plotsdir,paste0("2-taxonomic_absolute_abundance_", tolower(level), ".tiff")),
     plot = p2,
     width = 12,
     height = 10,
@@ -153,12 +155,12 @@ for (level in taxa_levels) {
     )
   
   h1_gg <- as.ggplot(h1)
-  h1_gg <- h1_gg + labs(title = paste("(Bacterial) Taxonomic Abundance at", level)) +
+  h1_gg <- h1_gg + labs(title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
   ggplot2::ggsave(
-    filename = file.path(outdir, plotsdir, paste0("3-taxonomic_abundance_heatmap_", tolower(level), ".tiff")),
+    filename = file.path(outdir, plotsdir, paste0("3-taxonomic_absolute_abundance_heatmap_", tolower(level), ".tiff")),
     plot = h1_gg,
     width = 12,
     height = 10,
@@ -211,12 +213,12 @@ for (level in taxa_levels) {
       force = TRUE,
       topn = 20
     )
-  p3 <- p3 + labs(title = paste("(Bacterial) Taxonomic Abundance at", level)) +
+  p3 <- p3 + labs(y = "Relative Abundance (%)", title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
   ggplot2::ggsave(
-    filename = file.path(outdir, plotsdir,paste0("2-taxonomic_abundance_average_", tolower(level), ".tiff")),
+    filename = file.path(outdir, plotsdir,paste0("2-taxonomic_relative_abundance_", tolower(level), ".tiff")),
     plot = p3,
     width = 12,
     height = 10,
@@ -239,12 +241,12 @@ for (level in taxa_levels) {
       force=TRUE
     )
   h2_gg <- as.ggplot(h2)
-  h2_gg <- h2_gg + labs(title = paste("(Bacterial) Taxonomic Abundance at", level)) +
+  h2_gg <- h2_gg + labs(title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
   ggplot2::ggsave(
-    filename = file.path(outdir, plotsdir, paste0("3-taxonomic_abundance_heatmap_average_", tolower(level), ".tiff")),
+    filename = file.path(outdir, plotsdir, paste0("3-taxonomic_relative_abundance_heatmap_", tolower(level), ".tiff")),
     plot = h2_gg,
     width = 12,
     height = 10,
@@ -338,12 +340,379 @@ plot6_clustering <- function() {
   p
 }
 
-
-# BINS --------------------------------------------------------------------
-
+# CONTIGS --------------------------------------------------------------------
 library(dplyr)
 library(tidyr)
 library(stringr)
+library(ggplot2)
+library(httr)
+
+base_dir_05 <- file.path(outdir, "results/05_prokaryote_annotation")
+treatments <- list.dirs(file.path(base_dir_05, "eggnog"),
+                        full.names = FALSE,
+                        recursive = FALSE)
+
+# To get nice names for the KEGG pathways in my data
+kegg_map <- read.delim(url("https://rest.kegg.jp/list/pathway/ko"), header = FALSE, stringsAsFactors = FALSE)
+colnames(kegg_map) <- c("KEGG_Pathway", "Pathway_name")
+
+# Getting all the pathways to then exclude some
+resp <- GET("https://rest.kegg.jp/list/pathway")
+txt <- content(resp, "text")
+lines <- strsplit(txt, "\n")[[1]]
+
+df <- data.frame(
+  pathway_id = str_extract(lines, "map\\d+"),
+  pathway_name = str_extract(lines, "(?<=\\t).*"),
+  stringsAsFactors = FALSE
+)
+
+df <- df %>%
+  mutate(category = case_when(
+    str_detect(pathway_id, "^map05") ~ "5",
+    str_detect(pathway_id, "^map06") ~ "6",
+    str_detect(pathway_id, "^map07") ~ "7",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(category))
+
+# To get reference for COG
+cog_map <- read.delim(url("https://ftp.ncbi.nlm.nih.gov/pub/COG/COG2024/data/cog-24.fun.tab"), header = FALSE, stringsAsFactors = FALSE)
+cog_map <- cog_map[,c(1,4)]
+cog_map <- cog_map[cog_map$V4 != "",]
+colnames(cog_map) <- c("", "Description")
+write.csv(cog_map, file.path(outdir,plotsdircontigs,"COG_Categories_reference.csv"), row.names = FALSE)
+
+merged_list <- list()
+kegg_plots_list <- list()
+cog_plots_list <- list()
+for (trt in treatments) {
+  
+  salmon_file <- file.path(base_dir_05, "salmon/merged", trt, paste0(trt, "_ORF_TPM.tsv"))
+  eggnog_file <- file.path(base_dir_05, "eggnog", trt, paste0(trt, ".emapper.annotations.adjusted"))
+  
+  # Check files exist (prevents crashing)
+  if (file.exists(salmon_file) & file.exists(eggnog_file)) {
+    
+    salmon_counts <- read.delim(salmon_file, header = TRUE, stringsAsFactors = FALSE)
+    eggnog_out   <- read.delim(eggnog_file, header = TRUE, stringsAsFactors = FALSE)
+
+    merged_list[[trt]] <- eggnog_out %>%
+      inner_join(salmon_counts, by = c("X.query" = "Name"))
+    sample_cols <- setdiff(names(salmon_counts), "Name")
+    kegg_counting <- merged_list[[trt]] %>%
+      select(X.query, KEGG_Pathway, all_of(sample_cols)) %>%
+      filter(!is.na(KEGG_Pathway), KEGG_Pathway != "-", KEGG_Pathway != "") %>%
+      mutate(
+        KEGG_Pathway = sapply(
+          str_split(KEGG_Pathway, ","),
+          function(x) {
+            x <- trimws(x)
+            keep <- x[str_starts(x, "ko")]
+            paste(keep, collapse = ",")
+          }
+        )
+      ) %>%
+      filter(KEGG_Pathway != "") %>%
+      mutate(
+        KEGG_Pathway = word(KEGG_Pathway, 1, sep = ",")
+      )
+    kegg_counting_named <- kegg_counting %>%
+      left_join(kegg_map, by = "KEGG_Pathway") %>%
+      mutate(
+        Pathway_name = ifelse(
+          is.na(Pathway_name),
+          KEGG_Pathway,
+          Pathway_name
+        )
+      )
+    kegg_counting_named_filtered <- kegg_counting_named %>%
+      filter(!Pathway_name %in% df$pathway_name)
+    # Average per Pathway for all samples
+    if (nrow(kegg_counting_named_filtered) == 0 || length(sample_cols) == 0) {
+      
+      kegg_counting_averaged <- tibble(
+        `KEGG Pathway name` = character()
+      )
+      
+    } else {
+      
+      kegg_counting_averaged <- kegg_counting_named_filtered %>%
+        mutate(across(all_of(sample_cols), as.numeric)) %>%
+        group_by(Pathway_name) %>%
+        summarise(
+          across(all_of(sample_cols), \(x) mean(x, na.rm = TRUE)),
+          .groups = "drop"
+        )
+      
+      colnames(kegg_counting_averaged)[1] <- "KEGG Pathway name"
+    }
+    
+    colnames(kegg_counting_averaged)[1] <- "KEGG Pathway name"
+    write.csv(kegg_counting_averaged, file.path(outdir, plotsdircontigs, paste0(trt, "_KEGG_functions.csv")), row.names = FALSE)
+    
+    ## FOR PLOTTING
+    # Keep top 30 for plot
+    # First, a column where the sum of all columns is stored to be able to know which ones are the most abundant ones
+    kegg_counting_averaged$sum <- rowSums(
+      kegg_counting_averaged[, sapply(kegg_counting_averaged, is.numeric), drop = FALSE],
+      na.rm = TRUE
+    )
+    top_n <- 30
+
+    kegg_count_top <- kegg_counting_averaged %>%
+      slice_max(order_by = sum, n = top_n)
+
+    # Remove the sum column
+    kegg_count_top <- kegg_count_top[, -ncol(kegg_count_top), drop = FALSE]
+
+    # Check whether there are sample/count columns
+    if (ncol(kegg_count_top) < 2) {
+      
+      message("No KEGG abundance columns available for treatment: ", trt)
+      
+      k1 <- ggplot() +
+        annotate(
+          "text",
+          x = 0.5,
+          y = 0.5,
+          label = paste0(
+            "No KEGG abundance data available\n\n",
+            "Assembly: ", trt
+          ),
+          size = 6,
+          hjust = 0.5,
+          vjust = 0.5
+        ) +
+        xlim(0, 1) +
+        ylim(0, 1) +
+        theme_void() +
+        labs(title = paste0("KEGG Pathway Dotplot (Top 30) - Assembly ", trt)) +
+        theme(
+          plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+        )
+      
+    } else {
+      
+      kegg_count_top_long <- pivot_longer(
+        kegg_count_top,
+        cols = -1,
+        names_to = "Sample",
+        values_to = "Count"
+      )
+      
+      colnames(kegg_count_top_long)[1] <- "Pathway_name"
+      
+      kegg_count_top_long_filt <- kegg_count_top_long %>%
+        dplyr::filter(Count > 0)
+      
+      if (nrow(kegg_count_top_long_filt) == 0) {
+        
+        message("All KEGG values are zero for treatment: ", trt)
+        
+        k1 <- ggplot() +
+          annotate(
+            "text",
+            x = 0.5,
+            y = 0.5,
+            label = paste0(
+              "No KEGG pathway with TPM > 0\n\n",
+              "Assembly: ", trt
+            ),
+            size = 6,
+            hjust = 0.5,
+            vjust = 0.5
+          ) +
+          xlim(0, 1) +
+          ylim(0, 1) +
+          theme_void() +
+          labs(title = paste0("KEGG Pathway Dotplot (Top 30) - Assembly ", trt)) +
+          theme(
+            plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+          )
+        
+      } else {
+        
+        k1 <- ggplot(
+          kegg_count_top_long_filt,
+          aes(x = Sample, y = reorder(Pathway_name, Count))
+        ) +
+          geom_point(aes(size = Count, color = Count)) +
+          scale_color_gradient(low = "lightblue", high = "darkblue") +
+          scale_size(range = c(1.5, 9)) +
+          guides(
+            color = guide_colorbar(order = 1),
+            size = guide_legend(order = 2)
+          ) +
+          theme_minimal() +
+          labs(
+            x = "",
+            y = "KEGG Pathway",
+            title = paste0("KEGG Pathway Dotplot (Top 30) - Assembly ", trt),
+            color = "TPM",
+            size = "TPM"
+          )
+      }
+    }
+
+    ggplot2::ggsave(
+      filename = file.path(outdir, plotsdircontigs, paste0(trt, ".KEGG_top30.tiff")),
+      plot = k1,
+      width = 8,
+      height = 8,
+      units = "in",
+      dpi = 500,
+      compression = "lzw"
+    )
+
+    kegg_plots_list[[trt]] <- k1
+    
+    
+    # Now, COG
+    cog_counting <- merged_list[[trt]] %>%
+      select(X.query, COG_category, all_of(names(merged_list[[trt]])[(which(names(merged_list[[trt]]) == "PFAMs") + 1):ncol(merged_list[[trt]])])) %>%
+      filter(COG_category != "") # remove genes with no COG annotation
+    
+    # Average per Pathway for all samples
+    cog_counting$X.query <- NULL
+    cog_counting <- cog_counting[cog_counting$COG_category != "-",]
+    cog_counting_averaged <- cog_counting %>%
+      group_by(COG_category) %>%
+      summarise(across(where(is.numeric), \(x) mean(x, na.rm = TRUE)), .groups = "drop")
+    
+    colnames(cog_counting_averaged)[1] <- "COG Category"
+    write.csv(cog_counting_averaged, file.path(outdir, plotsdircontigs, paste0(trt, "_COG_functions.csv")), row.names = FALSE)
+    
+    ## For the COG plot
+    # Keep top 30 for plot
+    # First, a column where the sum of all columns is stored to be able to know which ones are the most abundant ones
+    cog_counting_averaged$sum <- rowSums(
+      cog_counting_averaged[, sapply(cog_counting_averaged, is.numeric), drop = FALSE],
+      na.rm = TRUE
+    )
+
+    top_n <- 30
+
+    cog_count_top <- cog_counting_averaged %>%
+      slice_max(order_by = sum, n = top_n)
+
+    # Remove the sum column
+    cog_count_top <- cog_count_top[, -ncol(cog_count_top), drop = FALSE]
+
+    # Check whether there are sample/count columns
+    if (ncol(cog_count_top) < 2) {
+      
+      message("No COG abundance columns available for treatment: ", trt)
+      
+      c1 <- ggplot() +
+        annotate(
+          "text",
+          x = 0.5,
+          y = 0.5,
+          label = paste0(
+            "No COG abundance data available\n\n",
+            "Assembly: ", trt
+          ),
+          size = 6,
+          hjust = 0.5,
+          vjust = 0.5
+        ) +
+        xlim(0, 1) +
+        ylim(0, 1) +
+        theme_void() +
+        labs(title = paste0("COG Category Dotplot (Top 30) - Assembly ", trt)) +
+        theme(
+          plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+        )
+      
+    } else {
+      
+      cog_count_top_long <- pivot_longer(
+        cog_count_top,
+        cols = -1,
+        names_to = "Sample",
+        values_to = "Count"
+      )
+      
+      colnames(cog_count_top_long)[1] <- "COG_Category"
+      
+      cog_count_top_long_filt <- cog_count_top_long %>%
+        dplyr::filter(Count > 0)
+      
+      if (nrow(cog_count_top_long_filt) == 0) {
+        
+        message("All COG values are zero for treatment: ", trt)
+        
+        c1 <- ggplot() +
+          annotate(
+            "text",
+            x = 0.5,
+            y = 0.5,
+            label = paste0(
+              "No COG category with TPM > 0\n\n",
+              "Assembly: ", trt
+            ),
+            size = 6,
+            hjust = 0.5,
+            vjust = 0.5
+          ) +
+          xlim(0, 1) +
+          ylim(0, 1) +
+          theme_void() +
+          labs(title = paste0("COG Category Dotplot (Top 30) - Assembly ", trt)) +
+          theme(
+            plot.title = element_text(hjust = 0.5, size = 14, face = "bold")
+          )
+        
+      } else {
+        
+        c1 <- ggplot(
+          cog_count_top_long_filt,
+          aes(x = Sample, y = reorder(COG_Category, Count))
+        ) +
+          geom_point(aes(size = Count, color = Count)) +
+          scale_color_gradient(low = "#EEE0E5", high = "magenta4") +
+          scale_size(range = c(1.5, 9)) +
+          guides(
+            color = guide_colorbar(order = 1),
+            size = guide_legend(order = 2)
+          ) +
+          theme_minimal() +
+          labs(
+            x = "",
+            y = "COG Category",
+            title = paste0("COG Category Dotplot (Top 30) - Assembly ", trt),
+            color = "TPM",
+            size = "TPM"
+          )
+      }
+    }
+
+    ggplot2::ggsave(
+      filename = file.path(outdir, plotsdircontigs, paste0(trt, ".COG_top30.tiff")),
+      plot = c1,
+      width = 4,
+      height = 8,
+      units = "in",
+      dpi = 500,
+      compression = "lzw"
+    )
+
+    cog_plots_list[[trt]] <- c1
+  }
+}
+
+
+plot1_top30_kegg <- function(trt) {
+  kegg_plots_list[[trt]]
+}
+
+plot2_top30_cog <- function(trt) {
+  cog_plots_list[[trt]]
+}
+
+# BINS --------------------------------------------------------------------
+
 library(ggalluvial)
 library(ggnewscale)
 
@@ -394,6 +763,38 @@ plot8_binsummary <- function() {
   print(bin)
 }
 
+read_table_safe <- function(file) {
+  df <- read.table(file, header = TRUE, sep = "\t", quote = "", comment.char = "")
+  if (nrow(df) == 0) {
+    message(paste("File", file, "contains only a header (no data)."))
+    return(NULL)  # or return(df) if you prefer keeping empty dfs
+  }
+  return(df)
+}
+
+make_empty_plot <- function(assembly, message_text) {
+  ggplot() +
+    annotate(
+      "text",
+      x = 0.5,
+      y = 0.5,
+      label = message_text,
+      size = 6,
+      hjust = 0.5,
+      vjust = 0.5
+    ) +
+    xlim(0, 1) +
+    ylim(0, 1) +
+    theme_void() +
+    labs(title = paste0("16S-MAG Linkage for pool ", assembly)) +
+    theme(
+      plot.title = element_text(
+        size = 14,
+        hjust = 0.5,
+        face = "bold"
+      )
+    )
+}
 
 # MAG-Linkage
 contig_files <- list.files(base_dir, pattern = "_linkages_by_contig\\.txt$", 
@@ -409,9 +810,55 @@ for (contig_file in contig_files) {
   message("Processing assembly: ", assembly)
   
   # --- Load data ---
-  df1 <- read.table(contig_file, header = TRUE, sep = "\t", quote = "", comment.char = "")
-  df2 <- read.table(genome_file, header = TRUE, sep = "\t", quote = "", comment.char = "")
-  
+  df1 <- read_table_safe(contig_file)
+  df2 <- read_table_safe(genome_file)
+
+  output_plot_file <- file.path(
+    outdir,
+    plotsdirbins,
+    paste0(assembly, "_MAGlinkage.tiff")
+  )
+
+  # If either input file has only header / no rows,
+  # save a placeholder plot instead of skipping silently.
+  if (is.null(df1) || is.null(df2)) {
+    
+    if (is.null(df1) && is.null(df2)) {
+      message_text <- paste0(
+        "No linkage data available\n\n",
+        "Both contig-level and genome-level linkage files contain no data."
+      )
+    } else if (is.null(df1)) {
+      message_text <- paste0(
+        "No contig-level linkage data available\n\n",
+        basename(contig_file),
+        " contains only a header."
+      )
+    } else {
+      message_text <- paste0(
+        "No genome-level linkage data available\n\n",
+        basename(genome_file),
+        " contains only a header."
+      )
+    }
+
+    plot <- make_empty_plot(assembly, message_text)
+
+    ggplot2::ggsave(
+      filename = output_plot_file,
+      plot = plot,
+      dpi = 500,
+      width = 12,
+      height = 10,
+      units = "in",
+      compression = "lzw"
+    )
+
+    all_plots[[assembly]] <- plot
+
+    message("Saved placeholder plot for assembly ", assembly)
+    next
+  }
   # --- Prepare data ---
   df1 <- df1 %>%
     tidyr::separate(Marker___Genome.total., into = c("MarkerGene", "GenomicSeq_total"), sep = "___") %>%
@@ -448,7 +895,7 @@ for (contig_file in contig_files) {
       legend.justification = c(1, 1),
       legend.background = element_rect(fill = "transparent", color = NA)
     )
-  ggplot2::ggsave(filename = file.path(outdir, plotsdirbins, paste0(assembly,"_MAGlinkage.tiff")), plot = plot, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
+  ggplot2::ggsave(filename = output_plot_file, plot = plot, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
   all_plots[[assembly]] <- plot
 }
 
@@ -515,11 +962,83 @@ for (tr in treatments) {
         }
       )
     )
-  binstax <- cbind(bins,tax$taxonomy_concat)
-  colnames(binstax)[4] <- "taxonomy_concat"
+# Detect ID columns
+bins_id_col <- names(bins)[1]
+tax_id_col  <- names(tax)[1]
+
+bins <- bins %>%
+  rename(bin_id = all_of(bins_id_col))
+
+tax <- tax %>%
+  rename(bin_id = all_of(tax_id_col))
+
+# Build taxonomy string for each BAT assignment
+tax <- tax %>%
+  mutate(
+    taxonomy_concat = pmap_chr(
+      select(., superkingdom, phylum, class, order, family, genus, species),
+      ~ {
+        values <- list(...)
+        col_names <- c("kingdom", "phylum", "class", "order", "family", "genus", "species")
+        
+        out <- map2_chr(values, col_names, function(val, col) {
+          if (is.na(val) || val == "no support" || val == "") return("")
+          
+          prefix <- substr(col, 1, 1)
+          paste0(prefix, "_", val)
+        })
+        
+        out <- out[out != ""]
+        
+        if (length(out) == 0) {
+          return("unclassified")
+        }
+        
+        paste(out, collapse = ";")
+      }
+    )
+  )
+
+# Collapse multiple BAT taxonomy assignments per bin
+tax_collapsed <- tax %>%
+  group_by(bin_id) %>%
+  summarise(
+    taxonomy_concat = paste(unique(taxonomy_concat), collapse = " | "),
+    n_taxonomy_assignments = n(),
+    .groups = "drop"
+  )
+
+# Optional: report bins with multiple taxonomy assignments
+multi_tax <- tax_collapsed %>%
+  filter(n_taxonomy_assignments > 1)
+
+if (nrow(multi_tax) > 0) {
+  message("Bins with multiple taxonomy assignments in treatment ", tr, ":")
+  message(paste(multi_tax$bin_id, collapse = ", "))
+}
+
+# Merge by bin ID
+binstax <- bins %>%
+  left_join(tax_collapsed, by = "bin_id") %>%
+  mutate(
+    taxonomy_concat = ifelse(
+      is.na(taxonomy_concat) | taxonomy_concat == "",
+      "unclassified",
+      taxonomy_concat
+    )
+  )
+  
+binstax <- binstax %>%
+  mutate(
+    taxonomy_for_color = ifelse(
+      n_taxonomy_assignments > 1,
+      "multiple_taxonomy_assignments",
+      taxonomy_concat
+    )
+  )
   
   # Static plot
-  p_gg <- ggplot(binstax, aes(x = completeness, y = contamination, color = taxonomy_concat)) +
+  p_gg <- ggplot(binstax, aes(x = completeness, y = contamination, color = taxonomy_for_color)) +
     geom_point(alpha = 0.7, size = 3) +
     scale_color_brewer(palette = "Set3") +
     theme_minimal() +
@@ -545,7 +1064,7 @@ for (tr in treatments) {
     y = ~contamination,
     type = 'scatter',
     mode = 'markers',
-    color = ~taxonomy_concat,
+    color = ~taxonomy_for_color,
     colors = "Set3",
     customdata = ~taxonomy_concat,
     hovertemplate = paste(

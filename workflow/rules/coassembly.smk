@@ -8,7 +8,8 @@ rule supervised_pooling:
     output:
         forward=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
         rev=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz"
-    log: f"{outdir}/logs/supervised_pooling_{{sample_pool}}.log"
+    log:
+        f"{outdir}/logs/supervised_pooling/supervised_pooling_{{sample_pool}}.log"
     run:
         shell("cat {input.forward} > {output.forward} 2> {log}")
         shell("cat {input.rev} > {output.rev} 2>> {log}")
@@ -27,16 +28,31 @@ rule normal_reads:
         # threads=config['threads'],
         memory=config['bbmap_mem']
     threads:
-        int(workflow.cores * 0.5)
+        max(1, int(workflow.cores * 0.5))
     resources:
         mem_mb=config['max_mem'] # * 0.6
     benchmark:
         f"{outdir}/results/benchmark/normal_reads/{{sample_pool}}.tsv"
     conda:
         "../envs/coassembly.yaml"
-    log: f"{outdir}/logs/normal_reads{{sample_pool}}.log"
+    log:
+        f"{outdir}/logs/normal_reads/normal_reads_{{sample_pool}}.log"
     shell:
-        "bbnorm.sh target={params.kmerdepth} minprob=0.6 prefiltersize=0.50 prefilter=True min=2 in={input.r1} in2={input.r2} threads={threads} out={output.out1} out2={output.out2} hist={output.hist} {params.memory} 2> {log}"
+        """
+        bbnorm.sh \
+            target={params.kmerdepth} \
+            minprob=0.6 \
+            prefiltersize=0.50 \
+            prefilter=True \
+            min=2 in={input.r1} \
+            in2={input.r2} \
+            threads={threads} \
+            out={output.out1} \
+            out2={output.out2} \
+            hist={output.hist} \
+            {params.memory} \
+            > {log} 2>&1
+        """
 
 
 rule megahit:
@@ -57,26 +73,44 @@ rule megahit:
         kmers = config["kmers"],
         output_dir = f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}",
         memory=config['megahit_mem']
-    log: f"{outdir}/logs/megahit_{{sample_pool}}.log"
+    log:
+        f"{outdir}/logs/megahit/megahit_{{sample_pool}}.log"
     benchmark:
         f"{outdir}/results/benchmark/megahit/{{sample_pool}}.tsv"
-    threads: int(workflow.cores * 0.9)
+    threads:
+        max(1, int(workflow.cores * 0.9))
     resources:
         mem_mb=config['max_mem']
     conda:
         "../envs/megahit.yaml"
-    shell:"megahit -f --out-dir {params.output_dir} --out-prefix {wildcards.sample_pool}_final -m {params.memory} --k-list {params.kmers} -t {threads} --presets meta-large -1 {input.fwd} -2 {input.rev} 2> {log}"
+    shell:"""
+          megahit \
+            -f \
+            --out-dir {params.output_dir} \
+            --out-prefix {wildcards.sample_pool}_final \
+            -m {params.memory} \
+            --k-list {params.kmers} \
+            -t {threads} \
+            --presets meta-large \
+            -1 {input.fwd} \
+            -2 {input.rev} \
+            > {log} 2>&1
+          """
 
 rule rename_megahit:
     input:
         rules.megahit.output
-        
+
     output:
         fasta=temp(f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta"),
         gzip=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta.gz",
-        done= temp(f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.done")
-    run:
-        shell("cat {input} | awk '{{print $1}}' | sed 's/_/contig/' > {output.fasta}")
-        shell("gzip -c {output.fasta} > {output.gzip}")
-        shell("touch {output.done}")
+        done=temp(f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.done")
+    log:
+        f"{outdir}/logs/rename_megahit/rename_megahit_{{sample_pool}}.log"
+    shell:
+        """ 
+        awk '/^>/ {{split($1, a, "_"); print a[1] "contig" a[2]; next}} {{print}}' {input} > {output.fasta} 2> {log}
+        gzip -c {output.fasta} > {output.gzip} 2>> {log}
+        touch {output.done} 2>> {log}
+        """
 

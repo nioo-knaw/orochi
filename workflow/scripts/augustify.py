@@ -276,6 +276,7 @@ def augustify_seq(hindex, header, seqs, tmp, params):
     logger.info("Executing the following commands: ")
     logger.info(calls)
     if __name__ == '__main__':
+        multiprocessing.set_start_method('fork', force=True)
         with multiprocessing.Pool(processes=args.threads) as pool:
             results = pool.map(work_augustus, calls)
     logger.info("Finished parallel execution!")

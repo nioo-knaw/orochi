@@ -19,10 +19,18 @@ rule fairy_sketch:
         sketch_dir=f"{outdir}/results/06_binning/coverage/fairy_sketch"
     resources:
         mem_mb=lambda wildcards: int(config['max_mem'] * 0.4)
+    log:
+        f"{outdir}/logs/fairy_sketch/fairy_sketch_{{sample}}.log"
     conda:
         "../envs/fairy.yaml"
     shell:
-        "fairy sketch -1 {input.forward} -2 {input.rev} -d {params.sketch_dir}"
+        """
+        fairy sketch \
+            -1 {input.forward} \
+            -2 {input.rev} \
+            -d {params.sketch_dir} \
+            > {log} 2>&1
+        """
 
 # Estimate coverage with fairy, using sketched reads and assembly.
 rule fairy_coverage:
@@ -36,10 +44,18 @@ rule fairy_coverage:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/fairy_coverage/fairy_coverage_{{sample_pool}}.log"
     conda:
         "../envs/fairy.yaml"
     shell:
-        "fairy coverage {input.sketch_files} {input.assembly} -t {threads} -o {output.coverage_file}"
+        """
+        fairy coverage \
+        {input.sketch_files} {input.assembly} \
+        -t {threads} \
+        -o {output.coverage_file} \
+        > {log} 2>&1
+        """
 
 
 checkpoint metabat2:
@@ -57,10 +73,19 @@ checkpoint metabat2:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/metabat2/metabat2_{{sample_pool}}.log"
     conda:
         "../envs/metabat2.yaml"
     shell:
-        "metabat2 -i {input.assembly} -a {input.depth} -o {params.bin_prefix} -t {threads}"
+        """
+        metabat2 \
+        -i {input.assembly} \
+        -a {input.depth} \
+        -o {params.bin_prefix} \
+        -t {threads} \
+        > {log} 2>&1
+        """
 
 
 def make_maxbin_coverage(input_file, output_file):
@@ -101,12 +126,19 @@ checkpoint maxbin2:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/maxbin2/maxbin2_{{sample_pool}}.log"
     conda:
         "../envs/maxbin2.yaml"
     shell:
         """
 	mkdir -p {output.bin_dir}
-	run_MaxBin.pl -contig {input.assembly} -abund {input.coverage} -out {params.bin_prefix} -thread {threads}
+	run_MaxBin.pl \
+	    -contig {input.assembly} \
+	    -abund {input.coverage} \
+	    -out {params.bin_prefix} \
+	    -thread {threads} \
+	    > {log} 2>&1
 	"""
 
 
@@ -163,10 +195,21 @@ checkpoint dastool:
         # input_list=lambda wildcards, input: format_dastool_input(input.contigs2bin_files) #Comma-separated list
     threads:
         config['threads']
+    log:
+        f"{outdir}/logs/dastool/dastool_{{sample_pool}}.log"
     conda:
         "../envs/dastool.yaml"
     shell:
-        "DAS_Tool -i {params.input_list} -l metabat2,maxbin -c {input.assembly} -o {params.dastool_output} -t {threads} --write_bins"
+        """
+        DAS_Tool \
+            -i {params.input_list} \
+            -l metabat2,maxbin \
+            -c {input.assembly} \
+            -o {params.dastool_output} \
+            -t {threads} \
+            --write_bins\
+            > {log} 2>&1
+        """
 
 
 rule checkm2:
@@ -184,11 +227,20 @@ rule checkm2:
         config['threads']
     resources:
         mem_mb=config['max_mem']
-    log: f"{outdir}/logs/{{sample_pool}}_checkm2.log"
+    log: f"{outdir}/logs/checkm2/{{sample_pool}}_checkm2.log"
     conda:
         "../envs/checkm2.yaml"
     shell:
-        "checkm2 predict --threads {threads} -x fa --input {input.dastool_dir} --output-directory {params.output_dir} --force --database_path {params.db_path} 2> {log}"
+        """
+        checkm2 predict \
+            --threads {threads} \
+            -x fa \
+            --input {input.dastool_dir} \
+            --output-directory {params.output_dir} \
+            --force \
+            --database_path {params.db_path} \
+            > {log} 2>&1
+        """
 
 rule BAT:
     input:
@@ -211,15 +263,30 @@ rule BAT:
         config['threads']
     resources:
         mem_mb=config['max_mem']
-    log: f"{outdir}/logs/{{sample_pool}}_bat.log"
+    log: f"{outdir}/logs/BAT/{{sample_pool}}_bat.log"
     conda:
         "../envs/cat.yaml"
     shell:
         """ 
         mkdir -p {params.output_dir}
-        CAT_pack bins -b {input.dastool_dir} -d {params.db_path} -t {params.tax_path} -p {input.proteins} \
-         -a {input.alignment} -s .fa -n {threads} -o {params.output_dir}{params.prefix} --force 2> {log}
-        CAT_pack add_names -i {output.bat_class} -o {output.bat_names} -t {params.tax_path} --only_official --exclude_scores
+        CAT_pack bins \
+            -b {input.dastool_dir} \
+            -d {params.db_path} \
+            -t {params.tax_path} \
+            -p {input.proteins} \
+            -a {input.alignment} \
+            -s .fa \
+            -n {threads} \
+            -o {params.output_dir}{params.prefix} \
+            --force \
+            > {log} 2>&1
+        CAT_pack add_names \
+            -i {output.bat_class} \
+            -o {output.bat_names} \
+            -t {params.tax_path} \
+            --only_official \
+            --exclude_scores \
+            >> {log} 2>&1
         """
 
 rule checkm2_to_drep_format:
@@ -264,28 +331,31 @@ rule checkm2_to_drep_format:
 
 rule combine_genome_info:
     input:
-        genome_info_files=expand(f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv",
-            sample_pool=sorted(set(samples["sample_pool"])))
+        genome_info_files=expand(
+            f"{outdir}/results/06_binning/drep/checkm2_genomeinfo/{{sample_pool}}_genomeinfo.tsv",
+            sample_pool=ASSEMBLY_UNITS
+        )
     output:
         combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
     run:
         # Read and combine all genome info files
         dfs = []
         for file in input.genome_info_files:
-            df = pd.read_csv(file,sep=",")  # Using comma as it's the output separator from previous rule
+            df = pd.read_csv(file, sep=",")
             dfs.append(df)
 
         # Concatenate all dataframes
-        combined_df = pd.concat(dfs,ignore_index=True)
+        combined_df = pd.concat(dfs, ignore_index=True)
 
         # Save combined dataframe
-        combined_df.to_csv(output.combined_info,sep=",",index=False)
+        combined_df.to_csv(output.combined_info, sep=",", index=False)
 
 
 rule prepare_drep_input:
     input:
         bins_dir=expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_bins",
-            sample_pool=sorted(set(samples["sample_pool"])))
+            sample_pool=ASSEMBLY_UNITS
+        )
     output:
         input_file = f"{outdir}/results/06_binning/drep/input_bins.txt"
     run:
@@ -299,38 +369,84 @@ rule prepare_drep_input:
 
 checkpoint dereplicate_bins:
     input:
-        input_file = f"{outdir}/results/06_binning/drep/input_bins.txt",
+        input_file=f"{outdir}/results/06_binning/drep/input_bins.txt",
         combined_info=f"{outdir}/results/06_binning/drep/combined_genomeinfo.tsv"
     output:
-        dereplicated_bins = directory(f"{outdir}/results/06_binning/drep/dereplicated_genomes"),
-        done = touch(f"{outdir}/results/06_binning/drep/dereplicated_genomes/drep.done")
+        dereplicated_bins=directory(
+            f"{outdir}/results/06_binning/drep/dereplicated_genomes"
+        ),
+        done=touch(
+            f"{outdir}/results/06_binning/drep/drep.done"
+        )
     params:
-        drep_output = f"{outdir}/results/06_binning/drep",
-        # bin_dirs = lambda _, input: ' '.join([f"{dir}/*.fa" for dir in sorted(set(input.bins_dir))]),
+        drep_output=f"{outdir}/results/06_binning/drep",
+        completeness_T=config["completeness_threshold"],
+        contamination_T=config["contamination_threshold"],
+        S_algorithm=config["S_algorithm"]
     threads:
-        config['threads']
+        config["threads"]
     resources:
-        mem_mb=config['max_mem']
-    # log:
-    #     debug_log = f"{outdir}/results/06_binning/drep/drep_rule.log"
+        mem_mb=config["max_mem"]
+    log:
+        f"{outdir}/logs/drep/dereplicate_bins.log"
     conda:
         "../envs/drep.yaml"
     shell:
-        """
-        if [ $(echo "{input.input_file}" | tr ' ' '\n' | wc -l) -gt 1 ]; then
-            dRep dereplicate {params.drep_output} -g {input.input_file} -p {threads} --genomeInfo {input.combined_info}
+        r"""
+        set -euo pipefail
+
+        n_bins=$(grep -cv '^[[:space:]]*$' {input.input_file})
+
+        # Clean stale dRep outputs before rerun.
+        # This avoids old data_tables/done files being combined with missing representatives.
+        rm -rf {params.drep_output}/data
+        rm -rf {params.drep_output}/data_tables
+        rm -rf {params.drep_output}/dereplicated_genomes
+        rm -rf {params.drep_output}/figures
+        rm -f  {params.drep_output}/drep.done
+
+        mkdir -p {params.drep_output}
+
+        if [ "$n_bins" -gt 1 ]; then
+            dRep dereplicate {params.drep_output} \
+                -g {input.input_file} \
+                -p {threads} \
+                --genomeInfo {input.combined_info} \
+                -comp {params.completeness_T} \
+                -con {params.contamination_T} \
+                --S_algorithm {params.S_algorithm} \
+                --skip_plots \
+                > {log} 2>&1
         else
             mkdir -p {output.dereplicated_bins}
-            cp $(cat {input.input_file}) {output.dereplicated_bins}/
+            cp "$(grep -v '^[[:space:]]*$' {input.input_file})" {output.dereplicated_bins}/ \
+                > {log} 2>&1
         fi
+
+        # Validate representative MAGs exist.
+        n_reps=$(find {output.dereplicated_bins} -maxdepth 1 -type f \
+            \( -name "*.fa" -o -name "*.fna" -o -name "*.fasta" \) | wc -l)
+
+        if [ "$n_reps" -eq 0 ]; then
+            echo "ERROR: dRep finished but no representative MAGs were found in {output.dereplicated_bins}" >&2
+            exit 1
+        fi
+
+        echo "Successfully dereplicated $n_bins bins into $n_reps representative MAGs" >> {log}
+
+        touch {output.done}
         """
 
 rule mag_depth:
     input:
-        fairy_coverage = expand(f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
-                                sample_pool=sorted(set(samples["sample_pool"]))),
-        dastool_contig2bin = expand(f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv",
-                                    sample_pool=sorted(set(samples["sample_pool"]))),
+        fairy_coverage = expand(
+            f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
+            sample_pool=ASSEMBLY_UNITS
+        ),
+        dastool_contig2bin = expand(
+            f"{outdir}/results/06_binning/dastool/{{sample_pool}}/{{sample_pool}}_DASTool_contig2bin.tsv",
+            sample_pool=ASSEMBLY_UNITS
+        ),
     output:
         binned_coverage = f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
         mag_depth = f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv",
@@ -340,8 +456,13 @@ rule mag_depth:
         config['threads']
     resources:
         mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/mag_depth/mag_depth.log"
     shell:
         """
-        python3 workflow/scripts/mag_depth.py --coverage {input.fairy_coverage} --mapping {input.dastool_contig2bin} -o {params.outdir}
+        python3 workflow/scripts/mag_depth.py \
+            --coverage {input.fairy_coverage} \
+            --mapping {input.dastool_contig2bin} \
+            -o {params.outdir} \
+            > {log} 2>&1
         """
-

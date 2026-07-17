@@ -4,7 +4,7 @@ rule spades:
         forward = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
         rev = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
     output:
-        f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/{{sample}}_contigs.fasta",
+        f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/contigs.fasta",
     params:
         outdir = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}",
         kmers = config['kmers']
@@ -13,7 +13,23 @@ rule spades:
         mem_mb = config['max_mem']
     conda:
         "../envs/single_assembly.yaml"
-    shell: "spades.py --meta -m 1200 -1 {input.forward} -2 {input.rev} --only-assembler -k {params.kmers} -t {threads} -o {params.outdir} --tmp-dir {params.outdir}/tmp/"
+    log:
+        f"{outdir}/logs/spades/spades_{{sample}}.log}"
+    shell:
+        """
+        spades.py \
+            --meta \
+            -m 1200 \
+            -1 {input.forward} \
+            -2 {input.rev} \
+            --only-assembler \
+            -k {params.kmers} \
+            -t {threads} \
+            -o {params.outdir} \
+            --tmp-dir {params.outdir}/tmp/spades \
+            > {log} 2>&1
+        """
+
 
 rule rename_spades:
     input:
@@ -37,7 +53,17 @@ rule assembly_quality_single:
         int(workflow.cores * 0.8)
     conda:
         "../envs/single_assembly.yaml"
-    shell: "metaquast.py {input.assembly} --no-krona --threads {threads} -o {params.outdir}"
+    log:
+        f"{outdir}/logs/metaquast/metaquast_{{sample}}.log"
+    shell:
+        """
+        metaquast.py \
+        {input.assembly} \
+        --no-krona \
+        --threads {threads} \
+        -o {params.outdir}\
+        > {log} 2>&1
+        """
 
 rule coverm:
     input:
@@ -50,4 +76,15 @@ rule coverm:
         int(workflow.cores * 0.8)
     conda:
         "../envs/single_assembly.yaml"
-    shell: "coverm contig --mapper bwa-mem --reference {input.assembly} -1 {input.contigs_f} -2 {input.contigs_r} --threads {threads} > {output.coverm_out}"
+    log:
+        f"{outdir}/logs/coverm/coverm_{{sample}}.log"
+    shell:
+        """
+        coverm contig \
+            --mapper bwa-mem \
+            --reference {input.assembly} \
+            -1 {input.contigs_f} \
+            -2 {input.contigs_r} \
+            --threads {threads} > {output.coverm_out}\
+            > {log} 2>&1
+        """
