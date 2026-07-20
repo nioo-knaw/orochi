@@ -147,7 +147,7 @@ rule MetaPhlAn_secondary:
             python workflow/scripts/gtdb_reform.py \\
                 -i {params.raw_table} \\
                 -o {output.merged_table} \
-                2 >> {log}
+                2>> {log}
         else
             mv {params.raw_table} {output.merged_table} 2>> {log}
         fi
