@@ -1,5 +1,29 @@
 """ Rules related to reconstructing 16S rRNA gene sequences and linking them to MAGs"""
 
+phyloflash_version = config["phyloflash_version"]
+phyloflash_dir = config["phyloflash_dir"]
+
+# phyloFlash.pl locates its bundled PhyloFlash.pm/barrnap-HGV via FindBin, so it must be
+# invoked from its extracted source tree rather than installed as a conda package.
+rule download_phyloflash:
+    output:
+        script=f"{phyloflash_dir}/phyloFlash.pl"
+    params:
+        version=phyloflash_version,
+        dir=phyloflash_dir
+    log:
+        f"{outdir}/logs/phyloflash/download_phyloflash.log"
+    shell:
+        """
+        set -euo pipefail
+        mkdir -p {params.dir}
+        curl -L https://github.com/HRGV/phyloFlash/archive/refs/tags/pf{params.version}.tar.gz \
+            | tar -xz -C {params.dir} --strip-components=1 > {log} 2>&1
+        find {params.dir} -type f -name "*.pl" -exec chmod +x {{}} + 2>> {log}
+        find {params.dir} -type f -path "*/bin/*" -exec chmod +x {{}} + 2>> {log}
+        find {params.dir} -type f -path "*/binaries/*" -exec chmod +x {{}} + 2>> {log}
+        """
+
 # We use the non-normalized reads (if coassembly) because the MAG coverage is also based on non-normalized reads
 rule phyloflash:
     input:
@@ -8,7 +32,8 @@ rule phyloflash:
             otherwise=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_1.fastq.gz"),
         reverse_reads = branch(config['assembly_method'] == "coassembly",
             then=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz",
-            otherwise=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_2.fastq.gz")
+            otherwise=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_2.fastq.gz"),
+        phyloflash_script=f"{phyloflash_dir}/phyloFlash.pl"
         # forward_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_forward.fastq.gz",
         # reverse_reads=f"{outdir}/results/03_assembly/coassembly/pools/{{sample_pool}}_rev.fastq.gz"
 
@@ -47,7 +72,7 @@ rule phyloflash:
         mkdir -p {params.phylo_dir}
         
         # Run phyloFlash
-        phyloFlash.pl \
+        {input.phyloflash_script} \
             -dbhome {params.db} \
             -lib {wildcards.sample_pool} \
             -zip \
