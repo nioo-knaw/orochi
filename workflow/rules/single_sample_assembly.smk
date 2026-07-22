@@ -14,7 +14,7 @@ rule spades:
     conda:
         "../envs/single_assembly.yaml"
     log:
-        f"{outdir}/logs/spades/spades_{{sample}}.log}"
+        f"{outdir}/logs/spades/spades_{{sample}}.log"
     shell:
         """
         spades.py \
