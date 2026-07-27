@@ -39,6 +39,8 @@ rule report:
         ),
         markermag_done = expand(f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/markermag.done",
             sample_pool=ASSEMBLY_UNITS)
+        antismash_bac_bins = expand(f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin_index.html",
+            sample_pool=ASSEMBLY_UNITS),
     output:
         f"{outdir}/results/09_plots/Orochi_report.html"
     params:
