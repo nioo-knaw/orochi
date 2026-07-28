@@ -8,10 +8,11 @@ dependencies:
   # pulls in emirge). phyloFlash.pl itself is fetched from GitHub as a workflow
   # resource -- see the download_phyloflash rule in mag_linkage.smk.
   - perl>=5.13.2
-  - bbmap
+  - bbmap=39.26
   - vsearch>=2.5.0
   - bedtools
   - mafft
   - pigz
   - samtools>=1.12
   - spades=3.15.5
+  - python<3.12
