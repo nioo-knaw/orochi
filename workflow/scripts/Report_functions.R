@@ -78,8 +78,24 @@ f1 <- mpse3 %>% mp_plot_alpha(.alpha=c(Observe, Shannon))
 f1 <- f1 + theme_bw() + labs(title = "Alpha Diversity by Sample") + theme(plot.title = element_text(hjust = 0.5))
 
 # Observed and Shannon (per group)
-f2 <- mpse3 %>% mp_plot_alpha(.group=treatment1, .alpha=c(Observe, Shannon))
-f2 <- f2 + theme_bw() + labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
+# mp_plot_alpha() draws a half-violin per treatment1 group (via gghalves), which
+# fails with "missing value where TRUE/FALSE needed" when a group has too few
+# replicates to estimate a density (e.g. singleton treatment groups).
+f2 <- tryCatch(
+  {
+    p <- mpse3 %>% mp_plot_alpha(.group=treatment1, .alpha=c(Observe, Shannon))
+    p + theme_bw() + labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
+  },
+  error = function(e) {
+    message("Skipping alpha diversity by treatment (likely a treatment1 group with too few replicates): ", conditionMessage(e))
+    ggplot() +
+      annotate("text", x = 0.5, y = 0.5,
+               label = "Not enough replicates per treatment1 group\nto compute alpha diversity by treatment",
+               size = 5, hjust = 0.5, vjust = 0.5) +
+      xlim(0, 1) + ylim(0, 1) + theme_void() +
+      labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
+  }
+)
 f3 <- f1 / f2
 
 #ggplot2::ggsave(filename = "plots/1-alpha_diversity.tiff", plot = f3, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
