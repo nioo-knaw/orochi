@@ -382,7 +382,7 @@ plot_table <- datatable(
 
 reference_table <- datatable(
   cog_map,
-  options = list(dom = 't'),
+  options = list(dom = 't', pageLength = -1),
   rownames = FALSE
 )
 
@@ -413,12 +413,16 @@ Remember: These are standalone HTMLs that you can also find in `{OUTDIR}/results
 
 ASbac_files <- quality_files <- list.files(
   file.path(outdir, "results/09_plots/rsc"),
-  pattern = "index\\.html$",
+  pattern = "^index\\.html$",
   recursive = TRUE,
   full.names = TRUE
 )
 ASbac_files_rel <- sub(".*rsc/", "rsc/", ASbac_files)
 
+# Only keep the top-level index.html: rsc/{assembly}/{tooltype}/index.html  
+ASbac_files_rel <- ASbac_files_rel[  
+  sapply(strsplit(ASbac_files_rel, "/"), length) == 4  
+]
 
 # group by assembly
 groups <- list()
@@ -484,6 +488,49 @@ cat('</div>\n')
 ```{r Fig7BinSummary, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 9, fig.height = 2, fig.align = "center"}
 plot8_binsummary()
 ```
+
+#### antiSMASH bin-based results  
+HTML reports showing BGCs per MAG, as indicated by the name shown in each button. Make sure to download the `{OUTDIR}/results/09_plots/rsc/` directory so you can visualize all the elements of the HTMLs.  
+  
+::: note  
+Remember: These are standalone HTMLs that you can also find in `{OUTDIR}/results/08_BGC/antismash/{pool_name}/bacterial/per_bin_index.html`.  
+:::  
+  
+```{r antiSMASH bin output, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}  
+  
+ASbac_bin_files <- list.files(  
+  file.path(outdir, "results/09_plots/rsc"),  
+  pattern = "^per_bin_index\\.html$",  
+  recursive = TRUE,  
+  full.names = TRUE  
+)  
+ASbac_bin_files_rel <- sub(".*rsc/", "rsc/", ASbac_bin_files)  
+  
+bin_groups <- list()  
+for (f in ASbac_bin_files_rel) {  
+  parts <- strsplit(f, "/")[[1]]  
+  assembly <- parts[2]  
+  if (!assembly %in% names(bin_groups)) {  
+    bin_groups[[assembly]] <- list()  
+  }  
+  bin_groups[[assembly]][["antismash_bac_bins"]] <- f  
+}  
+  
+cat('<div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start;text-align:center;">\n')  
+  
+for (assembly in names(bin_groups)) {  
+  cat('<div style="display:flex; flex-direction:column; gap:10px; align-items:center; flex:0 0 auto; min-width:140px;">\n')  
+  if (!is.null(bin_groups[[assembly]][["antismash_bac_bins"]])) {  
+    cat(sprintf(  
+      '<p><a href="%s" target="_blank" class="link-button btn-bac">%s</a></p>\n',  
+      bin_groups[[assembly]][["antismash_bac_bins"]], assembly  
+    ))  
+  }  
+  cat('</div>\n')  
+}  
+  
+cat('</div>\n')  
+```  
 
 #### Bin quality
 

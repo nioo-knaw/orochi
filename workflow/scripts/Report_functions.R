@@ -776,7 +776,6 @@ bin <- ggplot(bin_counts) +
   scale_fill_brewer(palette = "Oranges") +
   scale_y_continuous(expand = c(0, 0)) +
   scale_x_continuous(expand = c(0, 0)) +
-  coord_fixed(ratio = 0.1) +
   labs(
     x = NULL, y = NULL,
     title = "Total number of bins per treatment (assembly)"
