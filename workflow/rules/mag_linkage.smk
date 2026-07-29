@@ -48,7 +48,8 @@ rule phyloflash:
 
     params:
         db=config["phyloflash_db"],
-        phylo_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/"
+        phylo_dir=f"{outdir}/results/07_maglinkage/{{sample_pool}}/phyloflash/",
+        scratch_dir=lambda wildcards: os.path.join(config["tmpdir"], "phyloflash", wildcards.sample_pool)
     threads:
         config['threads']
     resources:
@@ -56,10 +57,10 @@ rule phyloflash:
     log:
         f"{outdir}/logs/phyloflash/phyloflash_{{sample_pool}}.log"
 
-    shell: # We have to zip the phyloflash output and move it because it will be stored in the WD otherwise.
+    shell: # phyloFlash writes its working files into the CWD, so we run it from a scratch dir (config['tmpdir']) rather than in place.
         """
         set -euo pipefail
-        
+
         echo "Starting phyloFlash analysis for {wildcards.sample_pool}" > {log}
         echo "Timestamp: $(date)" >> {log}
         echo "Database: {params.db}" >> {log}
@@ -67,26 +68,40 @@ rule phyloflash:
         echo "Reverse reads: {input.reverse_reads}" >> {log}
         echo "CPUs: {threads}" >> {log}
         echo "" >> {log}
-        
+
         # Ensure output directory exists
         mkdir -p {params.phylo_dir}
-        
-        # Run phyloFlash
-        {input.phyloflash_script} \
-            -dbhome {params.db} \
+
+        # Resolve everything to absolute paths before we leave this directory
+        PHYLOFLASH_SCRIPT_ABS=$(readlink -f {input.phyloflash_script})
+        DB_ABS=$(readlink -f {params.db})
+        FWD_ABS=$(readlink -f {input.forward_reads})
+        REV_ABS=$(readlink -f {input.reverse_reads})
+        LOG_ABS=$(readlink -f {log})
+        PHYLO_DIR_ABS=$(readlink -f {params.phylo_dir})
+
+        # Run phyloFlash from a scratch dir so its working files never land in the launch directory
+        mkdir -p {params.scratch_dir}
+        cd {params.scratch_dir}
+
+        "$PHYLOFLASH_SCRIPT_ABS" \
+            -dbhome "$DB_ABS" \
             -lib {wildcards.sample_pool} \
             -zip \
             -CPUs {threads} \
-            -read1 {input.forward_reads} \
-            -read2 {input.reverse_reads} \
-            >> {log} 2>&1
-        
+            -read1 "$FWD_ABS" \
+            -read2 "$REV_ABS" \
+            >> "$LOG_ABS" 2>&1
+
         # Move all phyloFlash output files to the target directory
-        echo "" >> {log}
-        echo "Moving phyloFlash output files to {params.phylo_dir}" >> {log}
-        mv {wildcards.sample_pool}.phyloFlash.* {params.phylo_dir} 2>> {log}
-        
-        echo "phyloFlash analysis completed successfully at $(date)" >> {log}
+        echo "" >> "$LOG_ABS"
+        echo "Moving phyloFlash output files to $PHYLO_DIR_ABS" >> "$LOG_ABS"
+        mv {wildcards.sample_pool}.phyloFlash.* "$PHYLO_DIR_ABS" 2>> "$LOG_ABS"
+
+        cd - > /dev/null
+        rm -rf {params.scratch_dir}
+
+        echo "phyloFlash analysis completed successfully at $(date)" >> "$LOG_ABS"
         """
 
 rule unzip_phyloflash:
