@@ -300,7 +300,22 @@ mpse3 %<>%
   mp_decostand(.abundance=Abundance)
 
 ## Significance between pools
-b3 <- mpse3 %>% mp_cal_dist(.abundance=hellinger, distmethod="bray") %>% mp_plot_dist(.distmethod = bray, .group = treatment1, group.test=TRUE, textsize=2)
+# mp_plot_dist(group.test=TRUE) runs a wilcox.test per pairwise group comparison
+# via ggsignif with no small-n guard, so it can error out when a treatment1
+# group ends up with too few (or zero) pairwise distances to compare.
+b3 <- tryCatch(
+  {
+    mpse3 %>% mp_cal_dist(.abundance=hellinger, distmethod="bray") %>% mp_plot_dist(.distmethod = bray, .group = treatment1, group.test=TRUE, textsize=2)
+  },
+  error = function(e) {
+    message("Skipping significance-between-pools plot (likely a treatment1 group with too few replicates): ", conditionMessage(e))
+    ggplot() +
+      annotate("text", x = 0.5, y = 0.5,
+               label = "Not enough replicates per treatment1 group\nto compute significance between pools",
+               size = 5, hjust = 0.5, vjust = 0.5) +
+      xlim(0, 1) + ylim(0, 1) + theme_void()
+  }
+)
 
 ggplot2::ggsave(filename = file.path(outdir, plotsdir, "4-significance_between_pools.tiff"), plot = b3, width = 6, height = 5, units = "in", dpi = 500, compression = "lzw")
 
