@@ -37,7 +37,6 @@ def summarize_genbank_files(antismash_dir, taxon, output_tsv):
 
     genbank_files = sorted(
         list(antismash_dir.glob("*.region*.gbk"))
-        + list(antismash_dir.glob("*001.gbk"))
     )
 
     rows = []

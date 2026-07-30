@@ -265,112 +265,520 @@ rule regenerate_antismash_html_per_bin:
 
 
 rule aggregate_bin_antismash_reports:
-    """Create an index page linking to all per-bin antiSMASH reports."""
+    """Create a sortable index page linking to all per-bin antiSMASH reports."""
     input:
-        html_files=aggregate_bin_htmls,
         bin_taxonomy=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_per_bin_summary.tsv"
     output:
         index=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin_index.html"
     params:
+        report_prefix="per_bin",
         sample_pool="{sample_pool}"
     run:
         import pandas as pd
+        import html
         from pathlib import Path
-        
-        # Load bin summary
+        # Load the per-bin summary table.
         try:
-            summary_df = pd.read_csv(input.bin_taxonomy, sep="\t")
+            summary_df = pd.read_csv(
+                input.bin_taxonomy,
+                sep="\t"
+            )
         except (FileNotFoundError, pd.errors.EmptyDataError):
             summary_df = pd.DataFrame()
 
-        if not summary_df.empty:
-            for col in ["taxonomy", "taxonomy_lowest", "markermag_taxonomy", "markermag_taxonomy_lowest"]:
-                if col not in summary_df.columns:
-                    summary_df[col] = "N/A"
-                else:
-                    summary_df[col] = summary_df[col].fillna("N/A")
+        def safe_html(value):
+            """Escape a value before inserting it into HTML."""
+            if pd.isna(value):
+                return "N/A"
+
+            return html.escape(str(value), quote=True)
 
         def bgc_types_to_pills(bgc_types_str):
-            """Render a "Type:count;Type2:count2" string as sorted pill spans."""
-            if not isinstance(bgc_types_str, str) or not bgc_types_str or bgc_types_str == "N/A":
-                return "N/A"
-            pills = []
-            for entry in bgc_types_str.split(";"):
-                name, _, count = entry.rpartition(":")
-                name, count = (name, count) if name else (entry, "1")
-                pills.append(f'<span class="bgc-pill">{name} &times;{count}</span>')
-            return "".join(pills)
+            """
+            Convert:
+                NRPS:2;terpene:1
 
-        # Create HTML index
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>antiSMASH Results per Bin - {params.sample_pool}</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                table {{ border-collapse: collapse; width: 100%; margin-top: 20px; }}
-                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-                th {{ background-color: #4CAF50; color: white; }}
-                tr:hover {{ background-color: #f5f5f5; }}
-                a {{ color: #0066cc; text-decoration: none; }}
-                a:hover {{ text-decoration: underline; }}
-                .bgc-pill {{
-                    display: inline-block;
-                    background-color: #e8f0fe;
-                    color: #1a3a6b;
-                    border-radius: 12px;
-                    padding: 2px 10px;
-                    margin: 2px;
-                    font-size: 0.85em;
-                    white-space: nowrap;
-                }}
-            </style>
-        </head>
-        <body>
-            <h1>antiSMASH BGC Results per MAG</h1>
-            <h2>Sample Pool: {params.sample_pool}</h2>
-            <table>
-                <tr>
-                    <th>MAG ID</th>
-                    <th>BAT Taxonomy</th>
-                    <th>MarkerMAG Taxonomy</th>
-                    <th>Number of BGCs</th>
-                    <th>BGC Types</th>
-                    <th>antiSMASH Report</th>
-                </tr>
-        """
+            into styled HTML pill elements.
+            """
+            if (
+                not isinstance(bgc_types_str, str)
+                or not bgc_types_str.strip()
+                or bgc_types_str.strip().upper() == "N/A"
+            ):
+                return "N/A"
+
+            pills = []
+
+            for entry in bgc_types_str.split(";"):
+                entry = entry.strip()
+
+                if not entry:
+                    continue
+
+                name, separator, count = entry.rpartition(":")
+
+                if not separator:
+                    name = entry
+                    count = "1"
+
+                name = name.strip()
+                count = count.strip()
+
+                pills.append(
+                    '<span class="bgc-pill">'
+                    f"{safe_html(name)} &times;{safe_html(count)}"
+                    "</span>"
+                )
+
+            return "".join(pills) if pills else "N/A"
 
         if not summary_df.empty:
+            required_columns = ["bin_id"]
+
+            missing_columns = [
+                column
+                for column in required_columns
+                if column not in summary_df.columns
+            ]
+
+            if missing_columns:
+                raise ValueError(
+                    "Missing required column(s) in "
+                    f"{input.bin_taxonomy}: "
+                    + ", ".join(missing_columns)
+                )
+
+            text_columns = [
+                "taxonomy",
+                "taxonomy_lowest",
+                "markermag_taxonomy",
+                "markermag_taxonomy_lowest",
+                "bgc_types",
+            ]
+
+            for column in text_columns:
+                if column not in summary_df.columns:
+                    summary_df[column] = "N/A"
+                else:
+                    summary_df[column] = (
+                        summary_df[column]
+                        .fillna("N/A")
+                        .astype(str)
+                    )
+
+            if "n_bgcs" not in summary_df.columns:
+                summary_df["n_bgcs"] = 0
+            else:
+                summary_df["n_bgcs"] = (
+                    pd.to_numeric(
+                        summary_df["n_bgcs"],
+                        errors="coerce"
+                    )
+                    .fillna(0)
+                    .astype(int)
+                )
+
+        sample_pool_html = safe_html(params.sample_pool)
+
+        html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        antiSMASH Results per Bin - {sample_pool_html}
+    </title>
+
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #222;
+        }}
+
+        table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }}
+
+        th,
+        td {{
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: middle;
+        }}
+
+        th {{
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-right: 28px;
+        }}
+
+        th:hover {{
+            background-color: #449d48;
+        }}
+
+        th.sort-asc::after {{
+            content: "▲";
+            position: absolute;
+            right: 8px;
+        }}
+
+        th.sort-desc::after {{
+            content: "▼";
+            position: absolute;
+            right: 8px;
+        }}
+
+        tbody tr:hover {{
+            background-color: #f5f5f5;
+        }}
+
+        a {{
+            color: #0066cc;
+            text-decoration: none;
+        }}
+
+        a:hover {{
+            text-decoration: underline;
+        }}
+
+        .bgc-pill {{
+            display: inline-block;
+            background-color: #e8f0fe;
+            color: #1a3a6b;
+            border-radius: 12px;
+            padding: 2px 10px;
+            margin: 2px;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }}
+    </style>
+</head>
+
+<body>
+    <h1>antiSMASH BGC Results per MAG</h1>
+
+    <h2>
+        Sample Pool: {sample_pool_html}
+    </h2>
+
+    <table id="antismash-table">
+        <thead>
+            <tr>
+                <th data-type="text">
+                    MAG ID
+                </th>
+
+                <th data-type="text">
+                    BAT Taxonomy
+                </th>
+
+                <th data-type="text">
+                    MarkerMAG Taxonomy
+                </th>
+
+                <th data-type="number">
+                    Number of BGCs
+                </th>
+
+                <th data-type="text">
+                    BGC Types
+                </th>
+
+                <th data-type="text">
+                    antiSMASH Report
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+"""
+
+        if summary_df.empty:
+            html_content += """
+            <tr>
+                <td colspan="6">
+                    No bins with BGCs found
+                </td>
+            </tr>
+"""
+        else:
             for _, row in summary_df.iterrows():
-                bin_id = row['bin_id']
-                taxonomy_full = row.get('taxonomy', 'N/A')
-                taxonomy_lowest = row.get('taxonomy_lowest', 'N/A')
-                markermag_full = row.get('markermag_taxonomy', 'N/A')
-                markermag_lowest = row.get('markermag_taxonomy_lowest', 'N/A')
-                n_bgcs = row.get('n_bgcs', 0)
-                bgc_types_html = bgc_types_to_pills(row.get('bgc_types', 'N/A'))
+                bin_id_raw = str(row["bin_id"])
+                bin_id_html = safe_html(bin_id_raw)
+
+                taxonomy_full = safe_html(
+                    row.get("taxonomy", "N/A")
+                )
+                taxonomy_lowest = safe_html(
+                    row.get("taxonomy_lowest", "N/A")
+                )
+
+                markermag_full = safe_html(
+                    row.get("markermag_taxonomy", "N/A")
+                )
+                markermag_lowest = safe_html(
+                    row.get(
+                        "markermag_taxonomy_lowest",
+                        "N/A"
+                    )
+                )
+
+                n_bgcs = int(row.get("n_bgcs", 0))
+
+                bgc_types_html = bgc_types_to_pills(
+                    row.get("bgc_types", "N/A")
+                )
+
+                report_href = (
+                    f"{params.report_prefix}/"
+                    f"{bin_id_html}/index.html"
+                )
 
                 html_content += f"""
-                <tr>
-                    <td>{bin_id}</td>
-                    <td><em title="{taxonomy_full}">{taxonomy_lowest}</em></td>
-                    <td><em title="{markermag_full}">{markermag_lowest}</em></td>
-                    <td>{n_bgcs}</td>
-                    <td>{bgc_types_html}</td>
-                    <td><a href="per_bin/{bin_id}/index.html" target="_blank">View Report</a></td>
-                </tr>
-                """
-        else:
-            html_content += "<tr><td colspan='6'>No bins with BGCs found</td></tr>"
-        
+            <tr>
+                <td>
+                    {bin_id_html}
+                </td>
+
+                <td>
+                    <em title="{taxonomy_full}">
+                        {taxonomy_lowest}
+                    </em>
+                </td>
+
+                <td>
+                    <em title="{markermag_full}">
+                        {markermag_lowest}
+                    </em>
+                </td>
+
+                <td>
+                    {n_bgcs}
+                </td>
+
+                <td>
+                    {bgc_types_html}
+                </td>
+
+                <td>
+                    <a
+                        href="{report_href}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        View Report
+                    </a>
+                </td>
+            </tr>
+"""
+
         html_content += """
-            </table>
-        </body>
-        </html>
-        """
-        
-        with open(output.index, 'w') as f:
-            f.write(html_content)
+        </tbody>
+    </table>
 
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+                const table = document.getElementById(
+                    "antismash-table"
+                );
 
+                const headers = table.querySelectorAll(
+                    "thead th"
+                );
+
+                const tbody = table.querySelector(
+                    "tbody"
+                );
+
+                headers.forEach(
+                    function (header, columnIndex) {
+                        header.addEventListener(
+                            "click",
+                            function () {
+                                const rows = Array.from(
+                                    tbody.querySelectorAll(
+                                        "tr"
+                                    )
+                                );
+
+                                /*
+                                 * Do not sort the single
+                                 * "no results" row.
+                                 */
+                                if (
+                                    rows.length === 1 &&
+                                    rows[0].querySelector(
+                                        "td[colspan]"
+                                    )
+                                ) {
+                                    return;
+                                }
+
+                                const dataType =
+                                    header.dataset.type ||
+                                    "text";
+
+                                /*
+                                 * First click: ascending.
+                                 * Second click: descending.
+                                 */
+                                const ascending =
+                                    !header.classList.contains(
+                                        "sort-asc"
+                                    );
+
+                                headers.forEach(
+                                    function (otherHeader) {
+                                        otherHeader.classList
+                                            .remove(
+                                                "sort-asc",
+                                                "sort-desc"
+                                            );
+                                    }
+                                );
+
+                                header.classList.add(
+                                    ascending
+                                        ? "sort-asc"
+                                        : "sort-desc"
+                                );
+
+                                rows.sort(
+                                    function (rowA, rowB) {
+                                        const cellA =
+                                            rowA.cells[
+                                                columnIndex
+                                            ];
+
+                                        const cellB =
+                                            rowB.cells[
+                                                columnIndex
+                                            ];
+
+                                        const valueA = cellA
+                                            ? cellA.textContent
+                                                .trim()
+                                            : "";
+
+                                        const valueB = cellB
+                                            ? cellB.textContent
+                                                .trim()
+                                            : "";
+
+                                        const missingA =
+                                            valueA === "" ||
+                                            valueA
+                                                .toUpperCase()
+                                                === "N/A";
+
+                                        const missingB =
+                                            valueB === "" ||
+                                            valueB
+                                                .toUpperCase()
+                                                === "N/A";
+
+                                        /*
+                                         * Missing values are
+                                         * always placed last.
+                                         */
+                                        if (
+                                            missingA &&
+                                            missingB
+                                        ) {
+                                            return 0;
+                                        }
+
+                                        if (missingA) {
+                                            return 1;
+                                        }
+
+                                        if (missingB) {
+                                            return -1;
+                                        }
+
+                                        let comparison = 0;
+
+                                        if (
+                                            dataType ===
+                                            "number"
+                                        ) {
+                                            comparison =
+                                                Number(valueA) -
+                                                Number(valueB);
+                                        } else {
+                                            comparison =
+                                                valueA
+                                                    .localeCompare(
+                                                        valueB,
+                                                        undefined,
+                                                        {
+                                                            numeric:
+                                                                true,
+                                                            sensitivity:
+                                                                "base"
+                                                        }
+                                                    );
+                                        }
+
+                                        return ascending
+                                            ? comparison
+                                            : -comparison;
+                                    }
+                                );
+
+                                rows.forEach(
+                                    function (row) {
+                                        tbody.appendChild(
+                                            row
+                                        );
+                                    }
+                                );
+                            }
+                        );
+                    }
+                );
+            }
+        );
+    </script>
+</body>
+</html>
+"""
+
+        output_path = Path(output.index)
+        output_path.parent.mkdir(
+            parents=True,
+            exist_ok=True
+        )
+
+        output_path.write_text(
+            html_content,
+            encoding="utf-8"
+        )
+
+        print(
+            f"Generated sortable antiSMASH index: "
+            f"{output_path}"
+        )
+        print(
+            f"Sample pool: {params.sample_pool}"
+        )
+        print(
+            f"Report prefix: {params.report_prefix}"
+        )
+        print(
+            f"Number of MAGs: {len(summary_df)}"
+        )
