@@ -489,7 +489,7 @@ cat('</div>\n')
 plot8_binsummary()
 ```
 
-#### antiSMASH bin-based results  
+#### Bin-based bacterial antiSMASH results
 HTML reports showing BGCs per MAG, as indicated by the name shown in each button. Make sure to download the `{OUTDIR}/results/09_plots/rsc/` directory so you can visualize all the elements of the HTMLs.  
   
 ::: note  

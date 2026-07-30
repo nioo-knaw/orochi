@@ -265,112 +265,18 @@ rule regenerate_antismash_html_per_bin:
 
 
 rule aggregate_bin_antismash_reports:
-    """Create an index page linking to all per-bin antiSMASH reports."""
+    """Create a sortable index page linking to all per-bin antiSMASH reports."""
     input:
         html_files=aggregate_bin_htmls,
         bin_taxonomy=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_per_bin_summary.tsv"
     output:
         index=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin_index.html"
     params:
-        sample_pool="{sample_pool}"
-    run:
-        import pandas as pd
-        from pathlib import Path
-        
-        # Load bin summary
-        try:
-            summary_df = pd.read_csv(input.bin_taxonomy, sep="\t")
-        except (FileNotFoundError, pd.errors.EmptyDataError):
-            summary_df = pd.DataFrame()
+        sample_pool=lambda wildcards: wildcards.sample_pool,
 
-        if not summary_df.empty:
-            for col in ["taxonomy", "taxonomy_lowest", "markermag_taxonomy", "markermag_taxonomy_lowest"]:
-                if col not in summary_df.columns:
-                    summary_df[col] = "N/A"
-                else:
-                    summary_df[col] = summary_df[col].fillna("N/A")
-
-        def bgc_types_to_pills(bgc_types_str):
-            """Render a "Type:count;Type2:count2" string as sorted pill spans."""
-            if not isinstance(bgc_types_str, str) or not bgc_types_str or bgc_types_str == "N/A":
-                return "N/A"
-            pills = []
-            for entry in bgc_types_str.split(";"):
-                name, _, count = entry.rpartition(":")
-                name, count = (name, count) if name else (entry, "1")
-                pills.append(f'<span class="bgc-pill">{name} &times;{count}</span>')
-            return "".join(pills)
-
-        # Create HTML index
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>antiSMASH Results per Bin - {params.sample_pool}</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; }}
-                table {{ border-collapse: collapse; width: 100%; margin-top: 20px; }}
-                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
-                th {{ background-color: #4CAF50; color: white; }}
-                tr:hover {{ background-color: #f5f5f5; }}
-                a {{ color: #0066cc; text-decoration: none; }}
-                a:hover {{ text-decoration: underline; }}
-                .bgc-pill {{
-                    display: inline-block;
-                    background-color: #e8f0fe;
-                    color: #1a3a6b;
-                    border-radius: 12px;
-                    padding: 2px 10px;
-                    margin: 2px;
-                    font-size: 0.85em;
-                    white-space: nowrap;
-                }}
-            </style>
-        </head>
-        <body>
-            <h1>antiSMASH BGC Results per MAG</h1>
-            <h2>Sample Pool: {params.sample_pool}</h2>
-            <table>
-                <tr>
-                    <th>MAG ID</th>
-                    <th>BAT Taxonomy</th>
-                    <th>MarkerMAG Taxonomy</th>
-                    <th>Number of BGCs</th>
-                    <th>BGC Types</th>
-                    <th>antiSMASH Report</th>
-                </tr>
-        """
-
-        if not summary_df.empty:
-            for _, row in summary_df.iterrows():
-                bin_id = row['bin_id']
-                taxonomy_full = row.get('taxonomy', 'N/A')
-                taxonomy_lowest = row.get('taxonomy_lowest', 'N/A')
-                markermag_full = row.get('markermag_taxonomy', 'N/A')
-                markermag_lowest = row.get('markermag_taxonomy_lowest', 'N/A')
-                n_bgcs = row.get('n_bgcs', 0)
-                bgc_types_html = bgc_types_to_pills(row.get('bgc_types', 'N/A'))
-
-                html_content += f"""
-                <tr>
-                    <td>{bin_id}</td>
-                    <td><em title="{taxonomy_full}">{taxonomy_lowest}</em></td>
-                    <td><em title="{markermag_full}">{markermag_lowest}</em></td>
-                    <td>{n_bgcs}</td>
-                    <td>{bgc_types_html}</td>
-                    <td><a href="per_bin/{bin_id}/index.html" target="_blank">View Report</a></td>
-                </tr>
-                """
-        else:
-            html_content += "<tr><td colspan='6'>No bins with BGCs found</td></tr>"
-        
-        html_content += """
-            </table>
-        </body>
-        </html>
-        """
-        
-        with open(output.index, 'w') as f:
-            f.write(html_content)
-
-
+        # Path used after per_bin_index.html is copied to 09_plots/
+        report_prefix="per_bin"
+    conda:
+        "../envs/python_simple.yaml"
+    script:
+        "../scripts/make_per_bin_antismash_index.py"
