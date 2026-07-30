@@ -84,7 +84,12 @@ f1 <- f1 + theme_bw() + labs(title = "Alpha Diversity by Sample") + theme(plot.t
 f2 <- tryCatch(
   {
     p <- mpse3 %>% mp_plot_alpha(.group=treatment1, .alpha=c(Observe, Shannon))
-    p + theme_bw() + labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
+    p <- p + theme_bw() + labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
+    # ggplot layers build lazily: force the grob build now so a failure inside
+    # gghalves' geom_half_violin (triggered only at render/ggsave time) is
+    # actually caught here instead of aborting the later ggsave() call.
+    ggplot2::ggplotGrob(p)
+    p
   },
   error = function(e) {
     message("Skipping alpha diversity by treatment (likely a treatment1 group with too few replicates): ", conditionMessage(e))
@@ -305,7 +310,11 @@ mpse3 %<>%
 # group ends up with too few (or zero) pairwise distances to compare.
 b3 <- tryCatch(
   {
-    mpse3 %>% mp_cal_dist(.abundance=hellinger, distmethod="bray") %>% mp_plot_dist(.distmethod = bray, .group = treatment1, group.test=TRUE, textsize=2)
+    p <- mpse3 %>% mp_cal_dist(.abundance=hellinger, distmethod="bray") %>% mp_plot_dist(.distmethod = bray, .group = treatment1, group.test=TRUE, textsize=2)
+    # Force the grob build now (see note on f2 above) so a wilcox.test failure
+    # inside geom_signif's render step is caught here, not at the later ggsave().
+    ggplot2::ggplotGrob(p)
+    p
   },
   error = function(e) {
     message("Skipping significance-between-pools plot (likely a treatment1 group with too few replicates): ", conditionMessage(e))
