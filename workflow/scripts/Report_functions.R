@@ -843,7 +843,7 @@ all_plots <- list()
 
 for (contig_file in contig_files) {
   assembly <- stringr::str_match(contig_file, ".*/([A-Za-z0-9_-]+)/markermag/")[,2]
-  genome_file <- file.path(dirname(contig_file), paste0(assembly, "_linkages_by_genome.txt"))
+  genome_file <- file.path(dirname(contig_file), paste0(assembly, "_linkages_by_genome_taxonomy.txt"))
   if (!file.exists(genome_file)) next
   
   message("Processing assembly: ", assembly)
@@ -906,22 +906,32 @@ for (contig_file in contig_files) {
   merged <- df1 %>%
     left_join(df2, by = c("MarkerGene", "GenomicSeq"))
   
+  # Add MarkerMAG/phyloFlash taxonomy (lowest classified rank) as its own axis
+  # rather than folding it into the marker-gene label, which made that
+  # column's text too long -- the spades-assembled 16S ID stays short and
+  # distinct, taxonomy gets its own short column next to it.
   merged <- merged %>%
     mutate(
+      TaxonomyLabel = ifelse(
+        is.na(taxonomy) | !nzchar(taxonomy) | taxonomy == "unknown",
+        "unclassified",
+        sub(".*;", "", taxonomy)
+      ),
       MarkerGene = factor(MarkerGene, levels = unique(MarkerGene)),
+      TaxonomyLabel = factor(TaxonomyLabel, levels = unique(TaxonomyLabel)),
       Contig = factor(Contig, levels = unique(Contig)),
       GenomicSeq = factor(GenomicSeq, levels = unique(GenomicSeq))
     )
-  
-  plot <- ggplot(merged, aes(axis1 = MarkerGene, axis2 = Contig, axis3 = GenomicSeq, y = Linkage)) +
+
+  plot <- ggplot(merged, aes(axis1 = MarkerGene, axis2 = TaxonomyLabel, axis3 = Contig, axis4 = GenomicSeq, y = Linkage)) +
     geom_alluvium(aes(fill = MarkerGene), width = 1/12, show.legend = FALSE) +
     scale_fill_brewer(palette="Blues") +
     ggnewscale::new_scale_fill() +
     geom_stratum(aes(fill = Round), width = 0.1) +
     scale_fill_manual(values = c("Rd1" = "grey90", "Rd2" = "grey50")) +
     geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 3, nudge_x = 0.08, hjust = 0) +
-    scale_x_discrete(limits = c("MarkerGene", "Contig", "GenomicSeq"),
-                     labels = c("Marker", "Contig", "Genome")) +
+    scale_x_discrete(limits = c("MarkerGene", "TaxonomyLabel", "Contig", "GenomicSeq"),
+                     labels = c("Marker", "Taxonomy", "Contig", "Genome")) +
     theme_classic(base_size = 12) +
     labs(title = paste0("16S-MAG Linkage for pool ", assembly)) +
     theme(
