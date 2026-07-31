@@ -56,13 +56,14 @@ rule concat_host_phix:
 rule build_index:
     conda:
         "../envs/preprocessing.yaml"
-    input: 
+    input:
         reference=f"{outdir}/results/00_misc/contaminants_refs/contaminants_concat.fna"
-    output: 
+    output:
         ref_index=directory(f"{outdir}/results/00_misc/contaminants_refs/ref/")
     params:
         # threads=config['threads'],
-        memory=config['bbmap_mem']
+        memory=config['bbmap_mem'],
+        scratch_dir=os.path.join(config["tmpdir"], "build_index")
     resources:
         mem_mb=1500000
     threads:
@@ -70,13 +71,29 @@ rule build_index:
     log:
         f"{outdir}/logs/build_index/build_index.log"
     shell:
+        # Build the index on local scratch (config['tmpdir']) instead of directly at {output.ref_index},
+        # which may be on a shared/network filesystem, then move the finished index into place.
         """
+        set -euo pipefail
+
+        REFERENCE_ABS=$(readlink -f {input.reference})
+        LOG_ABS=$(readlink -f {log})
+
+        rm -rf {params.scratch_dir}
+        mkdir -p {params.scratch_dir}
+        cd {params.scratch_dir}
+
         bbmap.sh \
-            ref={input.reference} \
-            path={output.ref_index} \
+            ref="$REFERENCE_ABS" \
+            path=index \
             threads={threads} \
             {params.memory} \
-            > {log} 2>&1
+            > "$LOG_ABS" 2>&1
+
+        cd - > /dev/null
+        rm -rf {output.ref_index}
+        mv {params.scratch_dir}/index {output.ref_index}
+        rm -rf {params.scratch_dir}
         """
 
 rule filter_host:

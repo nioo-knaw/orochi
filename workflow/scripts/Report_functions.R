@@ -78,8 +78,29 @@ f1 <- mpse3 %>% mp_plot_alpha(.alpha=c(Observe, Shannon))
 f1 <- f1 + theme_bw() + labs(title = "Alpha Diversity by Sample") + theme(plot.title = element_text(hjust = 0.5))
 
 # Observed and Shannon (per group)
-f2 <- mpse3 %>% mp_plot_alpha(.group=treatment1, .alpha=c(Observe, Shannon))
-f2 <- f2 + theme_bw() + labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
+# mp_plot_alpha() draws a half-violin per treatment1 group (via gghalves), which
+# fails with "missing value where TRUE/FALSE needed" when a group has too few
+# replicates to estimate a density (e.g. singleton treatment groups).
+f2 <- tryCatch(
+  {
+    p <- mpse3 %>% mp_plot_alpha(.group=treatment1, .alpha=c(Observe, Shannon))
+    p <- p + theme_bw() + labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
+    # ggplot layers build lazily: force the grob build now so a failure inside
+    # gghalves' geom_half_violin (triggered only at render/ggsave time) is
+    # actually caught here instead of aborting the later ggsave() call.
+    ggplot2::ggplotGrob(p)
+    p
+  },
+  error = function(e) {
+    message("Skipping alpha diversity by treatment (likely a treatment1 group with too few replicates): ", conditionMessage(e))
+    ggplot() +
+      annotate("text", x = 0.5, y = 0.5,
+               label = "Not enough replicates per treatment1 group\nto compute alpha diversity by treatment",
+               size = 5, hjust = 0.5, vjust = 0.5) +
+      xlim(0, 1) + ylim(0, 1) + theme_void() +
+      labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
+  }
+)
 f3 <- f1 / f2
 
 #ggplot2::ggsave(filename = "plots/1-alpha_diversity.tiff", plot = f3, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
@@ -284,7 +305,26 @@ mpse3 %<>%
   mp_decostand(.abundance=Abundance)
 
 ## Significance between pools
-b3 <- mpse3 %>% mp_cal_dist(.abundance=hellinger, distmethod="bray") %>% mp_plot_dist(.distmethod = bray, .group = treatment1, group.test=TRUE, textsize=2)
+# mp_plot_dist(group.test=TRUE) runs a wilcox.test per pairwise group comparison
+# via ggsignif with no small-n guard, so it can error out when a treatment1
+# group ends up with too few (or zero) pairwise distances to compare.
+b3 <- tryCatch(
+  {
+    p <- mpse3 %>% mp_cal_dist(.abundance=hellinger, distmethod="bray") %>% mp_plot_dist(.distmethod = bray, .group = treatment1, group.test=TRUE, textsize=2)
+    # Force the grob build now (see note on f2 above) so a wilcox.test failure
+    # inside geom_signif's render step is caught here, not at the later ggsave().
+    ggplot2::ggplotGrob(p)
+    p
+  },
+  error = function(e) {
+    message("Skipping significance-between-pools plot (likely a treatment1 group with too few replicates): ", conditionMessage(e))
+    ggplot() +
+      annotate("text", x = 0.5, y = 0.5,
+               label = "Not enough replicates per treatment1 group\nto compute significance between pools",
+               size = 5, hjust = 0.5, vjust = 0.5) +
+      xlim(0, 1) + ylim(0, 1) + theme_void()
+  }
+)
 
 ggplot2::ggsave(filename = file.path(outdir, plotsdir, "4-significance_between_pools.tiff"), plot = b3, width = 6, height = 5, units = "in", dpi = 500, compression = "lzw")
 
@@ -803,7 +843,7 @@ all_plots <- list()
 
 for (contig_file in contig_files) {
   assembly <- stringr::str_match(contig_file, ".*/([A-Za-z0-9_-]+)/markermag/")[,2]
-  genome_file <- file.path(dirname(contig_file), paste0(assembly, "_linkages_by_genome.txt"))
+  genome_file <- file.path(dirname(contig_file), paste0(assembly, "_linkages_by_genome_taxonomy.txt"))
   if (!file.exists(genome_file)) next
   
   message("Processing assembly: ", assembly)
@@ -866,22 +906,32 @@ for (contig_file in contig_files) {
   merged <- df1 %>%
     left_join(df2, by = c("MarkerGene", "GenomicSeq"))
   
+  # Add MarkerMAG/phyloFlash taxonomy (lowest classified rank) as its own axis
+  # rather than folding it into the marker-gene label, which made that
+  # column's text too long -- the spades-assembled 16S ID stays short and
+  # distinct, taxonomy gets its own short column next to it.
   merged <- merged %>%
     mutate(
+      TaxonomyLabel = ifelse(
+        is.na(taxonomy) | !nzchar(taxonomy) | taxonomy == "unknown",
+        "unclassified",
+        sub(".*;", "", taxonomy)
+      ),
       MarkerGene = factor(MarkerGene, levels = unique(MarkerGene)),
+      TaxonomyLabel = factor(TaxonomyLabel, levels = unique(TaxonomyLabel)),
       Contig = factor(Contig, levels = unique(Contig)),
       GenomicSeq = factor(GenomicSeq, levels = unique(GenomicSeq))
     )
-  
-  plot <- ggplot(merged, aes(axis1 = MarkerGene, axis2 = Contig, axis3 = GenomicSeq, y = Linkage)) +
+
+  plot <- ggplot(merged, aes(axis1 = MarkerGene, axis2 = TaxonomyLabel, axis3 = Contig, axis4 = GenomicSeq, y = Linkage)) +
     geom_alluvium(aes(fill = MarkerGene), width = 1/12, show.legend = FALSE) +
     scale_fill_brewer(palette="Blues") +
     ggnewscale::new_scale_fill() +
     geom_stratum(aes(fill = Round), width = 0.1) +
     scale_fill_manual(values = c("Rd1" = "grey90", "Rd2" = "grey50")) +
     geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 3, nudge_x = 0.08, hjust = 0) +
-    scale_x_discrete(limits = c("MarkerGene", "Contig", "GenomicSeq"),
-                     labels = c("Marker", "Contig", "Genome")) +
+    scale_x_discrete(limits = c("MarkerGene", "TaxonomyLabel", "Contig", "GenomicSeq"),
+                     labels = c("Marker", "Taxonomy", "Contig", "Genome")) +
     theme_classic(base_size = 12) +
     labs(title = paste0("16S-MAG Linkage for pool ", assembly)) +
     theme(
