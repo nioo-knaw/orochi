@@ -35,7 +35,9 @@ rule downstream_test_pool:
         fungal_summary_targets,
         f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial_summary.tsv",
         f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_per_bin_summary.tsv",
-        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin_index.html"
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin_index.html",
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/combined_bgc_table.tsv",
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/combined_bgc_index.html"
 
 
 
