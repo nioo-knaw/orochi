@@ -8,7 +8,10 @@ and SVG) so it still works after being copied into the report's rsc/ tree.
 """
 
 import html
+import json
+import re
 from pathlib import Path
+from urllib.parse import quote
 
 import pandas as pd
 
@@ -56,6 +59,107 @@ def taxon_color(label):
     return COLOR_UNKNOWN
 
 
+def parse_record_data(text):
+    """Extract the JSON array assigned to `var recordData` in regions.js."""
+    match = re.search(r"var\s+recordData\s*=\s*", text)
+
+    if not match:
+        return None
+
+    start = text.find("[", match.end())
+
+    if start == -1:
+        return None
+
+    # regions.js holds several variables, so read to the matching bracket
+    # instead of to the end of the file. Strings are tracked so that a "]"
+    # inside a description does not end the array early.
+    depth = 0
+    in_string = False
+    escaped = False
+
+    for index in range(start, len(text)):
+        character = text[index]
+
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+
+            continue
+
+        if character == '"':
+            in_string = True
+        elif character == "[":
+            depth += 1
+        elif character == "]":
+            depth -= 1
+
+            if depth == 0:
+                try:
+                    return json.loads(text[start:index + 1])
+                except json.JSONDecodeError:
+                    return None
+
+    return None
+
+
+def load_anchors(regions_js_path):
+    """Map (contig, region number) to the anchor used inside index.html.
+
+    antiSMASH renders every region of a run into a single index.html and
+    reaches them by fragment ("index.html#r1c1"). regions.js is what that
+    page itself uses, so it is the reliable source for those anchors --
+    record numbering cannot be recomputed safely from the summary table.
+    """
+    anchors = {}
+    path = Path(regions_js_path)
+
+    if not path.is_file():
+        return anchors
+
+    records = parse_record_data(
+        path.read_text(encoding="utf-8", errors="replace")
+    )
+
+    if not isinstance(records, list):
+        return anchors
+
+    for record_index, record in enumerate(records, start=1):
+        if not isinstance(record, dict):
+            continue
+
+        contig_keys = set()
+
+        for field in ("seq_id", "id", "orig_id", "original_id"):
+            value = record.get(field)
+
+            if value:
+                contig_keys.add(str(value).split()[0])
+
+        regions = record.get("regions") or []
+
+        for region_index, region in enumerate(regions, start=1):
+            if not isinstance(region, dict):
+                continue
+
+            try:
+                number = int(region.get("idx", region_index))
+            except (TypeError, ValueError):
+                number = region_index
+
+            # Older antiSMASH versions omit "anchor"; its format is stable.
+            anchor = region.get("anchor") or f"r{record_index}c{number}"
+
+            for contig in contig_keys:
+                anchors.setdefault((contig, number), str(anchor))
+
+    return anchors
+
+
 def load_table(table_path):
     """Read and normalise the combined BGC table."""
     try:
@@ -93,6 +197,20 @@ def load_table(table_path):
         return table_df
 
     table_df["taxon_label"] = table_df["taxon"].apply(taxon_label)
+
+    # Matches the key regions.js is indexed by (see load_anchors).
+    table_df["contig_key"] = (
+        table_df["contig_id"].str.split(n=1).str[0]
+    )
+
+    if "region_number" in table_df.columns:
+        table_df["region_number"] = (
+            pd.to_numeric(table_df["region_number"], errors="coerce")
+            .fillna(1)
+            .astype(int)
+        )
+    else:
+        table_df["region_number"] = 1
 
     return table_df
 
@@ -427,7 +545,52 @@ def unique_values(table_df, column):
     return values
 
 
-def make_html(table_df, sample_pool):
+def row_taxon(row):
+    """Key of the antiSMASH run a BGC came from."""
+    return "fungi" if row["taxon_label"] == "Fungal" else "bacteria"
+
+
+def report_href(row, link_bases, anchors):
+    """Link to the antiSMASH region page for one BGC, or None."""
+    taxon = row_taxon(row)
+    base = link_bases.get(taxon)
+
+    if not base:
+        return None
+
+    anchor = anchors.get(taxon, {}).get(
+        (row["contig_key"], int(row["region_number"]))
+    )
+
+    # Without a known anchor the report still opens, just at its first
+    # region rather than at this one.
+    fragment = f"#{quote(anchor)}" if anchor else ""
+
+    return f"{base}/index.html{fragment}"
+
+
+def per_bin_href(bin_id, link_bases):
+    """Link to the regenerated per-bin antiSMASH report, or None."""
+    base = link_bases.get("per_bin")
+
+    if not base or bin_id == "N/A":
+        return None
+
+    return f"{base}/{quote(bin_id)}/index.html"
+
+
+def link(href, label, title):
+    """Anchor opening in a new tab, falling back to plain text."""
+    if not href:
+        return label
+
+    return (
+        f'<a href="{safe_html(href)}" target="_blank" '
+        f'rel="noopener noreferrer" title="{safe_html(title)}">{label}</a>'
+    )
+
+
+def make_html(table_df, sample_pool, link_bases, anchors):
     """Generate the complete overview page."""
     sample_pool_html = safe_html(sample_pool)
 
@@ -476,7 +639,6 @@ def make_html(table_df, sample_pool):
     else:
         for _, row in table_df.iterrows():
             bgc_id = safe_html(row["bgc_id"])
-            contig_id = safe_html(row["contig_id"])
             source = safe_html(row["taxon_label"])
             taxonomy_full = safe_html(row["taxonomy"])
             taxonomy_lowest = safe_html(row["taxonomy_lowest"])
@@ -491,12 +653,23 @@ def make_html(table_df, sample_pool):
                 else "N/A"
             )
 
+            bgc_cell = link(
+                report_href(row, link_bases, anchors),
+                bgc_id,
+                f"Open this region in the {source.lower()} antiSMASH "
+                f"report (contig {row['contig_id']})",
+            )
+
+            bin_cell = link(
+                per_bin_href(row["bin_id"], link_bases),
+                bin_id,
+                f"Open the antiSMASH report for {row['bin_id']}",
+            )
+
             body_rows.append(
                 f"""
             <tr>
-                <td data-value="{bgc_id}">
-                    <span title="Contig: {contig_id}">{bgc_id}</span>
-                </td>
+                <td data-value="{bgc_id}">{bgc_cell}</td>
 
                 <td data-value="{source}">
                     <span class="tag tag-{source_class}">{source}</span>
@@ -506,7 +679,7 @@ def make_html(table_df, sample_pool):
                     <em title="{taxonomy_full}">{taxonomy_lowest}</em>
                 </td>
 
-                <td data-value="{bin_id}">{bin_id}</td>
+                <td data-value="{bin_id}">{bin_cell}</td>
 
                 <td data-value="{product}">{product_cell}</td>
             </tr>
@@ -754,6 +927,15 @@ def make_html(table_df, sample_pool):
 
         tbody tr:hover {{
             background-color: #f5f5f5;
+        }}
+
+        tbody a {{
+            color: #0066cc;
+            text-decoration: none;
+        }}
+
+        tbody a:hover {{
+            text-decoration: underline;
         }}
 
         .bgc-pill {{
@@ -1022,19 +1204,62 @@ def make_html(table_df, sample_pool):
 
 def main():
     table_path = Path(snakemake.input.combined_table)
-    output_path = Path(snakemake.output.index)
-
     sample_pool = str(snakemake.params.sample_pool)
 
+    antismash_dirs = dict(snakemake.params.antismash_dirs)
+    link_bases = dict(snakemake.params.link_bases)
+
     table_df = load_table(table_path)
-    html_content = make_html(table_df, sample_pool)
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(html_content, encoding="utf-8")
+    # Kept per taxon: the two antiSMASH runs number their records
+    # independently, so an anchor is only meaningful within its own report.
+    anchors = {}
 
-    print(f"Generated combined BGC overview: {output_path}")
+    for taxon, antismash_dir in antismash_dirs.items():
+        anchors[taxon] = load_anchors(Path(antismash_dir) / "regions.js")
+
+        if not anchors[taxon]:
+            print(
+                f"WARNING: no region anchors read from {antismash_dir}/"
+                "regions.js -- BGC links for this taxon will open the "
+                "report at its first region."
+            )
+
     print(f"Sample pool: {sample_pool}")
     print(f"Number of BGC rows: {len(table_df)}")
+    print(
+        "Region anchors available: "
+        + ", ".join(
+            f"{taxon}={len(found)}" for taxon, found in anchors.items()
+        )
+    )
+
+    if not table_df.empty:
+        linked = sum(
+            (row["contig_key"], int(row["region_number"]))
+            in anchors.get(row_taxon(row), {})
+            for _, row in table_df.iterrows()
+        )
+
+        print(f"BGCs linked to their own region: {linked}/{len(table_df)}")
+
+    # The page is written twice: once next to the antiSMASH output and once
+    # in the report's rsc/ tree, where the sibling report directories are
+    # named differently. Only the link prefixes differ between the two.
+    for output_name, bases in link_bases.items():
+        output_path = Path(snakemake.output[output_name])
+
+        html_content = make_html(
+            table_df=table_df,
+            sample_pool=sample_pool,
+            link_bases=dict(bases),
+            anchors=anchors,
+        )
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(html_content, encoding="utf-8")
+
+        print(f"Generated combined BGC overview: {output_path}")
 
 
 if __name__ == "__main__":

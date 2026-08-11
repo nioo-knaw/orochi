@@ -44,7 +44,7 @@ rule report:
             sample_pool=ASSEMBLY_UNITS
         ),
         combined_bgc=expand(
-            rules.combined_bgc_overview.output.index,
+            rules.combined_bgc_overview.output.report_index,
             sample_pool=ASSEMBLY_UNITS
         )
     output:
@@ -71,16 +71,7 @@ rule report:
         ),
         rep_antismash_fun = expand(f"{outdir}/results/09_plots/rsc/{{sample_pool}}/antismash_fun/",
             sample_pool=ASSEMBLY_UNITS
-        ),
-        # Lives one level above bacterial/ and fungal/, so it is not picked
-        # up by the antiSMASH directory copies below and needs its own pairs.
-        combined_bgc = json.dumps([
-            {
-                "src": f"{outdir}/results/08_BGC/antismash/{sp}/combined_bgc_index.html",
-                "dst": f"{outdir}/results/09_plots/rsc/{sp}/combined_bgc_index.html"
-            }
-            for sp in ASSEMBLY_UNITS
-        ])
+        )
     threads:
         config['threads']
     resources:
@@ -132,15 +123,6 @@ rule report:
                 done
         done 2>> {log}
         
-        echo "Copying combined BGC overviews..." >> {log}
-        echo '{params.combined_bgc}' | jq -c '.[]' | while read pair; do
-            src=$(echo "$pair" | jq -r '.src')
-            dst=$(echo "$pair" | jq -r '.dst')
-            echo "  Processing: $src -> $dst" >> {log}
-            mkdir -p "$(dirname "$dst")"
-            cp "$src" "$dst"
-        done 2>> {log}
-
         echo "Rendering final HTML report with R..." >> {log}
         
         Rscript workflow/scripts/render_report.R {params.configfile} {input.metaphlan_secondary} {output} >> {log} 2>&1

@@ -171,13 +171,44 @@ rule combine_bgc_summaries:
 rule combined_bgc_overview:
     """Standalone HTML overview of all BGCs (bacterial + fungal) in one
     assembly unit: summary statistics, charts per type, and a sortable and
-    filterable table."""
+    filterable table.
+
+    Each BGC id links into the antiSMASH report for its own region and each
+    bin links to that bin's regenerated report, so the per-bin reports are an
+    input here even though no data is read from them -- the links would
+    otherwise dangle when this page is built on its own.
+
+    The page is written twice, because the directories it links to are named
+    differently in the two places it is served from: next to the antiSMASH
+    output (bacterial/, fungal/) and inside the report's rsc/ tree
+    (antismash_bac/, antismash_fun/, see rule report)."""
     input:
-        combined_table=rules.combine_bgc_summaries.output.combined_table
+        combined_table=rules.combine_bgc_summaries.output.combined_table,
+        bacterial_html=rules.antismash.output.html,
+        per_bin_index=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin_index.html"
     output:
-        index=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/combined_bgc_index.html"
+        index=f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/combined_bgc_index.html",
+        report_index=f"{outdir}/results/09_plots/rsc/{{sample_pool}}/combined_bgc_index.html"
     params:
-        sample_pool="{sample_pool}"
+        sample_pool="{sample_pool}",
+        # Read for regions.js, which holds the "#r1c1" anchors index.html
+        # uses for each region.
+        antismash_dirs=lambda wildcards: {
+            "bacteria": f"{outdir}/results/08_BGC/antismash/{wildcards.sample_pool}/bacterial",
+            "fungi": f"{outdir}/results/08_BGC/antismash/{wildcards.sample_pool}/fungal",
+        },
+        link_bases={
+            "index": {
+                "bacteria": "bacterial",
+                "fungi": "fungal",
+                "per_bin": "bacterial/per_bin",
+            },
+            "report_index": {
+                "bacteria": "antismash_bac",
+                "fungi": "antismash_fun",
+                "per_bin": "antismash_bac/per_bin",
+            },
+        }
     conda:
         "../envs/python_simple.yaml"
     script:

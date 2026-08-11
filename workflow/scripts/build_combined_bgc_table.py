@@ -31,6 +31,7 @@ OUTPUT_COLUMNS = [
     "sample_pool",
     "taxon",
     "bgc_id",
+    "region_number",
     "contig_id",
     "bin_id",
     "taxonomy",
@@ -56,6 +57,30 @@ def contig_key(series):
         .str.split(n=1)
         .str[0]
     )
+
+
+def region_numbers(summary_df):
+    """antiSMASH's own region number for each row.
+
+    summarize_antismash.py writes it directly; derive it from the region
+    GenBank file name ("<contig>.region002.gbk") for summaries produced
+    before that column existed.
+    """
+    if "region_number" in summary_df.columns:
+        numbers = pd.to_numeric(summary_df["region_number"], errors="coerce")
+    else:
+        numbers = pd.Series(float("nan"), index=summary_df.index, dtype="float")
+
+    if "genbank_file" in summary_df.columns:
+        from_file = pd.to_numeric(
+            summary_df["genbank_file"]
+            .astype(str)
+            .str.extract(r"\.region(\d+)\.gbk$", expand=False),
+            errors="coerce",
+        )
+        numbers = numbers.fillna(from_file)
+
+    return numbers.fillna(1).astype(int)
 
 
 def read_summary(path):
@@ -190,6 +215,7 @@ def build_table(bgc_df, c2b_df, cat_df, sample_pool):
 
     bgc_df = bgc_df.copy()
     bgc_df["contig_key"] = contig_key(bgc_df["contig_id"])
+    bgc_df["region_number"] = region_numbers(bgc_df)
 
     merged = bgc_df.merge(c2b_df, on="contig_key", how="left")
     merged = merged.merge(cat_df, on="contig_key", how="left")
