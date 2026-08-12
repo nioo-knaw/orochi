@@ -1202,6 +1202,53 @@ def make_html(table_df, sample_pool, link_bases, anchors):
 """
 
 
+def report_link_coverage(table_df, anchors, antismash_dirs):
+    """Log how many BGCs got a link to their own region, per taxon.
+
+    Only taxa that actually contributed BGCs are reported: a pool with no
+    fungal BGCs has nothing to link, so an empty fungal regions.js is not
+    worth warning about.
+    """
+    if table_df.empty:
+        print("No BGCs in this sample pool; nothing to link.")
+        return
+
+    for taxon, group in table_df.groupby(table_df.apply(row_taxon, axis=1)):
+        found = anchors.get(taxon, {})
+
+        keys = [
+            (row["contig_key"], int(row["region_number"]))
+            for _, row in group.iterrows()
+        ]
+
+        linked = sum(key in found for key in keys)
+        duplicates = len(keys) - len(set(keys))
+
+        print(
+            f"{taxon}: {linked}/{len(group)} BGCs linked to their own "
+            f"region ({len(found)} anchors in regions.js)"
+        )
+
+        if linked < len(group):
+            print(
+                f"WARNING: {len(group) - linked} {taxon} BGC(s) have no "
+                f"matching entry in {antismash_dirs.get(taxon)}/regions.js. "
+                "Their links open the report at its first region. This "
+                "usually means antiSMASH renamed the contig (e.g. for the "
+                "GenBank LOCUS length limit) between the region GenBank "
+                "files and the HTML report."
+            )
+
+        if duplicates:
+            print(
+                f"WARNING: {duplicates} {taxon} BGC row(s) share a contig "
+                "and region number with another row, so their links cannot "
+                "point at distinct regions. Check that "
+                "summarize_antismash.py ran after the region-number fix -- "
+                "stale summaries number every region of a contig as 1."
+            )
+
+
 def main():
     table_path = Path(snakemake.input.combined_table)
     sample_pool = str(snakemake.params.sample_pool)
@@ -1218,30 +1265,10 @@ def main():
     for taxon, antismash_dir in antismash_dirs.items():
         anchors[taxon] = load_anchors(Path(antismash_dir) / "regions.js")
 
-        if not anchors[taxon]:
-            print(
-                f"WARNING: no region anchors read from {antismash_dir}/"
-                "regions.js -- BGC links for this taxon will open the "
-                "report at its first region."
-            )
-
     print(f"Sample pool: {sample_pool}")
     print(f"Number of BGC rows: {len(table_df)}")
-    print(
-        "Region anchors available: "
-        + ", ".join(
-            f"{taxon}={len(found)}" for taxon, found in anchors.items()
-        )
-    )
 
-    if not table_df.empty:
-        linked = sum(
-            (row["contig_key"], int(row["region_number"]))
-            in anchors.get(row_taxon(row), {})
-            for _, row in table_df.iterrows()
-        )
-
-        print(f"BGCs linked to their own region: {linked}/{len(table_df)}")
+    report_link_coverage(table_df, anchors, antismash_dirs)
 
     # The page is written twice: once next to the antiSMASH output and once
     # in the report's rsc/ tree, where the sibling report directories are
