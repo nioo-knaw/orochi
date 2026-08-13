@@ -89,16 +89,14 @@ def gff_has_features(gff):
 
     return False
 
-def fungal_summary_targets(wildcards):
+def _fungal_summary_targets_for_pool(sample_pool):
     """
-    Return fungal_summary.tsv only if the current assembly unit has
+    Return fungal_summary.tsv only if the given assembly unit has
     eukaryotic sequences and augustify produced gene annotations.
 
     Otherwise return an empty list, so summarize_antismash_fungal
     will not be requested.
     """
-    sample_pool = wildcards.sample_pool
-
     whokaryote_ckpt = checkpoints.whokaryote.get(sample=sample_pool)
     euk_fasta = whokaryote_ckpt.output.euk_fasta
 
@@ -115,6 +113,20 @@ def fungal_summary_targets(wildcards):
         f"{outdir}/results/08_BGC/antismash/{sample_pool}/fungal/fungal_summary.tsv"
     ]
 
+
+def fungal_summary_targets(wildcards):
+    """Input-function form, for rules with their own {sample_pool} wildcard."""
+    return _fungal_summary_targets_for_pool(wildcards.sample_pool)
+
+
+def all_fungal_summary_targets(wildcards):
+    """Aggregate fungal_summary_targets() across all assembly units, for rule all."""
+    return [
+        target
+        for sample_pool in ASSEMBLY_UNITS
+        for target in _fungal_summary_targets_for_pool(sample_pool)
+    ]
+
 include: "rules/common.smk"
 include: "rules/preprocessing.smk"
 include: "rules/mash_clustering.smk"
@@ -125,7 +137,6 @@ include: "rules/BGC_prediction.smk"
 include: "rules/binning.smk"
 include: "rules/mag_linkage.smk"
 include: "rules/antismash_bins.smk"
-include: "rules/test_rule.smk"
 include: "rules/plots.smk"
 
 # # Load report
@@ -140,20 +151,12 @@ include: "rules/plots.smk"
 #     for file in rule.output:
 #         outfiles.append(file)
 
-target = None
-
-
 if config['assembly_method'] == "coassembly":
     include: "rules/coassembly.smk"
-    target = expand(
-        f"{outdir}/results/05_test/{{sample_pool}}/{{sample_pool}}_test.txt",
-        sample_pool=samples["sample_pool"].unique()
-    )
 
 elif config['assembly_method'] == "single_assembly":
     include: "rules/single_sample_assembly.smk"
-    target = expand(f"{outdir}/results/05_test/{{sample}}/{{sample}}_test.txt",
-                    sample=samples["sample"])
+
 else:
     raise ValueError("Unsupported assembly type")
 
@@ -182,22 +185,62 @@ mag_depth_targets = (
     else []
 )
 
+# Taxonomic classification of contigs (CAT). Requesting the summary also
+# builds CAT's other outputs (names, alignment) that krona/BAT/the per-bin
+# BGC summary below depend on.
+taxonomy_targets = expand(
+    f"{outdir}/results/05_prokaryote_annotation/CAT/{{sample_pool}}/{{sample_pool}}.contig2classification.names.summarise.txt",
+    sample_pool=ASSEMBLY_UNITS
+)
+
+# Functional annotation (eggNOG)
+eggnog_targets = expand(
+    [
+        f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations",
+        f"{outdir}/results/05_prokaryote_annotation/eggnog/{{sample_pool}}/{{sample_pool}}.emapper.annotations.adjusted",
+    ],
+    sample_pool=ASSEMBLY_UNITS
+)
+
+# Krona taxonomy plot (depends on CAT's "names" output)
+krona_targets = expand(
+    f"{outdir}/results/09_plots/rsc/{{sample_pool}}/{{sample_pool}}_krona.html",
+    sample_pool=ASSEMBLY_UNITS
+)
+
+# Bin-level taxonomic classification (BAT)
+bat_targets = expand(
+    f"{outdir}/results/06_binning/BAT/{{sample_pool}}/{{sample_pool}}_BAT.done",
+    sample_pool=ASSEMBLY_UNITS
+)
+
+# MAG-linkage taxonomy assignment
+mag_linkage_taxonomy_targets = expand(
+    f"{outdir}/results/07_maglinkage/{{sample_pool}}/markermag/{{sample_pool}}_linkages_by_genome_taxonomy.txt",
+    sample_pool=ASSEMBLY_UNITS
+)
+
+# Per-bin BGC summary/dashboard, cross-referencing BGCs, bins, and taxonomy
+bgc_per_bin_targets = expand(
+    [
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/bacterial_summary.tsv",
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bgc_per_bin_summary.tsv",
+        f"{outdir}/results/08_BGC/antismash/{{sample_pool}}/bacterial/per_bin_index.html",
+    ],
+    sample_pool=ASSEMBLY_UNITS
+)
+
 rule all:
     input:
         f"{outdir}/results/09_plots/Orochi_report.html",
-        target,
         salmon_targets,
         salmon_final_targets,
-        mag_depth_targets
-        # f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
-        # f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv"
-        # expand(f"{config['outdir']}/results/05_prokaryote_annotation/MetaPhlAn/{{sample}}.txt", sample=samples["sample"]),
-        # f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/merged_abundance_table.txt" @Todo: enable after testing
-    # input: expand(output,
-    #               sample=config["data"],
-    #               treatment=config["treatment"],
-    #               assembler=config["assembler"],
-    #               binner=config["binner"],
-    #               kmers=config["assembly-klist"]
-    #              )
+        mag_depth_targets,
+        taxonomy_targets,
+        eggnog_targets,
+        krona_targets,
+        bat_targets,
+        mag_linkage_taxonomy_targets,
+        bgc_per_bin_targets,
+        all_fungal_summary_targets
 
