@@ -1,8 +1,6 @@
 """ Rules related to binning/creating MAGs """
 import pandas as pd
 
-# @Todo: Figure out a way to also do binning for single-sample assembly. We need to use coverM here. Maybe different rules for single-sample assembly?
-
 binning_tools = {
     "metabat2": "fa",
     "maxbin2": "fasta"
@@ -58,12 +56,51 @@ rule fairy_coverage:
         """
 
 
+# Estimate coverage for single-sample assemblies with CoverM: map only the
+# sample's own reads against its own assembly (self-coverage), instead of
+# fairy's approach of mapping every sample in the whole project against
+# each assembly. For a single-sample assembly that cross-mapping would add
+# mostly noise (unrelated samples don't share differential-coverage signal)
+# and cost O(n^2) mapping operations instead of O(n). CoverM's "metabat"
+# method reproduces jgi_summarize_bam_contig_depths' output format exactly,
+# so its output is a drop-in for the depth files fairy_coverage produces.
+rule coverm_coverage:
+    input:
+        assembly=f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta",
+        forward=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_1.fastq.gz",
+        rev=f"{outdir}/results/02_filtered_reads/{{sample_pool}}_filt_2.fastq.gz"
+    output:
+        coverage_file=f"{outdir}/results/06_binning/coverage/coverm/coverage_{{sample_pool}}.tsv"
+    threads:
+        config['threads']
+    resources:
+        mem_mb=config['max_mem']
+    log:
+        f"{outdir}/logs/coverm_coverage/coverm_coverage_{{sample_pool}}.log"
+    conda:
+        "../envs/single_assembly.yaml"
+    shell:
+        """
+        coverm contig \
+            --reference {input.assembly} \
+            -1 {input.forward} \
+            -2 {input.rev} \
+            --mapper bwa-mem \
+            --methods metabat \
+            --threads {threads} \
+            --output-file {output.coverage_file} \
+            > {log} 2>&1
+        """
+
+
 checkpoint metabat2:
     input:
 #        assembly=f"{outdir}/results/03_assembly/coassembly/assembly_{{sample_pool}}/{{sample_pool}}_assembly.fasta",
         assembly=f"{outdir}/results/03_assembly/size_filtered/{{sample_pool}}_{minsize}/contigs_{{sample_pool}}_{minsize}.fasta",
 
-        depth=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
+        depth=branch(config['assembly_method'] == "coassembly",
+            then=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
+            otherwise=f"{outdir}/results/06_binning/coverage/coverm/coverage_{{sample_pool}}.tsv")
     output:
         bin_dir=directory(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_bins"),
         done = touch(f"{outdir}/results/06_binning/metabat2/{{sample_pool}}/{{sample_pool}}_metabat2.done"),
@@ -98,11 +135,13 @@ def make_maxbin_coverage(input_file, output_file):
 
 rule maxbin_coverage:
     input:
-        fairy_input=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
+        coverage_input=branch(config['assembly_method'] == "coassembly",
+            then=f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
+            otherwise=f"{outdir}/results/06_binning/coverage/coverm/coverage_{{sample_pool}}.tsv")
     output:
         maxbin_coverage=f"{outdir}/results/06_binning/coverage/fairy/maxbin2/coverage_{{sample_pool}}_maxbin.tsv"
     run:
-        make_maxbin_coverage(input_file=input.fairy_input, output_file=output.maxbin_coverage)
+        make_maxbin_coverage(input_file=input.coverage_input, output_file=output.maxbin_coverage)
 
 
 checkpoint maxbin2:
