@@ -88,8 +88,21 @@ rule coverm_coverage:
             --mapper bwa-mem \
             --methods metabat \
             --threads {threads} \
-            --output-file {output.coverage_file} \
+            --output-file {output.coverage_file}.tmp \
             > {log} 2>&1
+
+        # CoverM names the depth/-var columns after the BAM it builds
+        # internally (reference + reads basename), so they're unique per
+        # sample by construction -- e.g. contigs_S1_1000.fasta/S1_filt_1...
+        # There's exactly one such pair here (one sample, self-mapped), so
+        # normalize it to a fixed generic name: mag_depth.py concatenates
+        # coverage files across assembly units and expects identical
+        # columns, and a canonical name also correctly reflects that this
+        # is a single depth value, not one column among several cohort
+        # samples the way fairy's coassembly output is.
+        awk 'BEGIN{{FS=OFS="\t"}} NR==1 {{$4="meanDepth"; $5="meanDepth-var"}} {{print}}' \
+            {output.coverage_file}.tmp > {output.coverage_file}
+        rm {output.coverage_file}.tmp
         """
 
 
