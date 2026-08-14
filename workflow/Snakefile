@@ -176,14 +176,10 @@ salmon_final_targets = expand(
     sample_pool=salmon_assembly_units
 )
 
-mag_depth_targets = (
-    [
-        f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
-        f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv",
-    ]
-    if config["assembly_method"] == "coassembly"
-    else []
-)
+mag_depth_targets = [
+    f"{outdir}/results/06_binning/mag_depth/binned_only_coverage.tsv",
+    f"{outdir}/results/06_binning/mag_depth/mag_depth.tsv",
+]
 
 # Taxonomic classification of contigs (CAT). Requesting the summary also
 # builds CAT's other outputs (names, alignment) that krona/BAT/the per-bin

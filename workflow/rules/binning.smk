@@ -478,8 +478,14 @@ checkpoint dereplicate_bins:
 
 rule mag_depth:
     input:
-        fairy_coverage = expand(
-            f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv",
+        # Same coverage source metabat2/maxbin_coverage use for this
+        # assembly_method: fairy for coassembly, coverm_coverage otherwise.
+        coverage_files = expand(
+            (
+                f"{outdir}/results/06_binning/coverage/fairy/coverage_{{sample_pool}}.tsv"
+                if config['assembly_method'] == "coassembly"
+                else f"{outdir}/results/06_binning/coverage/coverm/coverage_{{sample_pool}}.tsv"
+            ),
             sample_pool=ASSEMBLY_UNITS
         ),
         dastool_contig2bin = expand(
@@ -500,7 +506,7 @@ rule mag_depth:
     shell:
         """
         python3 workflow/scripts/mag_depth.py \
-            --coverage {input.fairy_coverage} \
+            --coverage {input.coverage_files} \
             --mapping {input.dastool_contig2bin} \
             -o {params.outdir} \
             > {log} 2>&1
