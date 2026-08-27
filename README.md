@@ -105,10 +105,4 @@ The Orochi pipeline integrates several state-of-the-art bioinformatics tools to 
 
 The pipeline primarily relies on the `configfile.yaml` for configuration. Ensure that any system-specific paths are correctly set there.
 
-## Tests
 
-TODO: Add instructions for running tests. A `test_rule.smk` exists in the workflow.
-
-## License
-
-TODO: Specify the license in `LICENSE.md`.
