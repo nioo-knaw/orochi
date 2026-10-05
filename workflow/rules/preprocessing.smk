@@ -13,7 +13,7 @@ rule fastp:
         params:
             report_name = lambda wildcards: wildcards.sample,
             min_qual = config['min_qual'],
-            min_length = config['min_length]
+            min_length = config['min_length']
         threads:
             16 #is max nr of threads for fastp
         conda:

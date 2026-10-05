@@ -27,7 +27,7 @@ bbmap_mem: '-Xmx100g'
 min_qual: 15
 
 # min_length: The minimum length of the reads after trimming.
-min_length: 50
+min_length: 30
 
 # host_removal: Default: True. If True, host removal will be performed.
 host_removal: True
