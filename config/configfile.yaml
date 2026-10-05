@@ -24,10 +24,10 @@ max_mem: 1000000
 bbmap_mem: '-Xmx100g'
 
 # min_qual: The minimum quality score for trimming.
-min_qual: 30
+min_qual: 15
 
 # min_length: The minimum length of the reads after trimming.
-min_length: 150
+min_length: 50
 
 # host_removal: Default: True. If True, host removal will be performed.
 host_removal: True

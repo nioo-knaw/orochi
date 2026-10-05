@@ -11,7 +11,9 @@ rule fastp:
             report_html = f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.html",
             report_json = f"{outdir}/results/01_trimmed_reads/quality_reports/{{sample}}.json"
         params:
-            report_name = lambda wildcards: wildcards.sample
+            report_name = lambda wildcards: wildcards.sample,
+            min_qual = config['min_qual'],
+            min_length = config['min_length]
         threads:
             16 #is max nr of threads for fastp
         conda:
@@ -30,7 +32,8 @@ rule fastp:
                 -R {params.report_name} \
                 -w {threads} \
                 -y \
-                -l 30 \
+                -q {params.min_qual} \
+                -l {params.min_length} \
                 -r \
                 --trim_poly_g \
                 --n_base_limit 0 \
