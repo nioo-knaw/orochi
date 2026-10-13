@@ -401,6 +401,44 @@ div(
 
 ```
 
+#### Combined BGC overview
+
+One overview page per sample pool, combining the bacterial and fungal antiSMASH results: summary statistics, the number of BGCs per type, and a sortable/filterable table of every BGC with its taxonomy and bin.
+
+::: note
+Remember: These are standalone HTMLs that you can also find in `{OUTDIR}/results/08_BGC/antismash/{pool_name}/combined_bgc_index.html`.
+:::
+
+```{r combined BGC overview, warning=FALSE, message=FALSE, echo=FALSE, comment=NA, results = 'asis'}
+
+combined_bgc_files <- list.files(
+  file.path(outdir, "results/09_plots/rsc"),
+  pattern = "^combined_bgc_index\\.html$",
+  recursive = TRUE,
+  full.names = TRUE
+)
+combined_bgc_files_rel <- sub(".*rsc/", "rsc/", combined_bgc_files)
+
+cat('<div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start;text-align:center;">\n')
+
+for (f in combined_bgc_files_rel) {
+  assembly <- strsplit(f, "/")[[1]][2]
+
+  cat('<div style="display:flex; flex-direction:column; gap:10px; align-items:center; flex:0 0 auto; min-width:140px;">\n')
+  cat(sprintf(
+    '<p><a href="%s" target="_blank" class="link-button btn-bac">%s</a></p>\n',
+    f, assembly
+  ))
+  cat('</div>\n')
+}
+
+cat('</div>\n')
+```
+
+```{=html}
+<div style="height:56px;"></div>
+```
+
 #### antiSMASH results
 HTML reports showing BGCs per sample pool, as indicated by the name shown in each button. Buttons in the top row correspond to bacterial results (antiSMASH) and buttons in the bottom row correspond to fungal results (fungiSMASH). Make sure to download the `{OUTDIR}/results/09_plots/rsc/` directory so you can visualize all the elements of the HTMLs.
 
