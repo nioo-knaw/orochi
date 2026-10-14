@@ -11,10 +11,14 @@ import argparse
 parser = argparse.ArgumentParser(description="Adding clusters to samples file")
 parser.add_argument("-k", type=int, required=True, help="number of clusters desired by the user")
 parser.add_argument("-f", type=str, required=True, help="file path to the table with the distance matrix")
+parser.add_argument("--outdir", required=True, help="output directory")
+parser.add_argument("--samples", required=True, help="samples file used")
+
 args = parser.parse_args()
 
 file_path = args.f
 data = pd.read_csv(file_path, sep='\t', header=0)
+outdir = args.outdir ### NEW
 
 print(os.getcwd())
 
@@ -40,7 +44,13 @@ plt.title('Dendrogram')
 plt.xlabel('Samples')
 plt.ylabel('Distance')
 plt.xticks(rotation=90)
-plt.savefig('results/clustering/dendrogram.png', dpi=300, bbox_inches='tight')
+
+dendro_out_path = os.path.join(args.outdir, "results", "clustering", "dendrogram.png")  ### NEW
+os.makedirs(os.path.dirname(dendro_out_path), exist_ok=True) ### NEW
+
+plt.savefig(dendro_out_path, dpi=300, bbox_inches='tight')
+
+#plt.savefig('results/clustering/dendrogram.png', dpi=300, bbox_inches='tight')
 
 ## DEFINED BY THE USER
 # Clustering based on desired number of clusters (DEFINED BY THE USER)
@@ -81,7 +91,9 @@ if k == 0:
             plt.xlabel('Number of clusters')
             plt.ylabel('Silhouette Score')
             plt.title('Silhouette Method for Optimal k')
-            plt.savefig('results/clustering/silhouette_score.png', dpi=300, bbox_inches='tight')
+            silhouette_out_path = os.path.join(args.outdir, "results", "clustering", "silhouette_score.png") #### NEW
+            plt.savefig(silhouette_out_path, dpi=300, bbox_inches='tight') #### NEW
+            #plt.savefig('results/clustering/silhouette_score.png', dpi=300, bbox_inches='tight')
             plt.show()
         else:
             print("The optimal number of clusters could not be determined.")
@@ -107,7 +119,8 @@ else:
     print("Adding cluster information to 'samples.tsv' file...")
 
 # Adding cluster division to "samples.tsv"
-df = pd.read_csv('config/samples.tsv', sep='\t')
+#df = pd.read_csv('config/samples.tsv', sep='\t')
+df = pd.read_csv(args.samples, sep='\t') ### NEW
 df.iloc[:, -1] = cluster_labels
 df.to_csv('config/samples_unsupervised.tsv', sep='\t', index=False)
 

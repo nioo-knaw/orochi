@@ -15,7 +15,7 @@ rule mash_paste:
     input:
         expand(f"{outdir}/results/clustering/{{sample}}.msh", sample=samples["sample"])
     output:
-        temp("results/clustering/all.msh")
+        temp(f"{outdir}/results/clustering/all.msh")
     conda: "../envs/mash.yaml"
     log: f"{outdir}/logs/mash_paste.log"
     shell: "mash paste {rules.mash_sketch.params.out_dir}all {input} 2> {log}"
@@ -34,8 +34,10 @@ rule clustering:
         smp='config/samples_unsupervised.tsv'
     params:
         clusterNumber = config["clustering"],
-        script=workflow.source_path("../scripts/clustering.py")
+        script=workflow.source_path("../scripts/clustering.py"),
+        outdir = config["outdir"], #### NEW
+        samples = config["samples"] ### NEW
     conda: "../envs/python_clustering.yaml"
     log: f"{outdir}/logs/clustering.log"
     shell:
-        "python3 {params.script} -f {input} -k {params.clusterNumber} && touch {output.chk} 2> {log}"
+        "python3 {params.script} -f {input} -k {params.clusterNumber} --outdir {params.outdir} --samples {params.samples} && touch {output.chk} 2> {log}" ### outdir is new
