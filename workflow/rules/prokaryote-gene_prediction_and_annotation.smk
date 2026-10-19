@@ -101,6 +101,8 @@ rule MetaPhlAn4:
         """
 
 rule MetaPhlAn_sgb_to_gtdb:
+    wildcard_constraints:
+        sample=r"[^/.](?<!\.raw)+"
     input:
         raw = f"{outdir}/results/05_prokaryote_annotation/MetaPhlAn/temp_MetaPhlAn/{{sample}}.raw.txt"
     output:
