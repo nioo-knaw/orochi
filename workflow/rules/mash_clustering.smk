@@ -34,10 +34,10 @@ rule clustering:
         smp='config/samples_unsupervised.tsv'
     params:
         clusterNumber = config["clustering"],
-        script=workflow.source_path("../scripts/clustering.py"),
+        script=workflow.source_path("../scripts/clustering_2.py"),
         outdir = config["outdir"], #### NEW
-        samples = config["samples"] ### NEW
+        samples = config["samples"], ### NEW
     conda: "../envs/python_clustering.yaml"
     log: f"{outdir}/logs/clustering.log"
     shell:
-        "python3 {params.script} -f {input} -k {params.clusterNumber} --outdir {params.outdir} --samples {params.samples} && touch {output.chk} 2> {log}" ### outdir is new
+        "python3 {params.script} -f {input} -k {params.clusterNumber} --outdir {params.outdir} --samples {params.samples}  && touch {output.chk} 2> {log}" ### outdir and samples_out is new
