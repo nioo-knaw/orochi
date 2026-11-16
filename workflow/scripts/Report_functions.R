@@ -47,10 +47,66 @@ dir.create(rsc_path, recursive = TRUE, showWarnings = FALSE)
 # Access input file
 mpse <- mp_import_metaphlan(profile = metaphlan_secondary)
 
-# Including TREATMENT information (in my case, treatment1)
-sample_groups <- read.table(samples, header = TRUE)
-colnames(sample_groups)[1] <- "Sample"
-sample_groups <- sample_groups[,c(1,2)]
+# Read sample metadata in the original TSV order
+sample_meta <- read.delim(
+  samples,
+  header = TRUE,
+  stringsAsFactors = FALSE,
+  check.names = FALSE
+)
+
+required_cols <- c("sample", "treatment1", "sample_pool")
+stopifnot(all(required_cols %in% names(sample_meta)))
+
+# Preserve the first-occurrence order from samples.tsv
+sample_order <- unique(sample_meta$sample)
+treatment_order <- unique(sample_meta$treatment1)
+pool_order <- unique(sample_meta$sample_pool)
+
+treatment_order <- treatment_order[
+  !is.na(treatment_order) & nzchar(treatment_order)
+]
+pool_order <- pool_order[
+  !is.na(pool_order) & nzchar(pool_order)
+]
+
+assembly_order <- if (config$assembly_method == "coassembly") {
+  pool_order
+} else {
+  sample_order
+}
+# Order HTML report files according to samples.tsv
+order_rsc_files <- function(files) {
+  if (length(files) == 0) return(files)
+
+  paths <- gsub("\\\\", "/", files)
+  rel <- sub("^.*/rsc/", "", paths)
+  assembly <- sub("/.*$", "", rel)
+
+  files[
+    order(
+      match(assembly, assembly_order),
+      seq_along(files),
+      na.last = TRUE
+    )
+  ]
+}
+
+# Helper: reorder existing identifiers using TSV order
+ordered_ids <- function(ids, reference) {
+  ids <- unique(as.character(ids))
+  c(reference[reference %in% ids],
+    ids[!ids %in% reference])
+}
+
+# Preserve metadata ordering in MPSE
+sample_groups <- sample_meta %>%
+  transmute(
+    Sample = sample,
+    treatment1 = factor(treatment1, levels = treatment_order),
+    sample_pool = factor(sample_pool, levels = pool_order)
+  )
+
 mpse3 <- mpse %>%
   left_join(sample_groups, by = "Sample")
 
@@ -73,9 +129,45 @@ mpse3 <- mpse3 %>%
 filter(!is.na(treatment1) & treatment1 != "")
 
 # Observed and Shannon (per sample)
-mpse3 %<>% mp_cal_alpha(.abundance=Abundance, force=TRUE) 
-f1 <- mpse3 %>% mp_plot_alpha(.alpha=c(Observe, Shannon))
-f1 <- f1 + theme_bw() + labs(title = "Alpha Diversity by Sample") + theme(plot.title = element_text(hjust = 0.5))
+mpse3 %<>% mp_cal_alpha(.abundance = Abundance, force = TRUE)
+
+# Get the samples actually included in the analysis
+present_samples <- unique(as.character(
+  mpse3 %>%
+    mp_extract_sample() %>%
+    dplyr::pull(Sample)
+))
+
+# Preserve sample order from input TSV
+display_order <- c(
+  sample_order[sample_order %in% present_samples],
+  setdiff(present_samples, sample_order)
+)
+
+n_samples <- length(display_order)
+
+# Dynamic figure height (inches)
+# Allocate approximately 0.35 inches per sample
+sample_plot_height <- max(5, 2 + n_samples * 0.35)
+treatment_plot_height <- 4.5
+alpha_plot_height <- sample_plot_height + treatment_plot_height
+
+# Horizontal alpha diversity barplot
+f1 <- mpse3 %>%
+  mp_plot_alpha(.alpha = c(Observe, Shannon))
+
+f1 <- f1 +
+  facet_wrap(~ Measure, scales = "free", nrow = 1) +
+  scale_x_discrete(limits = rev(display_order)) +
+  coord_flip() +
+  theme_bw() +
+  labs(title = "Alpha Diversity by Sample") +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    axis.text.y = element_text(size = 8),
+    axis.text.x = element_text(size = 9),
+    axis.title.y = element_blank()
+  )
 
 # Observed and Shannon (per group)
 # mp_plot_alpha() draws a half-violin per treatment1 group (via gghalves), which
@@ -101,10 +193,23 @@ f2 <- tryCatch(
       labs(title = "Alpha Diversity by Treatment") + theme(plot.title = element_text(hjust = 0.5))
   }
 )
-f3 <- f1 / f2
+f3 <- f1 / f2 +
+  patchwork::plot_layout(
+    heights = c(sample_plot_height, treatment_plot_height)
+  )
 
 #ggplot2::ggsave(filename = "plots/1-alpha_diversity.tiff", plot = f3, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
-ggplot2::ggsave(filename = file.path(outdir, plotsdir, "1-alpha_diversity.tiff"), plot = f3, dpi = 500, width = 12, height = 10, units = "in", compression = "lzw")
+ggplot2::ggsave(
+  filename = file.path(
+    outdir, plotsdir, "1-alpha_diversity.tiff"
+  ),
+  plot = f3,
+  dpi = 300,
+  width = 12,
+  height = alpha_plot_height,
+  units = "in",
+  compression = "lzw"
+)
 
 plot1_alpha_diversity <- function() {
   f3
@@ -130,8 +235,11 @@ for (level in taxa_levels) {
       relative = FALSE,
       force = TRUE
     )
-  
- p2 <- p2 + labs(y = "Absolute Abundance (%)", title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
+  p2$data$Sample <- factor(
+    as.character(p2$data$Sample),
+    levels = sample_order
+    )
+  p2 <- p2 + labs(y = "Absolute Abundance (%)", title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
   
   # Save each plot with its level in filename
@@ -233,6 +341,10 @@ for (level in taxa_levels) {
       relative = FALSE,
       force = TRUE,
       topn = 20
+    )
+  p3$data$Sample <- factor(
+    as.character(p3$data$Sample),
+    levels = treatment_order
     )
   p3 <- p3 + labs(y = "Relative Abundance (%)", title = paste("(Prokaryotic) Taxonomic Abundance at", level)) +
     theme(plot.title = element_text(hjust = 0.5))
@@ -391,6 +503,7 @@ base_dir_05 <- file.path(outdir, "results/05_prokaryote_annotation")
 treatments <- list.dirs(file.path(base_dir_05, "eggnog"),
                         full.names = FALSE,
                         recursive = FALSE)
+treatments <- ordered_ids(treatments, assembly_order)
 
 # To get nice names for the KEGG pathways in my data
 kegg_map <- read.delim(url("https://rest.kegg.jp/list/pathway/ko"), header = FALSE, stringsAsFactors = FALSE)
@@ -578,6 +691,9 @@ for (trt in treatments) {
           aes(x = Sample, y = reorder(Pathway_name, Count))
         ) +
           geom_point(aes(size = Count, color = Count)) +
+          scale_x_discrete(
+            limits = ordered_ids(unique(kegg_count_top_long_filt$Sample), sample_order)
+          ) +
           scale_color_gradient(low = "lightblue", high = "darkblue") +
           scale_size(range = c(1.5, 9)) +
           guides(
@@ -711,6 +827,9 @@ for (trt in treatments) {
           aes(x = Sample, y = reorder(COG_Category, Count))
         ) +
           geom_point(aes(size = Count, color = Count)) +
+          scale_x_discrete(
+            limits = ordered_ids(unique(cog_count_top_long_filt$Sample), sample_order)
+          ) +
           scale_color_gradient(low = "#EEE0E5", high = "magenta4") +
           scale_size(range = c(1.5, 9)) +
           guides(
@@ -761,6 +880,13 @@ base_dir <- file.path(outdir, "results/07_maglinkage")
 # Summary of bins per assembly
 bin_summary_files <- list.files(file.path(outdir, "results/06_binning/checkm2"), pattern = "quality_report\\.tsv$", 
                                 full.names = TRUE, recursive = TRUE)
+bin_summary_files <- bin_summary_files[
+  order(
+    match(basename(dirname(bin_summary_files)), assembly_order),
+    seq_along(bin_summary_files),
+    na.last = TRUE
+  )
+]
 treatments <- basename(dirname(bin_summary_files))
 n_bins <- sapply(bin_summary_files, function(file) length(readLines(file)) - 1)
 
@@ -768,6 +894,12 @@ bin_counts <- data.frame(
   treatment = treatments,
   n_bins = n_bins,
   stringsAsFactors = FALSE
+)
+
+# Preserve the same treatment order as the plotted bins
+bin_counts$treatment <- factor(
+  bin_counts$treatment,
+  levels = unique(bin_counts$treatment)
 )
 
 # Compute cumulative positions for stacked bar
@@ -782,7 +914,14 @@ bin_counts <- bin_counts %>%
 bin <- ggplot(bin_counts) +
   geom_rect(aes(xmin = start, xmax = end, ymin = 0, ymax = 6, fill = treatment)) +
   geom_text(aes(x = mid, y = 3, label = n_bins), color = "black", size = 5, fontface = "bold") +
-  scale_fill_brewer(palette = "Oranges") +
+  scale_fill_brewer(
+    palette = "Oranges",
+    breaks = levels(bin_counts$treatment),
+    guide = guide_legend(
+#      nrow = 2,
+      byrow = TRUE
+    )
+  ) +
   scale_y_continuous(expand = c(0, 0)) +
   scale_x_continuous(expand = c(0, 0)) +
   labs(
@@ -838,6 +977,16 @@ make_empty_plot <- function(assembly, message_text) {
 # MAG-Linkage
 contig_files <- list.files(base_dir, pattern = "_linkages_by_contig\\.txt$", 
                            full.names = TRUE, recursive = TRUE)
+contig_files <- contig_files[
+  order(
+    match(
+      basename(dirname(dirname(contig_files))),
+      assembly_order
+    ),
+    seq_along(contig_files),
+    na.last = TRUE
+  )
+]
 
 all_plots <- list()
 
@@ -966,6 +1115,7 @@ library(htmlwidgets)
 
 bat_base <- file.path(outdir,"/results/06_binning/BAT")
 treatments <- list.dirs(bat_base, full.names = FALSE, recursive = FALSE)
+treatments <- ordered_ids(treatments, assembly_order)
 base_dir <- file.path(outdir,"/results/06_binning")
 
 all_bin_plots_html <- list()

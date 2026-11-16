@@ -8,7 +8,6 @@ if os.path.isfile("config/configfile.yaml"):
 samples = (
     pd.read_csv(config["samples"], sep="\t", dtype={"sample": str})
     .set_index("sample", drop=False)
-    .sort_index()
 )
 
 def get_sample_value(sample, column):
@@ -38,7 +37,7 @@ POOL2SAMPLES = (
 
 df = pd.read_csv(config["samples"], sep="\t")
 SAMPLES = df["sample"].tolist()
-POOLS = sorted(df["sample_pool"].unique())
+POOLS = df["sample_pool"].drop_duplicates().tolist()
 
 ASSEMBLY_UNITS = (
     POOLS

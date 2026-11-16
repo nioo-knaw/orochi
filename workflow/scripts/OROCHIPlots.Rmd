@@ -98,6 +98,16 @@ NOTE: If you click on your samples and cannot visualize any of them, it means yo
 
 
 quality_files <- list.files(file.path(outdir,"results/09_plots/rsc"), pattern = "\\.html$", full.names = TRUE)
+quality_files <- quality_files[
+  order(
+    match(
+      tools::file_path_sans_ext(basename(quality_files)),
+      sample_order
+    ),
+    seq_along(quality_files),
+    na.last = TRUE
+  )
+]
 quality_files_rel <- file.path("rsc", basename(quality_files))
 
 cat('<div style="column-count:2; column-gap:40px; text-align:center;">\n')
@@ -112,7 +122,8 @@ cat('</div>\n')
 A) Observed and Shannon indexes for all samples, regardless of treatment
 B) Boxplot and violin plot of Observed and Shannon indexes per treatment
 
-```{r Fig1, warning=FALSE, message=FALSE, echo=FALSE, dpi = 500, fig.width = 12, fig.height = 10, fig.align = "center"}
+<CodeBlock language="r" editable={true}>
+```{r Fig1, warning=FALSE, message=FALSE, echo=FALSE, dpi=300, fig.width=12, fig.height=alpha_plot_height, fig.align="center"}
 plot1_alpha_diversity()
 ```
 
@@ -153,6 +164,7 @@ datatable(
     scrollY = 600,
     pageLength = 1,
     pagingType = "full_numbers",  # keep full numbers, we will customize them
+    ordering = FALSE,
     # customize buttons
     drawCallback = JS(
       "function(settings) {
@@ -192,6 +204,7 @@ datatable(
     scrollY = 600,
     pageLength = 1,
     pagingType = "full_numbers",  # keep full numbers, we will customize them
+    ordering = FALSE,
     # customize buttons
     drawCallback = JS(
       "function(settings) {
@@ -252,6 +265,8 @@ krona_files <- list.files(
   recursive = TRUE,
   full.names = TRUE
 )
+
+krona_files <- order_rsc_files(krona_files)
 
 krona_files_rel <- sub(".*rsc/", "rsc/", krona_files)
 
@@ -315,6 +330,7 @@ datatable(
     scrollY = 600,
     pageLength = 1,
     pagingType = "full_numbers",
+    ordering = FALSE,
     drawCallback = JS(
       "function(settings) {
          var labels = ", jsonlite::toJSON(page_labels), ";
@@ -365,6 +381,7 @@ plot_table <- datatable(
     #scrollY = 600,
     pageLength = 1,
     pagingType = "full_numbers",
+    ordering = FALSE,
     drawCallback = JS(
       "function(settings) {
          var labels = ", jsonlite::toJSON(page_labels), ";
@@ -417,6 +434,7 @@ ASbac_files <- quality_files <- list.files(
   recursive = TRUE,
   full.names = TRUE
 )
+ASbac_files <- order_rsc_files(ASbac_files)
 ASbac_files_rel <- sub(".*rsc/", "rsc/", ASbac_files)
 
 # Only keep the top-level index.html: rsc/{assembly}/{tooltype}/index.html  
@@ -504,6 +522,7 @@ ASbac_bin_files <- list.files(
   recursive = TRUE,  
   full.names = TRUE  
 )  
+ASbac_bin_files <- order_rsc_files(ASbac_bin_files)
 ASbac_bin_files_rel <- sub(".*rsc/", "rsc/", ASbac_bin_files)  
   
 bin_groups <- list()  
@@ -583,6 +602,7 @@ datatable(
     scrollY = "auto",
     pageLength = 1,
     pagingType = "full_numbers",
+    ordering = FALSE,
     drawCallback = JS(
       "function(settings) {
          var labels = ", jsonlite::toJSON(page_labels), ";
@@ -623,6 +643,7 @@ datatable(
     scrollY = 600,
     pageLength = 1,
     pagingType = "full_numbers",
+    ordering = FALSE,
     drawCallback = JS(
       "function(settings) {
          var labels = ", jsonlite::toJSON(page_labels), ";

@@ -163,7 +163,16 @@ rule dastool_contigs2bin:
         script=workflow.source_path("../scripts/Fasta_to_Contig2Bin.sh"),
         extension=lambda wildcards: binning_tools[wildcards.tool]
     shell:
-        "bash {params.script} -e {params.extension} -i {input.bins_dir} > {output.tsv} "
+        r"""
+        set -euo pipefail
+
+        bash {params.script} \
+            -e {params.extension} \
+            -i {input.bins_dir} \
+        | awk -v prefix="{wildcards.tool}_" \
+            'BEGIN {{FS=OFS="\t"}} NF==2 {{$2=prefix $2; print}}' \
+        > {output.tsv}
+        """
 
 
 def format_dastool_input(input_files):
@@ -203,7 +212,6 @@ checkpoint dastool:
         """
         DAS_Tool \
             -i {params.input_list} \
-            -l metabat2,maxbin \
             -c {input.assembly} \
             -o {params.dastool_output} \
             -t {threads} \
