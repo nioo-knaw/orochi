@@ -2,6 +2,8 @@
 
 Orochi is a Snakemake-based metagenomics pipeline designed for comprehensive analysis of metagenomic data, including preprocessing, assembly, binning, taxonomic and functional annotation, and Biosynthetic Gene Cluster (BGC) prediction.
 
+The Orochi project is a collaboration between the Microbial Ecology group at the Netherlands Institute of Ecology (NIOO-KNAW) and the Bioinformatics Group at Wageningen University & Research (WUR).
+
 ## Overview
 
 The Orochi pipeline integrates several state-of-the-art bioinformatics tools to process raw metagenomic reads and produce high-quality insights into microbial communities. It supports both single-sample assembly and co-assembly approaches.
@@ -103,10 +105,4 @@ The Orochi pipeline integrates several state-of-the-art bioinformatics tools to 
 
 The pipeline primarily relies on the `configfile.yaml` for configuration. Ensure that any system-specific paths are correctly set there.
 
-## Tests
 
-TODO: Add instructions for running tests. A `test_rule.smk` exists in the workflow.
-
-## License
-
-TODO: Specify the license in `LICENSE.md`.

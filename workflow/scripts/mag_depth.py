@@ -1,4 +1,5 @@
-# Script to calculate bin-level mean depths from contig-level coverage data. Based on the fairy-generated table.
+# Script to calculate bin-level mean depths from contig-level coverage data.
+# Reads MetaBAT-format coverage tables (fairy for coassembly, coverm_coverage for single_assembly).
 # Each contig's depth is weighted by its length to compute accurate bin-level averages.
 #!/usr/bin/env python3
 

@@ -42,6 +42,10 @@ rule report:
         antismash_bac_bins=expand(
             rules.aggregate_bin_antismash_reports.output.index,
             sample_pool=ASSEMBLY_UNITS
+        ),
+        combined_bgc=expand(
+            rules.combined_bgc_overview.output.report_index,
+            sample_pool=ASSEMBLY_UNITS
         )
     output:
         f"{outdir}/results/09_plots/Orochi_report.html"

@@ -65,26 +65,6 @@ rule assembly_quality_single:
         > {log} 2>&1
         """
 
-rule coverm:
-    input:
-        contigs_f = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_1.fastq.gz",
-        contigs_r = f"{outdir}/results/02_filtered_reads/{{sample}}_filt_2.fastq.gz",
-        assembly = rules.rename_spades.output.gzip
-    output:
-        coverm_out = f"{outdir}/results/03_assembly/single_sample_assembly/{{sample}}/quality/coverage.tsv"
-    threads:
-        int(workflow.cores * 0.8)
-    conda:
-        "../envs/single_assembly.yaml"
-    log:
-        f"{outdir}/logs/coverm/coverm_{{sample}}.log"
-    shell:
-        """
-        coverm contig \
-            --mapper bwa-mem \
-            --reference {input.assembly} \
-            -1 {input.contigs_f} \
-            -2 {input.contigs_r} \
-            --threads {threads} > {output.coverm_out}\
-            > {log} 2>&1
-        """
+# Note: single-sample binning coverage now lives in binning.smk as
+# coverm_coverage (maps against the size-filtered contigs binning actually
+# uses, and writes MetaBAT-compatible depth output directly).
