@@ -344,7 +344,7 @@ rule markermag_link:
         # Prevents handing MarkerMAG more threads than the data can meaningfully
         # use, which triggers an internal bug on very small datasets (empty
         # per-thread subsets during Rd2 -> missing merged file -> crash).
-        n_reads=$(grep -c '^>' {input.forward_reads} || echo 0)
+        n_reads=$(awk '/^>/ {{n++}} END {{print n+0}}' {input.forward_reads})
         echo "Read count in forward reads: $n_reads" >> {log}
 
         if [ "$n_reads" -lt 1000 ]; then
@@ -365,7 +365,7 @@ rule markermag_link:
         
         # Run MarkerMAG link
         echo "Running MarkerMAG link analysis..." >> {log}
-        echo "Command: MarkerMAG link -p {wildcards.sample_pool} -r1 {input.forward_reads} -r2 {input.reverse_reads} -marker {input.phyloflash} -mag {input.mag_fasta} -o {params.markermag_dir} -x fa -t {threads} -force" >> {log}
+        echo "Command: MarkerMAG link -p {wildcards.sample_pool} -r1 {input.forward_reads} -r2 {input.reverse_reads} -marker {input.phyloflash} -mag {input.mag_fasta} -o {params.markermag_dir} -x fa -t $effective_threads -force" >> {log}
         echo "" >> {log}
         
         MarkerMAG link \
@@ -376,7 +376,7 @@ rule markermag_link:
             -mag {input.mag_fasta} \
             -o {params.markermag_dir} \
             -x fa \
-            -t {threads} \
+            -t $effective_threads \
             -force \
             >> {log} 2>&1
         
