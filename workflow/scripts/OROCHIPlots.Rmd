@@ -434,6 +434,7 @@ combined_bgc_files <- list.files(
   recursive = TRUE,
   full.names = TRUE
 )
+combined_bgc_files <- order_rsc_files(combined_bgc_files)
 combined_bgc_files_rel <- sub(".*rsc/", "rsc/", combined_bgc_files)
 
 cat('<div style="display:flex; flex-direction:row; flex-wrap:wrap; gap:30px; justify-content:center; align-items:flex-start;text-align:center;">\n')
